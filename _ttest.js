@@ -55,7 +55,7 @@ global.THREE=THREE;
 
 // ---------- carrega o jogo exposto via __G ----------
 // weapons.js e upgrades.js juntos com o game.js (no navegador são <script>s antes do game.js)
-let src=fs.readFileSync('assets/js/weapons.js','utf8')+'\n'+fs.readFileSync('assets/js/upgrades.js','utf8')+'\n'+fs.readFileSync('assets/js/enimies/skeleton.js','utf8')+'\n'+fs.readFileSync('assets/js/enimies/zombie.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
+const cdir='assets/js/class';const csrc=fs.readdirSync(cdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?1:b==='index.js'?-1:a.localeCompare(b)).map(f=>fs.readFileSync(cdir+'/'+f,'utf8')).join('\n')+'\n';const wdir='assets/js/weapons';let src=csrc+fs.readdirSync(wdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?-1:b==='index.js'?1:a.localeCompare(b)).map(f=>fs.readFileSync(wdir+'/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/upgrades.js','utf8')+'\n'+fs.readdirSync('assets/js/enimies').filter(f=>f.endsWith('.js')).sort().map(f=>fs.readFileSync('assets/js/enimies/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('game.js','utf8');
 const i=src.lastIndexOf('})();');
 const hook=`window.__G={newRun,update,player,enemies,damageEnemy,getBoss:()=>boss,runCheat,getState:()=>state,totems:()=>totems,gems:()=>gems,pickups:()=>pickups,dropGem,dropPickup,setAi:v=>aiSkill=v,ai:()=>aiSkill,nbG:()=>nextBoss,nbS:v=>nextBoss=v,tS:v=>runTime=v};\n})();`;;
 src=src.slice(0,i)+hook;

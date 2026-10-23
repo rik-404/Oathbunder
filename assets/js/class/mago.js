@@ -2,7 +2,7 @@
 window.CLASSES = window.CLASSES || {};
 window.CLASSES.mago = {
   nome: 'Aurelion',
-  role: 'Orbes automáticos que explodem',
+  role: 'Orbes arcanos explosivos; cada 4º é maior',
   ui: '#a58bff',
   hp: 75,
   armor: 0,
@@ -17,7 +17,7 @@ window.CLASSES.mago = {
   ab: {
     nome: 'Nova Arcana',
     cd: 6,
-    desc: 'Explosão ao seu redor que empurra e causa dano alto.'
+    desc: 'Nova arcana que empurra, causa dano alto e retarda os inimigos.'
   },
   pal: {
     body: 0x5b3fa8,

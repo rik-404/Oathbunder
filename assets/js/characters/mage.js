@@ -37,5 +37,8 @@
     vox(st,0,.7,.075,.03,.15,.03,P.trim);vox(st,0,.7,-.075,.03,.15,.03,P.trim);
     vox(st,0,.8,0,.15,.15,.15,0x9f7bff,1.3);          // cristal
     vox(st,0,.9,0,.08,.1,.08,0xcbb6ff,1.5);           // brilho do cristal
+    // orbe arcano flutuante acima do cajado: reforça a identidade dos "orbes" do mago
+    vox(st,0,1.02,0,.13,.13,.13,0xd9ccff,1.8);
+    for(let i=0;i<4;i++){const a=i*Math.PI/2;vox(st,Math.sin(a)*.19,1.02,Math.cos(a)*.19,.035,.035,.035,0xcbb6ff,1.5)}
     b.keep.push({g:st,arm:b.armR,lean:-.18,leanX:.6});
 };

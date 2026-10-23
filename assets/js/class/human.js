@@ -8,7 +8,7 @@ window.CLASSES.human = {
   armor: 0,
   speed: 2.6,
   atkCd: .6,
-  dmg: 10,
+  dmg: 6,
   kind: 'proj',
   proj: 'rock',
   projSpeed: 13,
@@ -28,5 +28,5 @@ window.CLASSES.human = {
     arm: 0xc08a5f,
     boots: 0x555a60
   },
-  stats: { Vida: 1, Dano: 2, Veloc: 1, Alcance: 1 }
+  stats: { Vida: 1, Dano: 1, Veloc: 1, Alcance: 1 }
 };
