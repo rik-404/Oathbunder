@@ -98,7 +98,7 @@ const CLASSES={
   future:{nome:'Smith',role:'Rajadas de plasma e salto quântico',ui:'#3bf0d0',hp:92,armor:.05,speed:5.6,atkCd:.38,dmg:13,kind:'proj',proj:'plasma',projSpeed:26,range:16,pierce:2,
     ab:{nome:'Salto Quântico',cd:6,desc:'Teleporta à frente, fica invencível um instante e explode ao chegar, ferindo os inimigos em volta.'},
     pal:{body:0x1c2b3a,trim:0x3bf0d0,skin:0xd9b48a,legs:0x14202c,hat:0x24384a,cape:0x2a4a5a,arm:0x1c2b3a},stats:{Vida:3,Dano:3,Veloc:5,Alcance:5}},
-  human:{nome:'Zé',role:'Joga pedra. É isso mesmo.',ui:'#b0a089',hp:80,armor:0,speed:5.2,atkCd:.6,dmg:10,kind:'proj',proj:'rock',projSpeed:13,range:9,pierce:0,
+  human:{nome:'Zé',role:'Joga pedra. É isso mesmo.',ui:'#b0a089',hp:65,armor:0,speed:5.2,atkCd:.6,dmg:10,kind:'proj',proj:'rock',projSpeed:13,range:9,pierce:0,
     ab:{nome:'Pedrada Caprichada',cd:5,desc:'Joga 3 pedras de uma vez, com bastante vontade. Pronto, esse é o poder especial.'},
     pal:{body:0x12b5b5,trim:0x3838c8,skin:0xc08a5f,legs:0x3838c8,hat:0x4a2f1e,arm:0xc08a5f,boots:0x555a60},stats:{Vida:2,Dano:2,Veloc:3,Alcance:1}},
   king:{nome:'Midas',role:'Arremessa moedas e convoca a guarda real',ui:'#f2c14b',hp:105,armor:.1,speed:5,atkCd:.5,dmg:17,kind:'proj',proj:'gcoin',projSpeed:17,range:14,pierce:1,
@@ -116,7 +116,10 @@ const ICONS={
   'Projétil Extra':'✨','Perfuração':'➡️','Espinhos':'🌵','Horda Óssea':'🦴','Ossos Afiados':'⚰️',
   'Punho Fatal':'💢','Velocidade de Tiro':'🚀','Empurrão':'🫱','Reflexo Relâmpago':'💨','Pulso Congelante':'❄️',
 };
-const CLSICON={mago:'🔮',arqueiro:'🏹',guerreiro:'⚔️',tank:'🛡️',necro:'💀',chrono:'⏳',pistol:'🔫',dracula:'🧛',demon:'😈',future:'🛸',human:'🧍',king:'👑'};
+// ícones de classe: pixel art 16×16 gerada em assets/images/icons/ (via node _genicons.js) — um rosto por herói
+const CLSICON={mago:'assets/images/icons/mago.png?v=1',arqueiro:'assets/images/icons/arqueiro.png?v=1',guerreiro:'assets/images/icons/guerreiro.png?v=1',tank:'assets/images/icons/tank.png?v=1',necro:'assets/images/icons/necro.png?v=1',chrono:'assets/images/icons/chrono.png?v=1',pistol:'assets/images/icons/pistol.png?v=1',dracula:'assets/images/icons/dracula.png?v=1',demon:'assets/images/icons/demon.png?v=1',future:'assets/images/icons/future.png?v=1',human:'assets/images/icons/human.png?v=1',king:'assets/images/icons/king.png?v=1'};
+let CLSIMG={};try{for(const k in CLSICON){const im=new Image();im.src=CLSICON[k];CLSIMG[k]=im}}catch(e){} // preload p/ canvas (menu 3D)
+const clsImg=k=>`<img class="cimg" src="${CLSICON[k]}" alt="" title="${CLASSES[k]?CLASSES[k].nome:k}">`; // HTML: tamanho segue o font-size do pai (em)
 const CLSTIPO={mago:'Mago',arqueiro:'Arqueiro',guerreiro:'Guerreiro',tank:'Guardião',necro:'Necromante',chrono:'Chronomante',pistol:'Pistoleiro',dracula:'Vampiro',demon:'Demônio',future:'Viajante',human:'Humano',king:'Rei'};
 const icon=n=>ICONS[n]||'';
 const WEAPONS_NAMES=new Set(Object.values(WEAPONS).map(w=>w.nome));
@@ -318,7 +321,6 @@ const ENEMY_BOXES={
   slime:()=>[[0,.27,0,.72,.54,.72,0x5fcf5a],[0,.58,0,.3,.08,.3,0x7fe07a],[-.14,.38,.362,.1,.12,.01,0x0d0b12],[.14,.38,.362,.1,.12,.01,0x0d0b12],[0,.2,.362,.2,.04,.01,0x2f6a2a]],
   slimeB:()=>[[0,.27,0,.72,.54,.72,0x4fb8d8],[0,.58,0,.3,.08,.3,0x7fd4ee],[-.14,.38,.362,.1,.12,.01,0x0d0b12],[.14,.38,.362,.1,.12,.01,0x0d0b12]],
   bat:()=>[[0,.95,0,.3,.26,.26,0x3a2a4a],[-.09,1.12,0,.07,.1,.07,0x3a2a4a],[.09,1.12,0,.07,.1,.07,0x3a2a4a],[-.06,.98,.131,.05,.05,.01,0xff5040],[.06,.98,.131,.05,.05,.01,0xff5040],[-.35,.97,0,.4,.04,.26,0x2a1f38],[.35,.97,0,.4,.04,.26,0x2a1f38],[-.5,.93,-.02,.14,.04,.18,0x2a1f38],[.5,.93,-.02,.14,.04,.18,0x2a1f38]],
-  zombie:()=>humanoid({legs:0x3d4a6a,body:0x6b5a4a,trim:0x4a3a2a,skin:0x7fae6a,arm:0x7fae6a,eye:0xffee55},{armsFwd:true,extra:[[0,1.14,-.02,.36,.06,.36,0x2a2a1a],[.12,.6,.142,.12,.1,.02,0x7fae6a]]}),
   brute:()=>humanoid({legs:0x4a3424,body:0x6a4a2e,trim:0x3a2a1a,skin:0x6f9a44,arm:0x6f9a44,eye:0xffd040},{extra:[[-.1,.84,.18,.04,.09,.03,0xf0ead8],[.1,.84,.18,.04,.09,.03,0xf0ead8],[0,1.15,0,.36,.05,.36,0x2a1f14],[.3,.42,.3,.09,.09,.5,0x5a3a22],[.3,.42,.6,.22,.22,.3,0x7a5a3a]]}),
   ogre:()=>humanoid({legs:0x5a4a2e,body:0x6a5a3a,trim:0x4a3a28,skin:0x7aa84a,arm:0x7aa84a,eye:0xffd24a},{extra:[
     [0,.56,.12,.5,.4,.12,0x7aa84a],                                         // barrigão
@@ -332,14 +334,13 @@ const ENEMIES={
   slime:{hp:22,speed:2.6,r:.36,dmg:7,h:.75,color:0x5fcf5a,xp:1},
   slimeB:{hp:30,speed:3,r:.36,dmg:8,h:.75,color:0x4fb8d8,xp:1},
   bat:{hp:12,speed:4.3,r:.28,dmg:5,h:1.2,color:0x3a2a4a,xp:1,fly:true},
-  zombie:{hp:34,speed:2.3,r:.32,dmg:9,h:1.15,color:0x7fae6a,xp:2},
   brute:{hp:120,speed:1.9,r:.5,dmg:16,h:1.7,color:0x6f9a44,xp:5,scale:1.45},
   ogre:{hp:200,speed:2.0,r:.52,dmg:19,h:1.9,color:0x7aa84a,xp:8,scale:1.55}, // versão comum (bem mais fraca que o boss)
 };
 const ENEMY_GEO={};
 function enemyGeo(t){if(!ENEMY_GEO[t])ENEMY_GEO[t]=mergeBoxes(ENEMY_BOXES[t]());return ENEMY_GEO[t]}
 // Inimigos articulados: corpo (malha) + pernas/asas separadas pra animar.
-const LEGGED={zombie:1,brute:1,ogre:1};
+const LEGGED={brute:1,ogre:1};
 // inimigos definidos em arquivos separados (assets/js/enimies/*.js registram em window.ENEMY_DEFS)
 const ENEMY_DEFS=(function(){const D=(window&&window.ENEMY_DEFS)||{},out={};
   for(const k in D){const S=D[k](humanoid);if(!S)continue;out[k]=S;ENEMY_BOXES[k]=S.boxes;ENEMIES[k]=S.stats;if(S.legged)LEGGED[k]=1}
@@ -348,8 +349,8 @@ const _BODY={},_LEG={},_WING={};
 function enemyBodyGeo(t){if(_BODY[t])return _BODY[t];let bx=ENEMY_BOXES[t]();
   if(LEGGED[t])bx=bx.slice(2);else if(t==='bat')bx=bx.slice(0,5); // tira pernas / asas do corpo
   return _BODY[t]=mergeBoxes(bx)}
-function enemyLegGeo(t){if(_LEG[t])return _LEG[t];const L=ENEMY_BOXES[t]()[0][6]; // cor da perna
-  return _LEG[t]=mergeBoxes([[0,-.17,0,.16,.34,.18,L]])} // pivô no quadril, pé em -.34
+function enemyLegGeo(t){if(_LEG[t])return _LEG[t];const d=ENEMY_DEFS[t],L=d&&d.leg?d.leg[0][6]:ENEMY_BOXES[t]()[0][6]; // cor da perna
+  return _LEG[t]=mergeBoxes(d&&d.leg?d.leg:[[0,-.17,0,.16,.34,.18,L]])} // def.leg: caixas finas (esqueleto); padrão: bloco maciço, pivô no quadril, pé em -.34
 function batWingGeo(side){const k='w'+side;if(_WING[k])return _WING[k];const px=.15*side,C=0x2a1f38; // pivô no ombro (±.15,.95)
   return _WING[k]=mergeBoxes([[.35*side-px,.02,0,.4,.04,.26,C],[.5*side-px,-.02,-.02,.14,.04,.18,C]])}
 function buildGolem(){const b=buildBody({body:0x6e6578,trim:0x4a4352,skin:0x7d7488,legs:0x5c5466,arm:0x7d7488,eye:0xff6a2a,eyeE:1.4,boots:0x4a4352});
@@ -524,7 +525,9 @@ function buildField(){
 }
 
 /* ================= entidades ================= */
-function scaleT(){const m=runTime/60;return{hp:1+m*.38+m*m*.04,dmg:1+m*.12}}
+// Escala degrau a degrau POR HORDA: a cada horda completada a arena fica um patamar mais difícil
+// (os inimigos que nascerem depois nascem já mais fortes; a curva continua mesmo com as melhorias no teto)
+function scaleT(){const H=hordeN;return{hp:1+H*.3+H*H*.05,dmg:1+H*.08}}
 function spawnEnemy(type,x,z,elite,opts){
   const D=ENEMIES[type],S=scaleT(),ms=(opts&&opts.ms)||1;const sc=(D.scale||1)*(elite?1.35:1)*ms;const emat=elite?eliteMat:vcMat;
   let mesh,legL,legR,wingL,wingR,parts;
@@ -761,18 +764,24 @@ const minMat=new THREE.MeshLambertMaterial({vertexColors:true,emissive:new THREE
 // soldado real (guarda do Rei): humanoide de aço com elmo e emblema dourado
 const SOLDIER_GEO=mergeBoxes(humanoid({legs:0x5a4433,body:0x8b95a3,trim:0xf2c14b,skin:0xe0b088,arm:0x8b95a3,eye:0x2a2018},{extra:[[0,1.14,0,.3,.08,.3,0x6d7682],[0,1.22,0,.06,.1,.06,0xf2c14b],[0,.56,.16,.1,.14,.02,0xf2c14b]]}));
 const soldierMat=new THREE.MeshLambertMaterial({vertexColors:true,emissive:new THREE.Color(0x3a2e10),emissiveIntensity:.2});
+// monta o mesh de um minion (sold: soldado real do Midas; senão esqueleto necromante do Necronus)
+function buildMinionMesh(sold){
+  const boxes=sold?humanoid({legs:0x5a4433,body:0x8b95a3,trim:0xf2c14b,skin:0xe0b088,arm:0x8b95a3,eye:0x2a2018},{extra:[[0,1.14,0,.3,.08,.3,0x6d7682],[0,1.22,0,.06,.1,.06,0xf2c14b],[0,.56,.16,.1,.14,.02,0xf2c14b]]}):ENEMY_BOXES['skel']();
+  const mm=sold?soldierMat:minMat,g=new THREE.Group();
+  g.add(new THREE.Mesh(mergeBoxes(boxes.slice(2)),mm));                          // corpo sem as pernas
+  // esqueleto usa as mesmas pernas finas de osso do inimigo (fêmur/tíbia/pé); soldado mantém bota grossa
+  const skelLeg=(typeof ENEMY_DEFS!=='undefined'&&ENEMY_DEFS.skel&&ENEMY_DEFS.skel.leg)||[[0,-.12,0,.055,.17,.055,0x8f8f8f],[0,-.27,0,.05,.14,.05,0x8f8f8f],[0,-.325,.03,.06,.05,.13,0x9b9b9b]];
+  const lgeo=mergeBoxes(sold?[[0,-.17,0,.16,.34,.18,0x5a4433]]:skelLeg);         // perna com pivô no quadril
+  const legL=new THREE.Mesh(lgeo,mm);legL.position.set(-.11,.34,0);g.add(legL);
+  const legR=new THREE.Mesh(lgeo,mm);legR.position.set(.11,.34,0);g.add(legR);
+  g.traverse(o=>{if(o.isMesh)o.castShadow=true});g.scale.setScalar(sold?.86:.82);
+  return{g,legL,legR}}
 function summonMinion(type){
   if(minions.length>=8)return;
   const a=rand(0,TAU),x=player.x+Math.sin(a)*rand(.9,1.7),z=player.z+Math.cos(a)*rand(.9,1.7);
   if(collide(x,z,.3))return;
-  const sold=type==='soldier';
-  const boxes=sold?humanoid({legs:0x5a4433,body:0x8b95a3,trim:0xf2c14b,skin:0xe0b088,arm:0x8b95a3,eye:0x2a2018},{extra:[[0,1.14,0,.3,.08,.3,0x6d7682],[0,1.22,0,.06,.1,.06,0xf2c14b],[0,.56,.16,.1,.14,.02,0xf2c14b]]}):ENEMY_BOXES['skel']();
-  const mm=sold?soldierMat:minMat,g=new THREE.Group();
-  g.add(new THREE.Mesh(mergeBoxes(boxes.slice(2)),mm));                          // corpo sem as pernas
-  const lgeo=mergeBoxes([[0,-.17,0,.16,.34,.18,sold?0x5a4433:0xcfc7b0]]);        // perna com pivô no quadril
-  const legL=new THREE.Mesh(lgeo,mm);legL.position.set(-.11,.34,0);g.add(legL);
-  const legR=new THREE.Mesh(lgeo,mm);legR.position.set(.11,.34,0);g.add(legR);
-  g.traverse(o=>{if(o.isMesh)o.castShadow=true});g.scale.setScalar(sold?.86:.82);fxGroup.add(g);
+  const sold=type==='soldier',{g,legL,legR}=buildMinionMesh(sold);
+  fxGroup.add(g);
   const hp=sold?70:45;
   minions.push({x,z,y:0,r:.3,hp,maxHp:hp,t:rand(0,6),atkCd:0,face:a,mesh:g,legL,legR,anim:0,sold});
   burst(x,.5,z,sold?0xf2c14b:0x7ee0a8,12,{emi:.9,speed:3,up0:.6,up1:2.4});
@@ -826,6 +835,9 @@ function openUpgrade(){
   let pool=STAT_UPS.filter(u=>(!u.cls||u.cls.includes(player.cls))&&(!u.ok||u.ok(player))).map(u=>Object.assign({kind:u.cls?'cls':'stat'},u));
   for(const k in WEAPONS){const l=player.weap[k];if(l<5){const up={id:'w_'+k,kind:'weapon',nome:WEAPONS[k].nome+(l?' nv '+(l+1):''),desc:(l?'':'Nova arma. ')+WEAPONS[k].desc(l+1),apply:p=>p.weap[k]++,wk:k};pool.push(up,up)}}
   const choice=[];while(choice.length<3&&pool.length){const u=pick(pool);choice.push(u);pool=pool.filter(x=>x.id!==u.id)}
+  if(!choice.length){ // tudo no teto: recompensa de consolação encerra a cadeia de sorteios
+    pendingUps=0;player.hp=Math.min(player.maxHp,player.hp+player.maxHp*.2);addCoins(10);
+    toast('Tudo no teto','Melhorias no máximo — +20% de vida e 🪙 10 por nível sobrando');setScreen('play');lockMouse();return}
   const wrap=$('#ups');wrap.innerHTML='';
   choice.forEach((u,i)=>{const b=document.createElement('button');b.type='button';b.className='up';b.id='up-'+i;
     const wlvl=u.wk?player.weap[u.wk]:0;
@@ -853,7 +865,7 @@ function showDeath(){
   setScreen('dead');const C=CLASSES[player.cls];
   $('#dead-title').textContent='Você caiu aos '+fmtT(runTime);
   const best=store.get('cv_bestT',{})[player.cls]||runTime;const rw=lastReward||{earned:0,bonus:0};
-  $('#dead-sub').innerHTML=C.nome+' · recorde: '+fmtT(best)+(hordeN?' · horda '+hordeN:'')+' · ganhou <b style="color:var(--gold)">🪙 '+(rw.earned+rw.bonus)+'</b>'+(rw.bonus?' (+'+rw.bonus+' de conquistas!)':'')+(rw.newCls?'<br><b style="color:var(--moss)">'+CLSICON[rw.newCls]+' '+CLASSES[rw.newCls].nome+' liberado!</b>':'');
+  $('#dead-sub').innerHTML=C.nome+' · recorde: '+fmtT(best)+(hordeN?' · horda '+hordeN:'')+' · ganhou <b style="color:var(--gold)">🪙 '+(rw.earned+rw.bonus)+'</b>'+(rw.bonus?' (+'+rw.bonus+' de conquistas!)':'')+(rw.newCls?'<br><b style="color:var(--moss)">'+clsImg(rw.newCls)+' '+CLASSES[rw.newCls].nome+' liberado!</b>':'');
   $('#d-time').textContent=fmtT(runTime);$('#d-lvl').textContent=player.lvl;$('#d-kills').textContent=kills;
   chips($('#d-chips'),player.picks,'Nenhuma melhoria escolhida');
 }
@@ -898,7 +910,7 @@ function renderPause(){
     const M=MISSION[k],done=isUnlocked(k),cur=M.prog(),pct=done?100:Math.min(100,Math.round(cur/M.goal*100));
     const curT=M.fmt?M.fmt(cur):fmtN(cur),goalT=M.fmt?M.fmt(M.goal):fmtN(M.goal);
     return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:8px;font-size:13px">`+
-      `<span style="color:var(--dust)">${CLSICON[k]} ${CLASSES[k].nome}</span>`+
+      `<span style="color:var(--dust)">${clsImg(k)} ${CLASSES[k].nome}</span>`+
       `<b style="color:${done?'var(--moss)':'var(--bone)'};font-variant-numeric:tabular-nums">${done?'✓ liberado':curT+' / '+goalT}</b></div>`+
       `<div class="pbar"><i style="width:${pct}%"></i></div></div>`;
   }).join('');
@@ -991,8 +1003,10 @@ const slotOf=i=>{if(i===9)return[-1.22,7.24];if(i<3)return[[Math.PI/2,Math.PI*1.
     vox(g,0,.21,0,.3,.42,.2,0x837e74);vox(g,0,.47,0,.36,.08,.24,0x8f8a80);vox(g,0,.56,0,.12,.14,.12,C.ui,1); // pedestal + cristal da cor da classe
     try{const cv=document.createElement('canvas');cv.width=128;cv.height=64;const cx=cv.getContext('2d');
       if(cx&&cx.fillText){cx.fillStyle='#151120';cx.fillRect(0,0,128,64);cx.strokeStyle='#3b3249';cx.strokeRect(2,2,124,60);
-        cx.textAlign='center';cx.font='28px serif';cx.fillText(CLSICON[k],64,30);
-        cx.font='bold 13px monospace';cx.fillStyle='#cfc4da';cx.fillText(C.nome.toUpperCase(),64,52);
+        cx.textAlign='center';
+        const icd=CLSIMG[k]&&CLSIMG[k].complete;
+        if(icd){cx.imageSmoothingEnabled=false;cx.drawImage(CLSIMG[k],48,2,32,32)}else{cx.font='26px serif';cx.fillStyle='#cfc4da';cx.fillText('?',64,34)}
+        cx.font='bold 11px monospace';cx.fillStyle='#cfc4da';cx.fillText(C.nome.toUpperCase(),64,56);
         const pm=new THREE.Mesh(new THREE.PlaneGeometry(.3,.15),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv)}));pm.position.set(0,.2,.105);g.add(pm)}}catch(e){}
     return g};
   ORDER.forEach((k,i)=>{menuStones[k]=mkRef(k,i)});
@@ -1084,7 +1098,7 @@ function renderCards(){
   if(!isUnlocked(selCls))selCls=ORDER.find(isUnlocked)||'guerreiro';
   const wrap=$('#classes');wrap.innerHTML='';
   ORDER.forEach((k,i)=>{const C=CLASSES[k];const b=document.createElement('button');b.type='button';b.className='ctile';b.id='cc-'+k;b.style.setProperty('--c',C.ui);b.setAttribute('aria-pressed',String(k===selCls));
-    b.innerHTML=`<span class="cic">${CLSICON[k]}</span><span class="cname">${C.nome}</span><span class="ctipo">${CLSTIPO[k]}</span>`;
+    b.innerHTML=`<span class="cic">${clsImg(k)}</span><span class="cname">${C.nome}</span><span class="ctipo">${CLSTIPO[k]}</span>`;
     if(i<10){const kb=document.createElement('i');kb.className='kbd';kb.textContent='1234567890'[i];b.appendChild(kb)}
     b.onclick=()=>selectClass(k);b.ondblclick=()=>newRun(k);
     if(!isUnlocked(k)){b.classList.add('locked');const lk=document.createElement('div');lk.className='lock';
@@ -1098,11 +1112,11 @@ function renderCards(){
 function renderDetail(k){const C=CLASSES[k],best=store.get('cv_bestT',{}),det=$('#chardetail'),locked=!isUnlocked(k);
   det.style.setProperty('--c',C.ui);
   const runs=metaStat().runs;
-  det.innerHTML=`<div class="cd-top" style="--c:${C.ui}"><span class="cd-ic">${CLSICON[k]}</span><div class="cd-id"><h3 style="color:${C.ui}">${C.nome}</h3><span class="cd-tipo">${CLSTIPO[k]}</span></div></div>`+
+  det.innerHTML=`<div class="cd-top" style="--c:${C.ui}"><span class="cd-ic">${clsImg(k)}</span><div class="cd-id"><h3 style="color:${C.ui}">${C.nome}</h3><span class="cd-tipo">${CLSTIPO[k]}</span></div></div>`+
     `<div class="cd-meta">${best[k]?'★ Recorde '+fmtT(best[k]):'★ Sem recorde ainda'} · ${runs} corrida${runs===1?'':'s'}</div>`+
     `<p class="cd-role">${C.role}</p>`+
     `<div class="pips">${Object.entries(C.stats).map(([n,v])=>`<div class="pip-row" style="--c:${C.ui}"><span>${n}</span><i>${'<b class="on"></b>'.repeat(v)}${'<b></b>'.repeat(5-v)}</i></div>`).join('')}</div>`+
-    `<div class="ab"><strong>${CLSICON[k]} ${C.ab.nome}<small>Q · ${C.ab.cd}s</small></strong><span>${C.ab.desc}</span></div>`+
+    `<div class="ab"><strong>${clsImg(k)} ${C.ab.nome}<small>Q · ${C.ab.cd}s</small></strong><span>${C.ab.desc}</span></div>`+
     (locked&&MISSION[k]?`<div class="rec" style="color:var(--gold)">🎯 ${MISSION[k].desc}<br>Progresso: ${MISSION[k].fmt?MISSION[k].fmt(MISSION[k].prog()):fmtN(MISSION[k].prog())} / ${MISSION[k].fmt?MISSION[k].fmt(MISSION[k].goal):fmtN(MISSION[k].goal)} ${MISSION[k].label}</div>`:'')+
     (locked
       ?(MISSION[k]?`<button class="btn" id="startbtn" type="button" disabled style="opacity:.6;cursor:default">🔒 CUMPRA A MISSÃO</button>`
@@ -1125,6 +1139,7 @@ const keys={},touchMove={x:0,y:0},moveVec={x:0,z:0};
 addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.altKey&&e.code==='KeyC'){e.preventDefault();toggleCheat();return} // combo secreto
   if(cheatOpen){if(e.code==='Escape'){e.preventDefault();toggleCheat()}return} // terminal aberto: jogo ignora teclas
+  if(mediaOpen){if(e.code==='Escape'||e.code==='KeyM')toggleMedia(false);e.preventDefault();return} // galeria de mídias aberta
   if(galleryOpen){e.preventDefault();if(e.code==='Escape'||e.code==='KeyG')toggleGallery();else if(e.code==='ArrowRight'||e.code==='ArrowDown')galleryStep(1);else if(e.code==='ArrowLeft'||e.code==='ArrowUp')galleryStep(-1);return}
   keys[e.code]=true;
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)&&state==='play')e.preventDefault();
@@ -1259,7 +1274,7 @@ function updEnemy(e,dt){
   switch(e.type){
     case'slime':case'slimeB':sp*=.6+.6*Math.abs(Math.sin(e.t*4));if(contact&&e.cd<=0){hurtPlayer(e.dmg,e,true);e.cd=.9}break;
     case'bat':{const w=Math.sin(e.t*5)*.8;mx=ux-uz*w;mz=uz+ux*w;if(contact&&e.cd<=0){hurtPlayer(e.dmg,e,true);e.cd=.75}break}
-    case'zombie':if(contact&&e.cd<=0){hurtPlayer(e.dmg,e,true);e.cd=.9}break;
+    case'zombie':{const c={d,ux,uz,mx,mz,contact,rnd:Math.random,rand,spawnProj,hurtPlayer};ENEMY_DEFS.zombie.ai(e,dt,c);mx=c.mx;mz=c.mz;break}
     case'skel':{const c={d,ux,uz,mx,mz,contact,rnd:Math.random,rand,spawnProj,hurtPlayer};ENEMY_DEFS.skel.ai(e,dt,c);mx=c.mx;mz=c.mz;break}
     case'brute':if(e.wind>0){e.wind-=dt;mx=mz=0;e.faceT=Math.atan2(e.tx-e.x,e.tz-e.z);if(e.wind<=0){if(Math.hypot(player.x-e.tx,player.z-e.tz)<1.9*e.sc/1.45+player.r&&player.y<.8)hurtPlayer(e.dmg,e,true);ringFX(e.tx,e.tz,1.9,0xffb08a,.3);burst(e.tx,.1,e.tz,0x8b7a66,10,{speed:4});addShake(.12)}}
       else if(d<2.1&&e.cd<=0){e.wind=.8;e.cd=2.4;e.tx=e.x+ux;e.tz=e.z+uz;telegraph(e.tx,e.tz,1.9,.8)}break;
@@ -1467,7 +1482,7 @@ function renderBest(){const b=store.get('cv_bestT',{});let k=null;for(const c of
 function renderRecs(){const b=store.get('cv_bestT',{}),st=metaStat(),w=$('#recs-list');w.innerHTML='';
   const rows=ORDER.map(c=>({c,t:b[c]||0})).sort((x,y)=>y.t-x.t);
   rows.forEach((r,i)=>{const d=document.createElement('div');d.className='lbrow'+(r.t?'':' empty');
-    d.innerHTML=`<span class="rk">#${i+1}</span><span class="cic">${CLSICON[r.c]}</span><span class="nm" style="color:${CLASSES[r.c].ui}">${CLASSES[r.c].nome}</span><span class="tm">${r.t?fmtT(r.t):'--:--'}</span>`;w.appendChild(d)});
+    d.innerHTML=`<span class="rk">#${i+1}</span><span class="cic">${clsImg(r.c)}</span><span class="nm" style="color:${CLASSES[r.c].ui}">${CLASSES[r.c].nome}</span><span class="tm">${r.t?fmtT(r.t):'--:--'}</span>`;w.appendChild(d)});
   $('#recs-sum').textContent=`${st.runs} partidas · ${st.kills} abates no total · ${st.bosses} golens derrotados`;}
 function updateCoins(){$('#coins-n').textContent=coins();$('#coins').hidden=!['title','menu','shop','ach','recs','play','pause','upgrade','dying'].includes(state);
   if(!store.get('cv_unlocked',{}).king&&coins()>=MISSION.king.goal){doUnlock('king');toast('👑 '+CLASSES.king.nome+' liberado!','Missão cumprida: '+fmtN(MISSION.king.goal)+' de ouro acumulado')}}
@@ -1519,6 +1534,7 @@ function toggleCheat(){
 const CHEAT_HELP=[
   'help · lista os comandos',
   'galeria · abre a sala de testes (ver todos os modelos em 360°)',
+  'arte · abre a galeria de imagens (rostos, skins) e emoticons',
   'god · liga/desliga invencibilidade',
   'heal · cura total',
   'hp N · define vida máxima',
@@ -1547,6 +1563,13 @@ function buildGalleryItems(){const items=[];
   ORDER.forEach(k=>items.push({name:CLASSES[k].nome+' · '+CLSTIPO[k],make:()=>buildHero(k).root}));
   const EN={slime:'Slime',slimeB:'Slime Azul',bat:'Morcego',zombie:'Zumbi',skel:'Esqueleto',brute:'Brutamontes',ogre:'Ogro'};
   for(const t in ENEMIES)items.push({name:(EN[t]||t)+' · inimigo',make:()=>buildEnemyDisplay(t)});
+  // minions dos heróis (modelo solo + combo com o dono)
+  items.push({name:'Esqueleto Necromante · minion do Necronus',make:()=>buildMinionMesh().g});
+  items.push({name:'Soldado Real · minion do Midas',make:()=>buildMinionMesh(true).g});
+  items.push({name:'Necronus + Horda de Esqueletos · combo',make:()=>{const g=new THREE.Group();g.add(buildHero('necro').root);
+    for(let i=0;i<3;i++){const a=Math.PI*.6+i*Math.PI*.4;const m=buildMinionMesh(false).g;m.position.set(Math.sin(a)*1.35,0,Math.cos(a)*1.35);m.rotation.y=a+Math.PI;g.add(m)}return g}});
+  items.push({name:'Midas + Guarda Real · combo',make:()=>{const g=new THREE.Group();g.add(buildHero('king').root);
+    for(let i=0;i<4;i++){const a=Math.PI*.5+i*Math.PI*.5;const m=buildMinionMesh(true).g;m.position.set(Math.sin(a)*1.45,0,Math.cos(a)*1.45);m.rotation.y=a+Math.PI;g.add(m)}return g}});
   items.push({name:'Golem do Campo · chefe',make:()=>buildGolem().root});
   items.push({name:'Ogro Brutamontes · chefe',make:()=>buildOgre().root});
   const TR=['Carvalho','Pinheiro','Arbusto','Árvore de Outono','Bétula','Árvore Morta'];
@@ -1616,6 +1639,57 @@ function toggleGallery(){ensureGalScene();if(!galleryItems)galleryItems=buildGal
 function updateGallery(dt){if(galSpin)galYaw+=dt*.5;if(galGroup)galGroup.rotation.y=galYaw;
   camera.position.set(0,galH,galDist);camera.lookAt(0,galTY,0);
   const fov=camera.aspect<1?58:46;if(camera.fov!==fov){camera.fov=fov;camera.updateProjectionMatrix()}}
+/* ================= galeria de mídias & emoticons (terminal: arte) ================= */
+let mediaOpen=false,mediaUI=null;
+const MEDIA_SKINS=[
+ ['assets/images/characters/archer.png','Arqueiro · Oliver'],
+ ['assets/images/characters/chronomancer.png','Chronomante · Vespera'],
+ ['assets/images/characters/demon.png','Demônio · Castiel'],
+ ['assets/images/characters/dracula.png','Vampiro · Vlad'],
+ ['assets/images/characters/king.png','Rei · Midas'],
+ ['assets/images/characters/necrmancer.png','Necromante · Necronus'],
+ ['assets/images/characters/warrior.png','Guerreiro · Darian'],
+ ['assets/images/enemies/skeleton.png','Esqueleto (inimigo)'],
+ ['assets/images/enemies/zombie.png','Zumbi (inimigo)'],
+ ['assets/images/title.png','Logo do título'],
+];
+function buildMediaUI(){
+ mediaUI=document.createElement('div');
+ mediaUI.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(8,6,14,.97);display:none;overflow-y:auto;color:#efe6d6;font-family:var(--body,monospace)';
+ const head=document.createElement('div');
+ head.style.cssText='position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 20px;background:rgba(12,10,18,.97);border-bottom:2px solid var(--arcane,#62b8ff)';
+ const t=document.createElement('span');t.style.cssText='font-family:var(--display,monospace);color:var(--arcane,#62b8ff);font-size:14px;letter-spacing:.06em';t.textContent='▚ GALERIA DE MÍDIAS & EMOTICONS';
+ const close=document.createElement('button');close.type='button';close.textContent='✕ fechar (ESC)';close.style.cssText='background:var(--stone,#191521);color:#efe6d6;border:2px solid var(--edge,#3b3249);box-shadow:3px 3px 0 #000;padding:8px 14px;font-family:var(--display,monospace);cursor:pointer';close.onclick=()=>toggleMedia(false);
+ head.append(t,close);mediaUI.append(head);
+ const sec=ttl=>{const s=document.createElement('h3');s.style.cssText='margin:26px 20px 10px;font-family:var(--display,monospace);font-size:13px;letter-spacing:.08em;color:var(--gold,#f2b84b)';s.textContent=ttl;mediaUI.append(s)};
+ const grid=mn=>{const g=document.createElement('div');g.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax('+mn+'px,1fr));gap:12px;padding:0 20px';mediaUI.append(g);return g};
+ const cell=(...items)=>{const c=document.createElement('div');c.style.cssText='background:rgba(255,255,255,.04);border:1px solid var(--edge,#3b3249);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:12px;text-align:center';items.forEach(i=>c.append(i));return c};
+ const checker='repeating-conic-gradient(#191521 0% 25%,#100d18 0% 50%) 0 0/16px 16px';
+ sec('ROSTOS DAS CLASSES · pixel art 16×16 (assets/images/icons/ · node _genicons.js)');
+ const g1=grid(120);
+ ORDER.forEach(k=>{const C=CLASSES[k];
+  const box=document.createElement('div');box.style.cssText='width:96px;height:96px;display:flex;align-items:center;justify-content:center;background:'+checker+';border:2px solid '+C.ui;
+  const im=new Image();im.src=CLSICON[k];im.width=88;im.height=88;im.style.imageRendering='pixelated';box.append(im);
+  const nm=document.createElement('div');nm.style.cssText='font-family:var(--display,monospace);font-size:12px;color:'+C.ui;nm.textContent=C.nome;
+  const rl=document.createElement('div');rl.style.cssText='font-size:11px;color:#a99db8';rl.textContent=CLSTIPO[k];
+  g1.append(cell(box,nm,rl))});
+ sec('SKINS DE REFERÊNCIA · PNGs base dos models (assets/images/)');
+ const g2=grid(170);
+ MEDIA_SKINS.forEach(f=>{const im=new Image();im.src=f[0];im.style.cssText='max-width:150px;max-height:150px;image-rendering:pixelated;background:'+checker+';padding:6px';
+  const nm=document.createElement('div');nm.style.cssText='font-size:11px;color:#cfc4da;line-height:1.35';nm.textContent=f[1];
+  g2.append(cell(im,nm))});
+ sec('EMOTICONS DO JOGO · ícones de poderes e melhorias (mapa ICONS)');
+ const g3=grid(130);
+ Object.entries(ICONS).forEach(([n,e])=>{const em=document.createElement('div');em.textContent=e;em.style.fontSize='34px';em.title=n;
+  const nm=document.createElement('div');nm.style.cssText='font-size:11px;color:#cfc4da;line-height:1.3';nm.textContent=n;
+  g3.append(cell(em,nm))});
+ sec('EMOTICONS DE INTERFACE');
+ const g4=grid(130);
+ [['🪙','ouro / recompensas'],['🔒','classe bloqueada'],['🔓','desbloquear'],['🎯','missão de desbloqueio'],['💀','abates (HUD)'],['⭐','nível / recorde'],['👹','Golem do Campo'],['⚔️','melee / título']].forEach(p=>{const em=document.createElement('div');em.textContent=p[0];em.style.fontSize='34px';const nm=document.createElement('div');nm.style.cssText='font-size:11px;color:#cfc4da;line-height:1.3';nm.textContent=p[1];g4.append(cell(em,nm))});
+ mediaUI.style.paddingBottom='60px';
+ document.body.appendChild(mediaUI)}
+function toggleMedia(force){if(!mediaUI)buildMediaUI();mediaOpen=force!==undefined?force:!mediaOpen;mediaUI.style.display=mediaOpen?'block':'none';if(mediaOpen&&cheatOpen)toggleCheat()}
+
 function runCheat(line){
   clog('› '+line,'#8fb7ff');
   const parts=line.trim().split(/\s+/),cmd=parts[0].toLowerCase(),a1=parts[1],num=parseFloat(a1);
@@ -1637,6 +1711,7 @@ function runCheat(line){
     case'time':if(!playing())break;if(isNaN(num)){clog('uso: time SEG','#f2b84b');break}runTime=num;clog('cronômetro = '+fmtT(num),'#7fe0a8');break;
     case'unlock':{if(a1==='all'||!a1){ORDER.forEach(doUnlock);clog('todas as classes liberadas 🔓','#7fe0a8')}else if(CLASSES[a1]){doUnlock(a1);clog(CLASSES[a1].nome+' liberado 🔓','#7fe0a8')}else clog('classe: '+ORDER.join(', '),'#f2b84b');if(state==='menu')renderCards()}break;
     case'galeria':case'gallery':case'dev':toggleGallery();clog('🏛️ sala de testes '+(galleryOpen?'aberta — ← → troca, arraste gira, ESC fecha':'fechada'),'#7fe0a8');break;
+case'arte':case'midia':case'midias':case'media':case'imagens':case'emojis':toggleMedia();clog('🖼️ galeria de mídias '+(mediaOpen?'aberta — ESC fecha':'fechada'),'#7fe0a8');break;
     case'clear':cheatLog.innerHTML='';break;
     default:clog('comando desconhecido: '+cmd+' (digite "help")','#e5473c');
   }

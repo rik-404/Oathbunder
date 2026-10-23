@@ -55,9 +55,9 @@ global.THREE=THREE;
 
 // ---------- carrega o jogo exposto via __G ----------
 // weapons.js e upgrades.js juntos com o game.js (no navegador são <script>s antes do game.js)
-let src=fs.readFileSync('assets/js/weapons.js','utf8')+'\n'+fs.readFileSync('assets/js/upgrades.js','utf8')+'\n'+fs.readFileSync('assets/js/enimies/skel.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
+let src=fs.readFileSync('assets/js/weapons.js','utf8')+'\n'+fs.readFileSync('assets/js/upgrades.js','utf8')+'\n'+fs.readFileSync('assets/js/enimies/skeleton.js','utf8')+'\n'+fs.readFileSync('assets/js/enimies/zombie.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
 const i=src.lastIndexOf('})();');
-const hook=`window.__G={newRun,update,openUpgrade,chooseUpgrade,damageEnemy,gainXP,hurtPlayer,dash,jump,useAbility,spawnBoss,spawnEnemy,killEnemy,S,setMuted,player,keys,setScreen,getBoss:()=>boss,getUps:()=>($('#ups')&&$('#ups')._choice)||null,hs:()=>hitStopT,getState:()=>state,enemies:()=>enemies,projs:()=>projs,mapInfo:()=>({W,H,grid,landPos,chestN:chests.length}),jv:(x,z)=>jv(x,z),relief:(x,z)=>relief(x,z),hills:()=>HILLS.length,runCheat,toggleMap,skelDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.skel)};\n})();`;
+const hook=`window.__G={newRun,update,openUpgrade,chooseUpgrade,damageEnemy,gainXP,hurtPlayer,dash,jump,useAbility,spawnBoss,spawnEnemy,killEnemy,S,setMuted,player,keys,setScreen,getBoss:()=>boss,getUps:()=>($('#ups')&&$('#ups')._choice)||null,hs:()=>hitStopT,getState:()=>state,enemies:()=>enemies,projs:()=>projs,mapInfo:()=>({W,H,grid,landPos,chestN:chests.length}),jv:(x,z)=>jv(x,z),relief:(x,z)=>relief(x,z),hills:()=>HILLS.length,runCheat,toggleMap,skelDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.skel),zombieDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.zombie)};\n})();`;
 src=src.slice(0,i)+hook;
 try{eval(src)}catch(e){console.log('ERRO AO CARREGAR:',e.stack);process.exit(1)}
 const G=global.__G;
@@ -66,7 +66,8 @@ const frames=n=>{for(let k=0;k<n;k++){const cb=rafCb;rafCb=null;fakeT+=16.7;cb&&
 try{
 console.log('[1] carregamento / menu');
 ok(G.getState()==='title','estado inicial é título');
-ok(G.skelDef(),'esqueleto registrado via assets/js/enimies/skel.js');
+ok(G.skelDef(),'esqueleto registrado via assets/js/enimies/skeleton.js');
+ok(G.zombieDef(),'zumbi registrado via assets/js/enimies/zombie.js');
 frames(3);
 console.log('[2] nova corrida (guerreiro)');
 G.runCheat('unlock all'); // localStorage vazio: libera todas as classes
@@ -193,6 +194,17 @@ if(king){
   ok(minis.length>=8,'ao morrer solta um bando de slimes menores ('+minis.length+' escaparam)');
   ok(minis.length>0&&minis.every(m=>m.sc<1&&m.r<.3),'slimes pequenos de verdade (sc='+(minis[0]?minis[0].sc.toFixed(2):'?')+', r='+(minis[0]?minis[0].r.toFixed(2):'?')+')');
 }
+console.log('[14] esqueleto (definido em assets/js/enimies/skeleton.js)');
+G.newRun('guerreiro');
+G.spawnEnemy('skel',G.player.x+5,G.player.z);
+const sk=G.enemies().find(e=>e.type==='skel');
+ok(!!sk,'esqueleto spawna');
+if(sk){sk.maxHp=sk.hp=1e6; // invulnerável durante o teste: queremos ver a IA, não a morte
+  let sawBone=false;
+  for(let k=0;k<240;k++){
+    if(G.getState()==='upgrade'){const ch=G.getUps();if(ch&&ch.length===3)G.chooseUpgrade(ch[0])}else G.update(1/60);
+    if(G.projs().some(p=>p.kind==='bone'))sawBone=true}
+  ok(sawBone,'IA do arquivo separado rodou e jogou osso')}
 }catch(e){console.log('ERRO NO TESTE:',e.stack);fails.push('exceção: '+e.message)}
 console.log(fails.length?('\n'+fails.length+' FALHA(S)'):'\nSMOKE_OK — tudo passou');
 process.exit(fails.length?1:0);

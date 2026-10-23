@@ -329,3 +329,5 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
   /* jogo em si: barra do boss sobe pra não cobrir os botões de toque */
   #bossbar{bottom:calc(120px + env(safe-area-inset-bottom,0px));width:min(420px,58vw)}
 }
+/* ícone de classe: pixel art 16×16 (assets/images/icons/) — o tamanho segue o font-size do elemento pai */
+.cimg{width:1em;height:1em;image-rendering:pixelated;vertical-align:-.12em;flex:none}
