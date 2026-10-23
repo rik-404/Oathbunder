@@ -1599,11 +1599,12 @@ if(moonA>.001){scene.background.lerp(MOON_RED,moonA*.85);scene.fog.color.copy(sc
     updFireFx(dt); // fogueiras do campo com a mesma animação da do título
     const tall=camera.aspect<1?1.15:1;shake=Math.max(0,shake-dt*1.6);const sx=(Math.random()-.5)*shake,sz=(Math.random()-.5)*shake;
     const foll=Math.min(1,dt*8);camFx+=(player.x-camFx)*foll;camFz+=(player.z-camFz)*foll;
-    const bx=-Math.sin(camYaw),bz=-Math.cos(camYaw),MAXD=camZoom*tall,cp=Math.cos(camPitch),sp=Math.sin(camPitch),base=1.3+player.y*.5;let D=MAXD;
+    const bx=-Math.sin(camYaw),bz=-Math.cos(camYaw),MAXD=camZoom*tall,cp=Math.cos(camPitch),sp=Math.sin(camPitch),groundY=relief(camFx,camFz),base=groundY+1.3+player.y*.5;let D=MAXD;
     for(let s=.4;s<=MAXD;s+=.1){const qx=camFx+bx*s*cp,qz=camFz+bz*s*cp,qy=base+s*sp;if(wallH(qx,qz)>qy||relief(qx,qz)>qy-.25){D=Math.max(.7,s-.35);break}}
     camDist=D<camDist?D:lerp(camDist,D,Math.min(1,dt*3));
-    const cx0=camFx+bx*camDist*cp,cz0=camFz+bz*camDist*cp;const cy=Math.max(.35,base+camDist*sp,relief(cx0,cz0)+.9);
-    camera.position.set(cx0+sx,cy+sz*.4,cz0+sz);camera.lookAt(camFx-bx*2.4,.95+player.y*.4+(.32-camPitch)*2.2,camFz-bz*2.4);
+    const cx0=camFx+bx*camDist*cp,cz0=camFz+bz*camDist*cp,camFloor=relief(cx0,cz0);const cy=Math.max(groundY+.9,base+camDist*sp,camFloor+.9);
+    const lookX=camFx-bx*2.4,lookZ=camFz-bz*2.4,lookFloor=relief(lookX,lookZ),lookY=lookFloor+Math.max(.55,.95+player.y*.4+(.32-camPitch)*2.2);
+    camera.position.set(cx0+sx,cy+sz*.4,cz0+sz);camera.lookAt(lookX,lookY,lookZ);
     const fx=player.x-bx*8,fz=player.z-bz*8;sun.position.set(fx+13,9,fz+8); // sol baixo de entardecer: sombras longas e quentessun.target.position.set(fx,0,fz);
     heroLight.position.set(player.x,1.8+player.y,player.z);
     if(state==='play'){hud();miniT-=dt;if(miniT<=0){miniT=.1;drawMini()}}
@@ -1758,16 +1759,37 @@ function makeTotem(){const g=new THREE.Group();
   g.add(m);
   const off=new THREE.Group();off.name='off';off.visible=false;vox(off,0,1.5,0,.3,.22,.3,0x6b665e);g.add(off);
   return {g,m,off}}
-// baú detalhado (madeira + ferro + bandas douradas + ferrolho). Retorna {g, lid} pro lid animar ao abrir.
-function makeChest(){const g=new THREE.Group();
-  vox(g,0,.22,0,.72,.44,.5,0x7a4e24);                                       // corpo de madeira
-  vox(g,0,.34,0,.76,.05,.54,0xd9a43a);vox(g,0,.1,0,.76,.05,.54,0xc8902e);    // bandas (cima/baixo)
-  vox(g,-.33,.22,.23,.07,.46,.06,0x3a2a1a);vox(g,.33,.22,.23,.07,.46,.06,0x3a2a1a); // cantoneiras de ferro na frente
-  vox(g,0,.25,.255,.16,.18,.03,0xd9a43a);vox(g,0,.23,.272,.05,.07,.02,0x2a1a0a);    // fechadura + buraco da chave
-  const lid=new THREE.Group();lid.position.set(0,.44,-.25);g.add(lid);                // dobradiça atrás-em-cima
-  vox(lid,0,.08,.25,.72,.15,.5,0x7a4e24);vox(lid,0,.17,.25,.7,.08,.32,0x875528);      // tampa + lombada arqueada
-  vox(lid,-.24,.11,.25,.06,.2,.54,0xd9a43a);vox(lid,.24,.11,.25,.06,.2,.54,0xd9a43a); // bandas douradas
-  vox(lid,0,-.02,.53,.14,.15,.04,0xe8c558);vox(lid,0,-.04,.552,.05,.07,.02,0x2a1a0a); // ferrolho
+// Geometria reutilizada: baús detalhados sem multiplicar draw calls por peça.
+let chestBodyGeo=null,chestLidGeo=null;
+function makeChest(){
+  if(!chestBodyGeo){
+    chestBodyGeo=mergeBoxes([
+      [0,.045,0,.82,.09,.60,0x3b291b],                 // base escura reforçada
+      [0,.26,0,.76,.40,.54,0x684222],                  // corpo de carvalho
+      [0,.13,0,.82,.055,.60,0x39434b],[0,.39,0,.82,.055,.60,0x39434b], // cintas de ferro
+      [-.21,.255,.282,.19,.20,.025,0x94612f],[0,.255,.282,.19,.20,.025,0xaa7137],[.21,.255,.282,.19,.20,.025,0x855329], // tábuas frontais
+      [-.39,.255,0,.025,.20,.44,0x8e5b2d],[.39,.255,0,.025,.20,.44,0x80502a], // laterais em madeira clara
+      [-.335,.26,.307,.075,.38,.035,0x303a45],[.335,.26,.307,.075,.38,.035,0x303a45], // cantoneiras
+      [-.335,.13,.33,.035,.035,.018,0xe8bd58],[.335,.13,.33,.035,.035,.018,0xe8bd58],[-.335,.39,.33,.035,.035,.018,0xe8bd58],[.335,.39,.33,.035,.035,.018,0xe8bd58], // rebites
+      [0,.25,.319,.20,.26,.04,0xd7a642],             // placa da fechadura
+      [0,.215,.345,.035,.09,.018,0x281c17]            // buraco da chave
+    ]);
+    chestLidGeo=mergeBoxes([
+      [0,.075,.27,.78,.15,.58,0x76502a],              // tampa em degraus voxel
+      [0,.16,.27,.66,.075,.42,0x906132],[0,.208,.27,.46,.035,.26,0xa16c38], // topo escalonado
+      [-.25,.11,.27,.055,.21,.60,0xb88737],[.25,.11,.27,.055,.21,.60,0xb88737], // faixas de latão
+      [0,.035,.575,.78,.045,.025,0x39434b],           // borda frontal metálica
+      [0,.005,.595,.17,.12,.035,0xe4b94e],            // lingueta do fecho
+      [-.25,.035,.605,.035,.035,.018,0xf3d475],[.25,.035,.605,.035,.035,.018,0xf3d475], // rebites do fecho
+      [0,.244,.27,.22,.035,.15,0xe0b64d]              // brasão no topo
+    ]);
+  }
+  const g=new THREE.Group(),body=new THREE.Mesh(chestBodyGeo,vcMat);
+  body.castShadow=true;body.receiveShadow=true;g.add(body);
+  vox(g,0,.315,.347,.07,.055,.025,0x4be0c7,.55);      // joia frontal luminosa
+  const lid=new THREE.Group();lid.position.set(0,.44,-.27);g.add(lid);
+  const lidMesh=new THREE.Mesh(chestLidGeo,vcMat);lidMesh.castShadow=true;lidMesh.receiveShadow=true;lid.add(lidMesh);
+  vox(lid,0,.274,.27,.085,.035,.08,0x4be0c7,.55);     // gema no brasão da tampa
   return{g,lid}}
 function buildChestDisplay(){const{g,lid}=makeChest();lid.rotation.x=-1.2;return g}
 function ensureGalScene(){if(galScene)return;
