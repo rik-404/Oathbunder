@@ -5,4 +5,11 @@ const WEAPONS={
   orbit:{nome:'Orbes Giratórios',desc:l=>`${Math.min(6,1+l)} orbes giram em volta de você, ${9+5*l} de dano por toque.`},
   bolt:{nome:'Raio Celeste',desc:l=>`Raio cai num inimigo a cada ${Math.max(.55,2.2-.32*l).toFixed(1).replace('.',',')} s, ${28+12*l} de dano${l>=3?', 2 alvos':''}.`},
   aura:{nome:'Aura de Brasa',desc:l=>`Queima tudo num raio de ${(1.7+.3*l).toFixed(1).replace('.',',')} m, ${5+4*l} de dano a cada 0,5 s.`},
+  shot:{nome:'Canhão de Estilhaços',desc:l=>`A cada ${(1.5-.15*l).toFixed(1).replace('.',',')} s, atira ${l+2} estilhaços em leque no mais perto (${4+3*l} de dano cada).`},
+  exec:{nome:'Machado Carniceiro',desc:l=>`Inimigos feridos (abaixo de 25% de vida) sofrem +${l*35}% de dano${l>=3?' · abaixo de 8%, morrem na hora':''}.`},
+  frost:{nome:'Poço Glacial',desc:l=>`A cada 6 s congela o bando mais denso perto de você: lentidão pesada e ${9+5*l} de dano a cada meio segundo por ${1.8+.4*l}s${l>=4?' · 2 poços':''}.`},
+  pact:{nome:'Pacto de Sangue',desc:l=>`Seus abates explodem em sangue: ${6+5*l} de dano num raio de ${(1.2+.3*l).toFixed(1).replace('.',',')} m ao redor da vítima.`},
+  time:{nome:'Bolsão do Tempo',desc:l=>`A cada ${36-3*l} s, tudo num raio de 9 m fica 40% lento por 4 s.`},
+  gold:{nome:'Ouro Real',desc:l=>`Abates têm ${l*10}% de chance de render na hora 🪙 ${1+Math.floor(l/2)}.`},
+  golem:{nome:'Golem Vigia',desc:l=>`Ergue uma torreta de pedra que atira no mais perto a cada ${(0.9-.1*l).toFixed(1).replace('.',',')} s (${14+8*l} de dano), dura ${12+4*l} s e se reconstrói depois.`},
 };

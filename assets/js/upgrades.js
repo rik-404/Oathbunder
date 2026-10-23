@@ -17,7 +17,7 @@ const STAT_UPS=[
   {id:'xp',nome:'Sabedoria',desc:'+15% de experiência ganha.',ok:p=>pode(p,'Sabedoria',8),apply:p=>p.stats.xpMul*=1.15},
   {id:'area',nome:'Alcance Maior',desc:'+18% de área em golpes, explosões e auras.',ok:p=>pode(p,'Alcance Maior',8),apply:p=>p.stats.area*=1.18},
   {id:'cdr',nome:'Foco',desc:'Habilidade recarrega 15% mais rápido.',ok:p=>pode(p,'Foco',6),apply:p=>p.stats.cdr*=.85},
-  {id:'cdmg',nome:'Punho Fatal',desc:'Críticos causam +50% mais dano.',ok:p=>pode(p,'Punho Fatal',4),apply:p=>p.stats.critDmg*=1.5},
+  {id:'cdmg',nome:'Punho Fatal',desc:'Críticos causam +50% mais dano.',ok:p=>pode(p,'Punho Fatal',4),apply:p=>p.stats.critDmg=Math.min(4,p.stats.critDmg+.5)},
   {id:'pspd',nome:'Velocidade de Tiro',desc:'+15% de velocidade nos projéteis.',ok:p=>pode(p,'Velocidade de Tiro',5),apply:p=>p.stats.pspd*=1.15},
   {id:'kb',nome:'Empurrão',desc:'+30% de recuo em golpes e tiros.',ok:p=>pode(p,'Empurrão',6),apply:p=>p.stats.kb*=1.3},
   {id:'dc',nome:'Reflexo Relâmpago',desc:'A esquiva recarrega 15% mais rápido.',ok:p=>pode(p,'Reflexo Relâmpago',6),apply:p=>p.stats.dashCd*=.85},
