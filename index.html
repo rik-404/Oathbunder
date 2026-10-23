@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Chakra+Petch:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=79">
+<link rel="stylesheet" href="style.css?v=80">
 </head>
 <body>
 <div id="game"></div>
@@ -89,7 +89,7 @@
 <section id="recs" class="screen panel-screen" hidden>
   <div class="panel">
     <h2>Recordes</h2>
-    <p class="sub">Os 3 recordes da arena: maior tempo vivo, mais abates e maior nível — ranqueados por classe.</p>
+    <p class="sub">O recorde mundial da comunidade no topo · seus 3 recordes da arena ranqueados por classe.</p>
     <div class="recs3" id="recs-list"></div>
     <p class="sub" id="recs-sum"></p>
     <button class="btn" id="recs-back" type="button">Voltar</button>
@@ -187,6 +187,26 @@
 <script src="assets/js/enimies/zombie.js?v=3"></script>
 <script src="assets/js/weapons.js?v=1"></script>
 <script src="assets/js/upgrades.js?v=2"></script>
-<script src="game.js?v=95"></script>
+<script src="game.js?v=96"></script>
+<script>
+// Service worker: autoatualização dos clientes (só funciona em http/https; em file:// fica inativo)
+(function(){
+  if(!('serviceWorker' in navigator)||!/^https?:$/.test(location.protocol))return;
+  const had=navigator.serviceWorker.controller; // null no primeiro acesso → não avisar
+  let told=false;
+  const say=()=>{if(told)return;told=true;
+    const d=document.createElement('div');
+    d.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:10000;display:flex;gap:10px;align-items:center;background:#141019;border:2px solid #f2b84b;box-shadow:4px 4px 0 rgba(0,0,0,.6);padding:10px 14px;font-family:var(--display,monospace);color:#efe6d6;font-size:13px';
+    const s=document.createElement('span');s.textContent='⬆ Nova versão disponível — recarregue para atualizar';d.appendChild(s);
+    const b=document.createElement('button');b.type='button';b.textContent='Recarregar';
+    b.style.cssText='background:#f2b84b;border:0;padding:6px 12px;font-family:var(--display,monospace);font-weight:bold;cursor:pointer';
+    b.onclick=()=>location.reload();d.appendChild(b);
+    document.body.appendChild(d)};
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had)say()});
+    setInterval(()=>{reg.update().catch(()=>{})},36e5); // confere a cada hora (partidas longas)
+  }).catch(()=>{});
+})();
+</script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 // - Abas já abertas recebem aviso "Nova versão disponível" (banner no canto).
 // - index.html sempre sai da rede (network-first) → quem recarrega pega o novo.
 // - Assets (js/css/png/mp3) ficam em cache-first; como a URL muda com ?v=, o cache se invalida sozinho.
-const VERSAO='cvsw-v1';
+const VERSAO='cvsw-v2';
 const self_=self;
 
 self_.addEventListener('install',e=>{
@@ -25,9 +25,10 @@ self_.addEventListener('fetch',e=>{
   if(r.mode==='navigate'){
     // index.html / navegação: rede primeiro (sempre o mais novo), cache só quando offline
     e.respondWith(fetch(r).then(res=>{
-      const cp=res.clone();caches.open(VERSAO).then(c=>c.put(r,cp)).catch(()=>{});
+      const cp=res.clone();
+      caches.open(VERSAO).then(async c=>{await c.put(r,cp);try{await c.put(new URL('index.html',r.url).href,cp)}catch(_){}}).catch(()=>{});
       return res;
-    }).catch(()=>caches.match(r).then(m=>m||caches.match('index.html'))));
+    }).catch(()=>caches.match(r).then(m=>m||caches.match(new URL('index.html',self_.location.origin)))));
     return;
   }
   // assets locais versionados por URL: cache primeiro, grava na rede de fundo

@@ -1425,6 +1425,12 @@ function toggleMap(){
   mapOpen=!mapOpen;mapScreen.style.display=mapOpen?'flex':'none';
   if(mapOpen){for(const k in keys)keys[k]=false;drawMap()}
 }
+// toque no mini-mapa → abre/fecha o mapa completo (no celular não existe a tecla M);
+// arrastar continua girando a câmera — só um toque curto e parado abre o mapa
+(()=>{const mm=$('#mini');if(!mm)return;let px=0,py=0,pt=0;
+mm.addEventListener('pointerdown',e=>{px=e.clientX;py=e.clientY;pt=performance.now()});
+mm.addEventListener('pointerup',e=>{if(Math.hypot(e.clientX-px,e.clientY-py)<16&&performance.now()-pt<500&&(state==='play'||mapOpen))toggleMap()});
+})();
 function hud(){
   $('#h-hp').style.width=(clamp(player.hp/player.maxHp,0,1)*100)+'%';$('#h-hpt').textContent=Math.max(0,Math.ceil(player.hp))+' / '+Math.round(player.maxHp);
   $('#xp-fill').style.width=(player.xp/player.xpNeed*100)+'%';$('#xp-lvl').textContent='NV '+player.lvl;$('#h-lvl').textContent='Nível '+player.lvl;
@@ -1487,7 +1493,17 @@ function frame(now){
   renderer.render(scene,camera);
 }
 function renderBest(){const b=store.get('cv_bestT',{});let k=null;for(const c of ORDER)if(b[c]&&(!k||b[c]>b[k]))k=c;$('#t-best').textContent=k?'★ MELHOR '+fmtT(b[k])+' · '+CLASSES[k].nome:''}
+// ============ RECORDES MUNDIAIS (placar da comunidade — os primeiros da história do Oathbound) ============
+// Para adicionar um novo: copie a linha e edite name/cls/time(seg)/kills/lvl/date
+const WORLD_RECS=[
+ {name:'C4.09',cls:'mago',time:1944,kills:10008,lvl:65,date:'23/10/26'}, // 1º recorde mundial: 32:24 · 10.008 abates · NV 65
+];
 function renderRecs(){const st=metaStat(),w=$('#recs-list');w.innerHTML='';
+  // recordes mundiais no topo de tudo
+  if(WORLD_RECS.length){const h0=document.createElement('div');h0.className='rec-cat-h';h0.textContent='🌍 RECORDE MUNDIAL';w.appendChild(h0);
+   WORLD_RECS.forEach(r=>{const d=document.createElement('div');d.className='wrec';
+    d.innerHTML=`<span class="rk">★</span><span class="cic">${clsImg(r.cls)}</span><span class="who">${r.name}</span><span class="nm" style="color:${CLASSES[r.cls]?CLASSES[r.cls].ui:''}">${CLASSES[r.cls]?CLASSES[r.cls].nome:r.cls}</span>`+
+     `<span class="tm">⏳ ${fmtT(r.time)}</span><span class="tm">💀 ${fmtN(r.kills)}</span><span class="tm">⭐ NV ${r.lvl}</span><span class="dt">${r.date}</span>`;w.appendChild(d)})}
   // os 3 recordes da arena, cada um ranqueado por classe (top 5 cada)
   const cats=[
     {ic:'⏳',t:'MAIOR TEMPO VIVO',key:'cv_bestT',fmt:v=>fmtT(v),zero:'--:--'},
