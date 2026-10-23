@@ -1,212 +1,259 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Oathbound</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Chakra+Petch:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=88">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Oathbound</title>
+  <meta name="claude:viewport-fit-sides" content="cover">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Chakra+Petch:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css?v=88">
 </head>
+
 <body>
-<div id="game"></div>
-<div id="hurt"></div>
-<div id="dmg"></div>
-<div id="toast"></div>
-<div id="lockhint" hidden>Clique na tela para olhar com o mouse</div>
+  <audio autoplay loop>
+    <source src="assets/sounds/flores-sond.mp3" type="audio/mpeg">
+    Seu navegador não suporta áudio HTML5.
+  </audio>
+  <div id="game"></div>
+  <div id="hurt"></div>
+  <div id="dmg"></div>
+  <div id="toast"></div>
+  <div id="lockhint" hidden>Clique na tela para olhar com o mouse</div>
 
-<div id="hud" hidden>
-  <div id="xpbar"><i id="xp-fill" style="width:0%"></i><span id="xp-lvl">NV 1</span></div>
-  <div class="hud-tl">
-    <div class="who"><span id="h-cls">Guerreiro</span><span id="h-lvl">Nível 1</span></div>
-    <div class="hpbar"><i id="h-hp" style="width:100%"></i><span id="h-hpt">0 / 0</span></div>
-    <div class="skills">
-      <div class="sk" id="sk-ab"><b>Q</b><span id="sk-ab-n">Habilidade</span><i></i></div>
-      <div class="sk" id="sk-dash"><b>Shift</b><span>Esquiva</span><i></i></div>
+  <div id="hud" hidden>
+    <div id="xpbar"><i id="xp-fill" style="width:0%"></i><span id="xp-lvl">NV 1</span></div>
+    <div class="hud-tl">
+      <div class="who"><span id="h-cls">Guerreiro</span><span id="h-lvl">Nível 1</span></div>
+      <div class="hpbar"><i id="h-hp" style="width:100%"></i><span id="h-hpt">0 / 0</span></div>
+      <div class="skills">
+        <div class="sk" id="sk-ab"><b>Q</b><span id="sk-ab-n">Habilidade</span><i></i></div>
+        <div class="sk" id="sk-dash"><b>Shift</b><span>Esquiva</span><i></i></div>
+      </div>
+      <div id="h-weap"></div>
     </div>
-    <div id="h-weap"></div>
+    <div class="hud-tc">
+      <div class="hud-top"><span class="tpill">💀 <b id="h-kills">0</b></span><b class="tclock"
+          id="h-time">00:00</b><span class="tpill">⭐ <b id="h-lvlc">1</b></span></div><span id="h-wave">Horda
+        0</span><span id="h-boss"></span>
+    </div>
+    <canvas id="mini" width="160" height="160"></canvas>
+    <button id="pausebtn" type="button" aria-label="Pausar">II PAUSA</button>
+    <div id="bossbar" hidden><span>GOLEM DO CAMPO</span>
+      <div><i id="boss-hp" style="width:100%"></i></div>
+    </div>
   </div>
-  <div class="hud-tc"><div class="hud-top"><span class="tpill">💀 <b id="h-kills">0</b></span><b class="tclock" id="h-time">00:00</b><span class="tpill">⭐ <b id="h-lvlc">1</b></span></div><span id="h-wave">Horda 0</span><span id="h-boss"></span></div>
-  <canvas id="mini" width="160" height="160"></canvas>
-  <button id="pausebtn" type="button" aria-label="Pausar">II PAUSA</button>
-  <div id="bossbar" hidden><span>GOLEM DO CAMPO</span><div><i id="boss-hp" style="width:100%"></i></div></div>
-</div>
 
-<div id="touch" hidden>
-  <div id="stick"><i></i></div>
-  <div class="tbtns">
-    <button id="t-ab" type="button">HAB</button>
-    <button id="t-jump" type="button">PULO</button>
-    <button id="t-dash" type="button">ESQ</button>
+  <div id="touch" hidden>
+    <div id="stick"><i></i></div>
+    <div class="tbtns">
+      <button id="t-ab" type="button">HAB</button>
+      <button id="t-jump" type="button">PULO</button>
+      <button id="t-dash" type="button">ESQ</button>
+    </div>
   </div>
-</div>
 
-<div id="coins" hidden><img class="cimg" src="assets/images/icons/upg/ouro.png?v=3" alt=""> <b id="coins-n">0</b></div>
-
-<section id="title" class="screen">
-  <div id="t-embers" aria-hidden="true"></div>
-  <div class="t-top">
-    <span class="eyebrow">⚔ Sobrevivência voxel</span>
-    <span class="t-meta" id="t-best"></span>
+  <div id="coins" hidden><img class="cimg" src="assets/images/icons/upg/ouro.png?v=3" alt=""> <b id="coins-n">0</b>
   </div>
-  <div class="t-core">
-    <h1 aria-label="Oathbound"><img class="tlogo" src="assets/images/title.png?v=1" alt=""></h1>
-    <p class="tag">Escolha um herói, aguente as hordas e veja até onde você chega antes do anoitecer.</p>
-    <div class="tmenu">
-      <div class="tframe"><button class="btn" id="t-play" type="button">Jogar</button></div>
-      <div class="tsplit">
-        <div class="tcol">
-          <button class="btn ghost" id="t-shop" type="button"><img class="cimg" src="assets/images/icons/upg/loja.png?v=3" alt=""> Loja</button>
-          <button class="btn ghost" id="t-ach" type="button"><img class="cimg" src="assets/images/icons/upg/trofeu.png?v=3" alt=""> Conquistas</button>
-        </div>
-        <div class="tcol">
-          <button class="btn ghost" id="t-recs" type="button"><img class="cimg" src="assets/images/icons/upg/grafico.png?v=3" alt=""> Recordes</button>
-          <button class="btn ghost" id="t-how" type="button"><img class="cimg" src="assets/images/icons/upg/ajuda.png?v=3" alt=""> Como jogar</button>
+
+  <section id="title" class="screen">
+    <div id="t-embers" aria-hidden="true"></div>
+    <div class="t-top">
+      <span class="eyebrow">⚔ Sobrevivência voxel</span>
+      <span class="t-meta" id="t-best"></span>
+    </div>
+    <div class="t-core">
+      <h1 aria-label="Oathbound"><img class="tlogo" src="assets/images/title.png?v=1" alt=""></h1>
+      <p class="tag">Escolha um herói, aguente as hordas e veja até onde você chega antes do anoitecer.</p>
+      <div class="tmenu">
+        <div class="tframe"><button class="btn" id="t-play" type="button">Jogar</button></div>
+        <div class="tsplit">
+          <div class="tcol">
+            <button class="btn ghost" id="t-shop" type="button"><img class="cimg"
+                src="assets/images/icons/upg/loja.png?v=3" alt=""> Loja</button>
+            <button class="btn ghost" id="t-ach" type="button"><img class="cimg"
+                src="assets/images/icons/upg/trofeu.png?v=3" alt=""> Conquistas</button>
+          </div>
+          <div class="tcol">
+            <button class="btn ghost" id="t-recs" type="button"><img class="cimg"
+                src="assets/images/icons/upg/grafico.png?v=3" alt=""> Recordes</button>
+            <button class="btn ghost" id="t-how" type="button"><img class="cimg"
+                src="assets/images/icons/upg/ajuda.png?v=3" alt=""> Como jogar</button>
+          </div>
         </div>
       </div>
+      <div class="tkey"><kbd>ENTER</kbd> jogar <span>·</span> <kbd>T</kbd> som</div>
     </div>
-    <div class="tkey"><kbd>ENTER</kbd> jogar <span>·</span> <kbd>T</kbd> som</div>
-  </div>
-  <div class="t-foot"><span>O campo espera</span><span>as hordas não esperam</span></div>
-</section>
+    <div class="t-foot"><span>O campo espera</span><span>as hordas não esperam</span></div>
+  </section>
 
-<section id="howto" class="screen panel-screen" hidden>
-  <div class="panel">
-    <h2>Como jogar</h2>
-    <div class="howto">
-      <div><h3>Mover</h3><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou as setas movem o herói pela tela</span><span>O <b>mouse</b> gira a câmera e o <b>scroll</b> aproxima ou afasta.</span><span>Clique na tela para prender o mouse. <kbd>ESC</kbd> solta e pausa.</span><span>No celular: <b>lado esquerdo</b> move · <b>lado direito</b> gira a câmera</span></div>
-      <div><h3>Lutar</h3><span>Os ataques saem sozinhos no inimigo mais perto.</span><span><kbd>Q</kbd> habilidade da classe · <kbd>ESPAÇO</kbd> pular · <kbd>SHIFT</kbd> esquiva</span><span><kbd>T</kbd> liga ou desliga o som dos efeitos.</span></div>
-      <div><h3>Evoluir</h3><span>Monstros deixam orbes verdes no chão. Passe perto para eles virem até você e suba de nível.</span><span>Baús dourados dão uma melhoria grátis. Aperte <kbd>M</kbd> para abrir o mapa e ver onde eles estão.</span></div>
-      <div><h3>Sobreviver</h3><span>A cada minuto vem uma horda maior. A cada 4 minutos chega o Golem.</span><span>Círculos vermelhos no chão avisam golpes fortes: saia deles ou pule.</span></div>
+  <section id="howto" class="screen panel-screen" hidden>
+    <div class="panel">
+      <h2>Como jogar</h2>
+      <div class="howto">
+        <div>
+          <h3>Mover</h3><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou as setas movem o herói pela
+            tela</span><span>O <b>mouse</b> gira a câmera e o <b>scroll</b> aproxima ou afasta.</span><span>Clique na
+            tela para prender o mouse. <kbd>ESC</kbd> solta e pausa.</span><span>No celular: <b>lado esquerdo</b> move ·
+            <b>lado direito</b> gira a câmera</span>
+        </div>
+        <div>
+          <h3>Lutar</h3><span>Os ataques saem sozinhos no inimigo mais perto.</span><span><kbd>Q</kbd> habilidade da
+            classe · <kbd>ESPAÇO</kbd> pular · <kbd>SHIFT</kbd> esquiva</span><span><kbd>T</kbd> liga ou desliga o som
+            dos efeitos.</span>
+        </div>
+        <div>
+          <h3>Evoluir</h3><span>Monstros deixam orbes verdes no chão. Passe perto para eles virem até você e suba de
+            nível.</span><span>Baús dourados dão uma melhoria grátis. Aperte <kbd>M</kbd> para abrir o mapa e ver onde
+            eles estão.</span>
+        </div>
+        <div>
+          <h3>Sobreviver</h3><span>A cada minuto vem uma horda maior. A cada 4 minutos chega o
+            Golem.</span><span>Círculos vermelhos no chão avisam golpes fortes: saia deles ou pule.</span>
+        </div>
+      </div>
+      <button class="btn" id="how-back" type="button">Voltar</button>
     </div>
-    <button class="btn" id="how-back" type="button">Voltar</button>
-  </div>
-</section>
+  </section>
 
-<section id="recs" class="screen panel-screen" hidden>
-  <div class="panel">
-    <h2>Recordes</h2>
-    <p class="sub">Ranking global por categoria (todo mundo vê) · sua melhor marca fica destacada embaixo.</p>
-    <div class="recs3" id="recs-list"></div>
-    <p class="sub" id="recs-sum"></p>
-    <button class="btn" id="recs-back" type="button">Voltar</button>
-  </div>
-</section>
-
-<section id="shop" class="screen panel-screen" hidden>
-  <div class="panel">
-    <h2>Loja</h2>
-    <p class="sub">Gaste o ouro que você ganha sobrevivendo. Em breve: skins e outros itens.</p>
-    <div class="shop" id="shop-list"></div>
-    <button class="btn" id="shop-back" type="button">Voltar</button>
-  </div>
-</section>
-
-<section id="ach" class="screen panel-screen" hidden>
-  <div class="panel">
-    <h2>🏆 Conquistas</h2>
-    <p class="sub">Complete objetivos e ganhe ouro automaticamente.</p>
-    <div class="achlist" id="ach-list"></div>
-    <button class="btn" id="ach-back" type="button">Voltar</button>
-  </div>
-</section>
-
-<section id="menu" class="screen" hidden>
-  <div class="selwrap">
-    <h2 class="seltitle">Escolha seu <span>Herói</span></h2>
-    <div class="selmain">
-      <div class="chargrid" id="classes"></div>
-      <div class="chardetail" id="chardetail"></div>
+  <section id="recs" class="screen panel-screen" hidden>
+    <div class="panel">
+      <h2>Recordes</h2>
+      <p class="sub">Ranking global por categoria (todo mundo vê) · sua melhor marca fica destacada embaixo.</p>
+      <div class="recs3" id="recs-list"></div>
+      <p class="sub" id="recs-sum"></p>
+      <button class="btn" id="recs-back" type="button">Voltar</button>
     </div>
-    <div class="selfoot">
-      <button class="btn ghost" id="backbtn" type="button">Voltar ao início</button>
-      <div class="ctrls"><span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> escolher</span><span><kbd>1</kbd>–<kbd>0</kbd> direto</span><span><kbd>ENTER</kbd> confirmar</span></div>
-    </div>
-  </div>
-</section>
+  </section>
 
-<section id="upgrade" class="screen panel-screen" hidden>
-  <div class="panel">
-    <h2 id="up-title">Nível 2</h2>
-    <p class="sub" id="up-sub">Escolha uma melhoria. Teclas 1, 2 e 3.</p>
-    <div class="ups" id="ups"></div>
-  </div>
-</section>
-
-<section id="pause" class="screen panel-screen" hidden>
-  <div class="panel">
-    <h2>Pausado</h2>
-    <div class="pbody">
-      <div class="pcol"><h3>Inventário</h3><div id="pause-inv"></div></div>
-      <div class="pcol"><h3>Atributos</h3><div class="statlist" id="pause-stats"></div></div>
-      <div class="pcol"><h3>Missões</h3><div id="pause-missions"></div></div>
+  <section id="shop" class="screen panel-screen" hidden>
+    <div class="panel">
+      <h2>Loja</h2>
+      <p class="sub">Gaste o ouro que você ganha sobrevivendo. Em breve: skins e outros itens.</p>
+      <div class="shop" id="shop-list"></div>
+      <button class="btn" id="shop-back" type="button">Voltar</button>
     </div>
-    <div class="row">
-      <button class="btn" id="resumebtn" type="button">Continuar</button>
-      <button class="btn ghost" id="quitbtn" type="button">Desistir</button>
-      <button class="btn ghost" id="sndbtn" type="button">🔊 Som</button>
-    </div>
-  </div>
-</section>
+  </section>
 
-<section id="dead" class="screen panel-screen" hidden>
-  <div class="panel">
-    <h2 id="dead-title" style="color:var(--blood)">Você caiu</h2>
-    <p class="sub" id="dead-sub"></p>
-    <div class="stats">
-      <div class="stat"><b id="d-time">0:00</b><span>Sobreviveu</span></div>
-      <div class="stat"><b id="d-lvl">1</b><span>Nível</span></div>
-      <div class="stat"><b id="d-kills">0</b><span>Abates</span></div>
+  <section id="ach" class="screen panel-screen" hidden>
+    <div class="panel">
+      <h2>🏆 Conquistas</h2>
+      <p class="sub">Complete objetivos e ganhe ouro automaticamente.</p>
+      <div class="achlist" id="ach-list"></div>
+      <button class="btn" id="ach-back" type="button">Voltar</button>
     </div>
-    <div class="chips" id="d-chips"></div>
-    <div class="row">
-      <button class="btn" id="againbtn" type="button">Tentar de novo</button>
-      <button class="btn ghost" id="menubtn" type="button">Trocar classe</button>
+  </section>
+
+  <section id="menu" class="screen" hidden>
+    <div class="selwrap">
+      <h2 class="seltitle">Escolha seu <span>Herói</span></h2>
+      <div class="selmain">
+        <div class="chargrid" id="classes"></div>
+        <div class="chardetail" id="chardetail"></div>
+      </div>
+      <div class="selfoot">
+        <button class="btn ghost" id="backbtn" type="button">Voltar ao início</button>
+        <div class="ctrls"><span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd>
+            escolher</span><span><kbd>1</kbd>–<kbd>0</kbd> direto</span><span><kbd>ENTER</kbd> confirmar</span></div>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
+
+  <section id="upgrade" class="screen panel-screen" hidden>
+    <div class="panel">
+      <h2 id="up-title">Nível 2</h2>
+      <p class="sub" id="up-sub">Escolha uma melhoria. Teclas 1, 2 e 3.</p>
+      <div class="ups" id="ups"></div>
+    </div>
+  </section>
+
+  <section id="pause" class="screen panel-screen" hidden>
+    <div class="panel">
+      <h2>Pausado</h2>
+      <div class="pbody">
+        <div class="pcol">
+          <h3>Inventário</h3>
+          <div id="pause-inv"></div>
+        </div>
+        <div class="pcol">
+          <h3>Atributos</h3>
+          <div class="statlist" id="pause-stats"></div>
+        </div>
+        <div class="pcol">
+          <h3>Missões</h3>
+          <div id="pause-missions"></div>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn" id="resumebtn" type="button">Continuar</button>
+        <button class="btn ghost" id="quitbtn" type="button">Desistir</button>
+        <button class="btn ghost" id="sndbtn" type="button">🔊 Som</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="dead" class="screen panel-screen" hidden>
+    <div class="panel">
+      <h2 id="dead-title" style="color:var(--blood)">Você caiu</h2>
+      <p class="sub" id="dead-sub"></p>
+      <div class="stats">
+        <div class="stat"><b id="d-time">0:00</b><span>Sobreviveu</span></div>
+        <div class="stat"><b id="d-lvl">1</b><span>Nível</span></div>
+        <div class="stat"><b id="d-kills">0</b><span>Abates</span></div>
+      </div>
+      <div class="chips" id="d-chips"></div>
+      <div class="row">
+        <button class="btn" id="againbtn" type="button">Tentar de novo</button>
+        <button class="btn ghost" id="menubtn" type="button">Trocar classe</button>
+      </div>
+    </div>
+  </section>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- heróis (registram em window.CHARACTERS; precisam vir antes do game.js) -->
-<script src="assets/js/characters/mage.js"></script>
-<script src="assets/js/characters/archer.js?v=79"></script>
-<script src="assets/js/characters/guerreiro.js?v=76"></script>
-<script src="assets/js/characters/tank.js?v=75"></script>
-<script src="assets/js/characters/necromancer.js?v=77"></script>
-<script src="assets/js/characters/chronomancer.js?v=77"></script>
-<script src="assets/js/characters/pistol.js?v=75"></script>
-<script src="assets/js/characters/dracula.js?v=76"></script>
-<script src="assets/js/characters/demon.js?v=76"></script>
-<script src="assets/js/characters/future.js?v=75"></script>
-<script src="assets/js/characters/human.js?v=75"></script>
-<script src="assets/js/characters/king.js?v=77"></script>
-<script src="assets/js/enimies/skeleton.js?v=4"></script>
-<script src="assets/js/enimies/zombie.js?v=3"></script>
-<script src="assets/js/weapons.js?v=1"></script>
-<script src="assets/js/upgrades.js?v=2"></script>
-<script src="game.js?v=114"></script>
-<script>
-// Service worker: autoatualização dos clientes (só funciona em http/https; em file:// fica inativo)
-(function(){
-  if(!('serviceWorker' in navigator)||!/^https?:$/.test(location.protocol))return;
-  const had=navigator.serviceWorker.controller; // null no primeiro acesso → não avisar
-  let told=false;
-  const say=()=>{if(told)return;told=true;
-    const d=document.createElement('div');
-    d.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:10000;display:flex;gap:10px;align-items:center;background:#141019;border:2px solid #f2b84b;box-shadow:4px 4px 0 rgba(0,0,0,.6);padding:10px 14px;font-family:var(--display,monospace);color:#efe6d6;font-size:13px';
-    const s=document.createElement('span');s.textContent='⬆ Nova versão disponível — recarregue para atualizar';d.appendChild(s);
-    const b=document.createElement('button');b.type='button';b.textContent='Recarregar';
-    b.style.cssText='background:#f2b84b;border:0;padding:6px 12px;font-family:var(--display,monospace);font-weight:bold;cursor:pointer';
-    b.onclick=()=>location.reload();d.appendChild(b);
-    document.body.appendChild(d)};
-  navigator.serviceWorker.register('sw.js').then(reg=>{
-    navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had)say()});
-    setInterval(()=>{reg.update().catch(()=>{})},36e5); // confere a cada hora (partidas longas)
-  }).catch(()=>{});
-})();
-</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- heróis (registram em window.CHARACTERS; precisam vir antes do game.js) -->
+  <script src="assets/js/characters/mage.js"></script>
+  <script src="assets/js/characters/archer.js?v=79"></script>
+  <script src="assets/js/characters/guerreiro.js?v=76"></script>
+  <script src="assets/js/characters/tank.js?v=75"></script>
+  <script src="assets/js/characters/necromancer.js?v=77"></script>
+  <script src="assets/js/characters/chronomancer.js?v=77"></script>
+  <script src="assets/js/characters/pistol.js?v=75"></script>
+  <script src="assets/js/characters/dracula.js?v=76"></script>
+  <script src="assets/js/characters/demon.js?v=76"></script>
+  <script src="assets/js/characters/future.js?v=75"></script>
+  <script src="assets/js/characters/human.js?v=75"></script>
+  <script src="assets/js/characters/king.js?v=77"></script>
+  <script src="assets/js/enimies/skeleton.js?v=4"></script>
+  <script src="assets/js/enimies/zombie.js?v=3"></script>
+  <script src="assets/js/weapons.js?v=1"></script>
+  <script src="assets/js/upgrades.js?v=2"></script>
+  <script src="game.js?v=114"></script>
+  <script>
+    // Service worker: autoatualização dos clientes (só funciona em http/https; em file:// fica inativo)
+    (function () {
+      if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+      const had = navigator.serviceWorker.controller; // null no primeiro acesso → não avisar
+      let told = false;
+      const say = () => {
+        if (told) return; told = true;
+        const d = document.createElement('div');
+        d.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:10000;display:flex;gap:10px;align-items:center;background:#141019;border:2px solid #f2b84b;box-shadow:4px 4px 0 rgba(0,0,0,.6);padding:10px 14px;font-family:var(--display,monospace);color:#efe6d6;font-size:13px';
+        const s = document.createElement('span'); s.textContent = '⬆ Nova versão disponível — recarregue para atualizar'; d.appendChild(s);
+        const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Recarregar';
+        b.style.cssText = 'background:#f2b84b;border:0;padding:6px 12px;font-family:var(--display,monospace);font-weight:bold;cursor:pointer';
+        b.onclick = () => location.reload(); d.appendChild(b);
+        document.body.appendChild(d)
+      };
+      navigator.serviceWorker.register('sw.js').then(reg => {
+        navigator.serviceWorker.addEventListener('controllerchange', () => { if (had) say() });
+        setInterval(() => { reg.update().catch(() => { }) }, 36e5); // confere a cada hora (partidas longas)
+      }).catch(() => { });
+    })();
+  </script>
 </body>
+
 </html>
