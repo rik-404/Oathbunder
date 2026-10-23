@@ -89,7 +89,7 @@ const CLASSES={
   pistol:{nome:'Cassian',role:'Tiros rápidos e certeiros no mais perto',ui:'#e0a94f',hp:88,armor:0,speed:5.7,atkCd:.3,dmg:9,kind:'proj',proj:'bullet',projSpeed:30,range:15,pierce:0,critBase:.15,
     ab:{nome:'Saque Rápido',cd:6,desc:'Num piscar, atira em até 6 inimigos próximos com crítico garantido.'},
     pal:{body:0x6e4a2e,trim:0xe0a94f,skin:0xe8b48a,legs:0x3a2a1c,hat:0x4a3222,cape:0x8a3a2a,arm:0x6e4a2e},stats:{Vida:2,Dano:3,Veloc:5,Alcance:4}},
-  dracula:{nome:'Vladren',role:'Lança morcegos e drena a vida dos inimigos',ui:'#c23a55',hp:100,armor:.05,speed:5.3,atkCd:.5,dmg:16,kind:'proj',proj:'batp',projSpeed:16,range:14,pierce:1,lsBase:.12,
+  dracula:{nome:'Vlad',role:'Lança morcegos e drena a vida dos inimigos',ui:'#c23a55',hp:100,armor:.05,speed:5.3,atkCd:.5,dmg:16,kind:'proj',proj:'batp',projSpeed:16,range:14,pierce:1,lsBase:.12,
     ab:{nome:'Enxame de Morcegos',cd:8,desc:'Solta um enxame que fere tudo em volta e cura você com o dano causado.'},
     pal:{body:0x141414,trim:0x0a0a0a,skin:0xe7ae82,legs:0x202020,hat:0x141414,cape:0x1c0507,arm:0x141414,boots:0x0a0a0a},stats:{Vida:3,Dano:4,Veloc:3,Alcance:3}},
   demon:{nome:'Castiel',role:'Lança fogo infernal e explode em chamas',ui:'#ff5a2a',hp:110,armor:.08,speed:5.2,atkCd:.55,dmg:22,kind:'proj',proj:'hellfire',projSpeed:15,range:14,pierce:1,
@@ -1166,10 +1166,12 @@ setMuted(muted);
 $('#againbtn').onclick=()=>newRun(player.cls);
 $('#menubtn').onclick=()=>goMenu();
 (function(){
-  const stick=$('#stick'),knob=stick.querySelector('i');let tid=null,ox=0,oy=0;
-  addEventListener('touchstart',e=>{if(state!=='play')return;for(const t of e.changedTouches){if(tid===null&&t.clientX<innerWidth*.5&&!t.target.closest('.tbtns')){tid=t.identifier;const r=stick.getBoundingClientRect();ox=r.left+r.width/2;oy=r.top+r.height/2;upd(t)}}},{passive:true});
-  addEventListener('touchmove',e=>{for(const t of e.changedTouches)if(t.identifier===tid)upd(t)},{passive:true});
-  const end=e=>{for(const t of e.changedTouches)if(t.identifier===tid){tid=null;touchMove.x=touchMove.y=0;knob.style.transform=''}};
+  const stick=$('#stick'),knob=stick.querySelector('i');let tid=null,ox=0,oy=0,ltid=null,lpx=0,lpy=0;
+  addEventListener('touchstart',e=>{if(state!=='play')return;for(const t of e.changedTouches){
+    if(tid===null&&t.clientX<innerWidth*.5&&!t.target.closest('.tbtns')){tid=t.identifier;const r=stick.getBoundingClientRect();ox=r.left+r.width/2;oy=r.top+r.height/2;upd(t)}
+    else if(ltid===null&&t.clientX>=innerWidth*.5&&!t.target.closest('.tbtns,button')){ltid=t.identifier;lpx=t.clientX;lpy=t.clientY}}},{passive:true});
+  addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(t.identifier===tid)upd(t);else if(t.identifier===ltid){look((t.clientX-lpx)*1.6,(t.clientY-lpy)*1.4);lpx=t.clientX;lpy=t.clientY}}},{passive:true});
+  const end=e=>{for(const t of e.changedTouches){if(t.identifier===tid){tid=null;touchMove.x=touchMove.y=0;knob.style.transform=''}if(t.identifier===ltid)ltid=null}};
   addEventListener('touchend',end);addEventListener('touchcancel',end);
   function upd(t){let dx=t.clientX-ox,dy=t.clientY-oy;const l=Math.hypot(dx,dy),m=50;if(l>m){dx*=m/l;dy*=m/l}knob.style.transform=`translate(${dx}px,${dy}px)`;touchMove.x=dx/m;touchMove.y=dy/m}
   const tap=(id,fn)=>$(id).addEventListener('pointerdown',e=>{e.preventDefault();fn()});

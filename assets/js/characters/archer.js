@@ -6,7 +6,7 @@
 
     // paleta da skin
     const HG=0x155343,HD=0x114236,HL=0x1a6151;      // capuz: base/sombra/luz
-    const TB=0x275447,TL=0x357260,TD=0x18372c;      // túnica: base/faixa clara/base escura
+    const TB=0x275447,TD=0x18372c;                 // túnica: base/base escura
     const GP=0x262828,BT=0x221812,BU=0x5d544d;      // painel cinza / cinto / metal
     const ST=0x4a2e1d,LT=0x2c231d,LB=0x3c3029;      // couro: tira clara / escura / média
     const SKD=0xcfa578,EY=0x9be36a;                 // pele sombreada / olhos brilhando (assinatura da classe)
@@ -26,10 +26,9 @@
     // túnica + capa das costas + gola
     vox(b.torso,0,-.05,0,.44,.2,.28,P.body);
     vox(b.torso,0,.15,-.17,.44,.52,.04,P.cape);vox(b.torso,0,.31,-.02,.5,.08,.33,P.cape);
-    // painel cinza no peito com fivela + faixa verde-clara no ombro
+    // painel cinza no peito com fivela
     vox(b.torso,0,.06,.172,.22,.3,.03,GP);
     vox(b.torso,0,.06,.198,.03,.03,.02,BU);
-    vox(b.torso,.095,-.02,.18,.07,.44,.03,TL);
     // barra larga da túnica sobre as coxas + borda escura (sem z-fighting)
     vox(b.torso,0,-.26,0,.46,.16,.34,P.body);
     vox(b.torso,0,-.32,0,.46,.05,.36,TD);
