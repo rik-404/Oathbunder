@@ -314,6 +314,8 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
   .cd-role{font-size:12px}
   #startbtn,.chardetail .btn{padding:9px;font-size:13px}
   .selfoot{justify-content:center}.selfoot .btn{width:auto;flex:0 0 auto}
+  /* pausa: alvo grande, no meio da borda direita (polegar direito, sem subir até o minimapa) */
+  #pausebtn{top:50%;transform:translateY(-50%);right:calc(10px + env(safe-area-inset-right,0px));font-size:15px;padding:14px 15px;border-radius:12px}
   .seltitle{font-size:16px}
   /* painéis */
   .panel{gap:10px}

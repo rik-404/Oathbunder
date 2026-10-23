@@ -534,12 +534,20 @@ function buildField(){
 // Escala degrau a degrau POR HORDA: a cada horda completada a arena fica um patamar mais difícil
 // (os inimigos que nascerem depois nascem já mais fortes; a curva continua mesmo com as melhorias no teto)
 // ===== IA ADAPTATIVA — lê como você joga e ajusta o campo EM SILÊNCIO (o jogador só sente o campo ficar mais pesado ou mais leve) =====
-let aiSkill=.5,aiHpAvg=1,runDealt=0,aiT=0;
+let aiSkill=.5,aiHpAvg=1,runDealt=0,aiT=0,moonOn=false,moonT=0,moonCd=0,moonKills=0,moonA=0,moonBudget=0,moonAcc=0;const MOON_RED=new THREE.Color(0x5c0f12);
 function updAI(dt){if(!player||cheatGod)return;aiT-=dt;if(aiT>0)return;aiT=.5;
  const kF=clamp(kills/Math.max(runTime/60,.4)/8,0,1); // ritmo de abates (~8 por minuto = dominando)
  const eF=clamp(runDealt/Math.max(1,runDmg*4),0,1); // dano causado vs 4x o recebido
  const hF=clamp(player.hp/player.maxHp,0,1);aiHpAvg+=(hF-aiHpAvg)*.2; // vida mantida
- aiSkill+=(.45*kF+.3*eF+.25*aiHpAvg-aiSkill)*.06;} // adaptação lenta, sem efeito ioiô
+ aiSkill+=(.45*kF+.3*eF+.25*aiHpAvg-aiSkill)*.06;
+ // LUA DE SANGUE: massacre sustentado (25+ abates dominando) ergue os mortos em peso
+ if(aiSkill<.7)moonKills=Math.max(0,moonKills-1);
+ if(moonOn){moonT-=dt;moonAcc+=dt;if(moonAcc>2.6&&moonBudget>0){moonAcc=0;moonBudget--;const a=rand(0,TAU),d=15+rand(0,7),x=player.x+Math.sin(a)*d,z=player.z+Math.cos(a)*d;if(!collide(x,z,.4))spawnEnemy('zombie',x,z,false,{ms:1.3+Math.random()*.6})}
+  if(moonT<=0){moonOn=false;moonCd=150}}
+ else if(moonCd>0)moonCd-=dt;} // adaptação lenta, sem efeito ioiô
+function bloodMoon(){moonOn=true;moonT=45;moonCd=150;moonKills=0;moonBudget=22;moonAcc=2.6;
+ for(let i=0;i<26;i++){const a=i/26*TAU,d=15+rand(0,7),x=player.x+Math.sin(a)*d,z=player.z+Math.cos(a)*d;if(!collide(x,z,.5))spawnEnemy('zombie',x,z,false,{ms:1.3+Math.random()*.6})}
+ toast('🩸 LUA DE SANGUE','Seu massacre atraiu os mortos — eles vêm grandes e fortes');addShake(.5);S('bossin')}
 function scaleT(){const H=hordeN,b=Math.max(0,aiSkill-.5)*2,r=Math.max(0,.5-aiSkill)*2;return{hp:(1+H*.3+H*H*.05)*(1+b*.75-r*.12),dmg:(1+H*.08)*(1+b*.85-r*.15),spd:1+b*.3,extra:b}}
 function spawnEnemy(type,x,z,elite,opts){
   const D=ENEMIES[type],S=scaleT(),ms=(opts&&opts.ms)||1;const sc=(D.scale||1)*(elite?1.35:1)*ms;const emat=elite?eliteMat:vcMat;
@@ -552,8 +560,8 @@ function spawnEnemy(type,x,z,elite,opts){
       wingL.castShadow=wingR.castShadow=true;wingL.position.set(-.15,.95,0);wingR.position.set(.15,.95,0);mesh.add(wingL,wingR);parts.push(wingL,wingR)}
   }else{mesh=new THREE.Mesh(enemyGeo(type),emat);mesh.castShadow=true;parts=[mesh]}
   mesh.scale.setScalar(sc);mesh.position.set(x,0,z);level.add(mesh);
-  const hp=D.hp*S.hp*(elite?5:1)*(ms<1?ms*1.1:1);
-  const e={type,x,z,r:D.r*(elite?1.25:1)*ms,hp,maxHp:hp,speed:D.speed*rand(.9,1.1)*(elite?.9:1)*(ms<1?1.25:1)*(S.spd||1),dmg:D.dmg*S.dmg*(elite?1.5:1)*(ms<1?.6:1),h:D.h*sc,sc,color:D.color,mesh,mat:emat,parts,legL,legR,wingL,wingR,mini:!!(opts&&opts.mini),miniPh:(opts&&opts.mini)?rand(0,TAU):0,walk:rand(0,TAU),
+  const hp=D.hp*S.hp*(elite?5:1)*(ms<1?ms*1.1:1+(ms-1)*.9);
+  const e={type,x,z,r:D.r*(elite?1.25:1)*ms,hp,maxHp:hp,speed:D.speed*rand(.9,1.1)*(elite?.9:1)*(ms<1?1.25:1/(1+(ms-1)*.25))*(S.spd||1),dmg:D.dmg*S.dmg*(elite?1.5:1)*(ms<1?.6:1+(ms-1)*.8),h:D.h*sc,sc,color:D.color,mesh,mat:emat,parts,legL,legR,wingL,wingR,mini:!!(opts&&opts.mini),miniPh:(opts&&opts.mini)?rand(0,TAU):0,walk:rand(0,TAU),
     kx:0,kz:0,cd:rand(.4,1.2),t:rand(0,10),face:0,flash:0,side:Math.random()<.5?-1:1,wind:0,elite:!!elite,xp:D.xp*(elite?8:1),fly:!!D.fly,orbCd:0,dead:false,atk:0};
   enemies.push(e);return e;
 }
@@ -651,7 +659,7 @@ function damageEnemy(e,amt,crit,kx=0,kz=0,quiet){
   if(e.hp<=0)killEnemy(e);
 }
 function killEnemy(e){
-  e.dead=true;if(e.boss)level.remove(e.obj);else level.remove(e.mesh);kills++;
+  e.dead=true;if(e.boss)level.remove(e.obj);else level.remove(e.mesh);kills++;if(!moonOn&&moonCd<=0&&aiSkill>.7){moonKills++;if(moonKills>=25)bloodMoon()}
   if(!store.get('cv_unlocked',{}).pistol&&kills>=MISSION.pistol.goal){doUnlock('pistol');toast('🔫 '+CLASSES.pistol.nome+' liberado!','Missão cumprida: '+MISSION.pistol.goal+' abates numa corrida')}
   burst(e.x,e.h*.5,e.z,e.color,e.boss?50:7,{speed:e.boss?7:4,size:e.boss?.22:.13,life:.7});
   if(e.boss){S('bossdie');hitStop(.16);for(let i=0;i<12;i++)dropGem(e.x+rand(-2,2),e.z+rand(-2,2),5);dropGem(e.x,e.z,40);for(let i=0;i<3;i++)dropPickup(e.x+rand(-1.5,1.5),e.z+rand(-1.5,1.5),'heart');
@@ -830,7 +838,7 @@ function newRun(cls){
   applyShop(player);
   if(player.model)scene.remove(player.model.root);
   player.model=buildHero(cls);scene.add(player.model.root);
-  kills=0;runTime=0;hordeN=0;nextHorde=60;nextBoss=240;bossCount=0;spawnAcc=0;pendingUps=0;boss=null;bossKills=0;runDmg=0;runSkel=0;runBat=0;cheatGod=false;ogreLoose=false;aiSkill=.5;aiHpAvg=1;runDealt=0;aiT=0;
+  kills=0;runTime=0;hordeN=0;nextHorde=60;nextBoss=240;bossCount=0;spawnAcc=0;pendingUps=0;boss=null;bossKills=0;runDmg=0;runSkel=0;runBat=0;cheatGod=false;ogreLoose=false;aiSkill=.5;aiHpAvg=1;runDealt=0;aiT=0;moonOn=false;moonT=0;moonCd=0;moonKills=0;moonA=0;moonBudget=0;moonAcc=0;
   scene.remove(menuGroup);
   if(level)scene.remove(level);if(fxGroup)scene.remove(fxGroup);if(wGroup)scene.remove(wGroup);
   enemies=[];projs=[];pickups=[];fxs=[];parts=[];gems=[];texts.forEach(t=>t.el.remove());texts=[];orbMeshes=[];auraMesh=null;auraFx=null;auraFlares.length=0;auraStains.length=0;boltT=1;minions=[];minSummonT=1;
@@ -1483,7 +1491,8 @@ function frame(now){
     if(state==='play'&&!mapOpen)update(dt);
     if(state==='dying'){deadT-=dt;if(deadT<=0)showDeath()}
     if((state==='play'&&!mapOpen)||state==='dying')updateFX(dt);
-    setSky(clamp(runTime/720,0,1));
+    setSky(clamp(runTime/720,0,1));moonA=clamp(moonA+(moonOn?dt:-dt)*.7,0,1);
+if(moonA>.001){scene.background.lerp(MOON_RED,moonA*.85);scene.fog.color.copy(scene.background);scene.fog.far=lerp(scene.fog.far,42,moonA);sun.intensity*=(1-moonA*.5);hemi.intensity*=(1-moonA*.35)}
     updFireFx(dt); // fogueiras do campo com a mesma animação da do título
     const tall=camera.aspect<1?1.15:1;shake=Math.max(0,shake-dt*1.6);const sx=(Math.random()-.5)*shake,sz=(Math.random()-.5)*shake;
     const foll=Math.min(1,dt*8);camFx+=(player.x-camFx)*foll;camFz+=(player.z-camFz)*foll;
