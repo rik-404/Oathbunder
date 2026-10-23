@@ -1759,38 +1759,8 @@ function makeTotem(){const g=new THREE.Group();
   g.add(m);
   const off=new THREE.Group();off.name='off';off.visible=false;vox(off,0,1.5,0,.3,.22,.3,0x6b665e);g.add(off);
   return {g,m,off}}
-// Geometria reutilizada: baús detalhados sem multiplicar draw calls por peça.
-let chestBodyGeo=null,chestLidGeo=null;
-function makeChest(){
-  if(!chestBodyGeo){
-    chestBodyGeo=mergeBoxes([
-      [0,.045,0,.82,.09,.60,0x3b291b],                 // base escura reforçada
-      [0,.26,0,.76,.40,.54,0x684222],                  // corpo de carvalho
-      [0,.13,0,.82,.055,.60,0x39434b],[0,.39,0,.82,.055,.60,0x39434b], // cintas de ferro
-      [-.21,.255,.282,.19,.20,.025,0x94612f],[0,.255,.282,.19,.20,.025,0xaa7137],[.21,.255,.282,.19,.20,.025,0x855329], // tábuas frontais
-      [-.39,.255,0,.025,.20,.44,0x8e5b2d],[.39,.255,0,.025,.20,.44,0x80502a], // laterais em madeira clara
-      [-.335,.26,.307,.075,.38,.035,0x303a45],[.335,.26,.307,.075,.38,.035,0x303a45], // cantoneiras
-      [-.335,.13,.33,.035,.035,.018,0xe8bd58],[.335,.13,.33,.035,.035,.018,0xe8bd58],[-.335,.39,.33,.035,.035,.018,0xe8bd58],[.335,.39,.33,.035,.035,.018,0xe8bd58], // rebites
-      [0,.25,.319,.20,.26,.04,0xd7a642],             // placa da fechadura
-      [0,.215,.345,.035,.09,.018,0x281c17]            // buraco da chave
-    ]);
-    chestLidGeo=mergeBoxes([
-      [0,.075,.27,.78,.15,.58,0x76502a],              // tampa em degraus voxel
-      [0,.16,.27,.66,.075,.42,0x906132],[0,.208,.27,.46,.035,.26,0xa16c38], // topo escalonado
-      [-.25,.11,.27,.055,.21,.60,0xb88737],[.25,.11,.27,.055,.21,.60,0xb88737], // faixas de latão
-      [0,.035,.575,.78,.045,.025,0x39434b],           // borda frontal metálica
-      [0,.005,.595,.17,.12,.035,0xe4b94e],            // lingueta do fecho
-      [-.25,.035,.605,.035,.035,.018,0xf3d475],[.25,.035,.605,.035,.035,.018,0xf3d475], // rebites do fecho
-      [0,.244,.27,.22,.035,.15,0xe0b64d]              // brasão no topo
-    ]);
-  }
-  const g=new THREE.Group(),body=new THREE.Mesh(chestBodyGeo,vcMat);
-  body.castShadow=true;body.receiveShadow=true;g.add(body);
-  vox(g,0,.315,.347,.07,.055,.025,0x4be0c7,.55);      // joia frontal luminosa
-  const lid=new THREE.Group();lid.position.set(0,.44,-.27);g.add(lid);
-  const lidMesh=new THREE.Mesh(chestLidGeo,vcMat);lidMesh.castShadow=true;lidMesh.receiveShadow=true;lid.add(lidMesh);
-  vox(lid,0,.274,.27,.085,.035,.08,0x4be0c7,.55);     // gema no brasão da tampa
-  return{g,lid}}
+// O desenho do baú vive em assets/js/environment/chest.js; aqui só conectamos o motor.
+function makeChest(){return window.CHEST_MODEL.create({THREE,mergeBoxes,vcMat,vox})}
 function buildChestDisplay(){const{g,lid}=makeChest();lid.rotation.x=-1.2;return g}
 function ensureGalScene(){if(galScene)return;
   galScene=new THREE.Scene();galScene.background=new THREE.Color(0x14121c);

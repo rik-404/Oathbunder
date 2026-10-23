@@ -232,10 +232,10 @@ window.CLASSES.arqueiro.model=function(b,P,vox,makeBow,boxGeo){
     }
 
     /* ---------------- arco recurvo ---------------- */
-    // O arco fica no plano X-Y, com a corda deslocada para a esquerda: assim a
-    // curva aparece bem na câmera do menu e nas costas durante o jogo.
+    // Espelho no eixo X para corrigir a curvatura; a flecha continua apontada para +Z.
     const bow=new THREE.Group();b.handL.add(bow);
     bow.position.set(-.085,0,.065);
+    bow.scale.x=-1;
     for(let i=-4;i<=4;i++){
       const y=i*.085,x=-i*i*.0075;
       vox(bow,x,y,.035,.058,.10,.07,i%2?LS:WOOD);
