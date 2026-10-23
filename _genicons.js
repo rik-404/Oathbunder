@@ -908,6 +908,23 @@ espadas:{pal:{W:0xd8dde6,G:0xb8912e},rows:[
 '....G......G....',
 '................'
 ]},
+'loja':{pal:{K:0x3a3f4a,G:0xf2b84b,W:0xfff0a0},rows:[
+'................',
+'.......KK.......',
+'......KWWK......',
+'.....KGGGGK.....',
+'....KGGGGGGK....',
+'...KGGGGGGGGK...',
+'..KGGGGGGGGGGK..',
+'.KGGGGGGGGGGGGK.',
+'.KGGGGGGGGGGGGK.',
+'.KGGGKKKKGGGGGK.',
+'.KGGKWWWWKGGGGK.',
+'.KGGKWWWWKGGGGK.',
+'.KGGGKKKKGGGGGK.',
+'.KGGGGGGGGGGGGK.',
+'..KKKKKKKKKKKK..',
+'................']},
 };
 
 const out=path.join('assets','images','icons');fs.mkdirSync(out,{recursive:true});

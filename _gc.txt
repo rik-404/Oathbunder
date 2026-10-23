@@ -1,0 +1,25 @@
+  // ===== armas novas =====
+  if(Wp.shot){shotT-=dt;
+    if(shotT<=0){const tg=nearest(13);if(tg){shotT=1.5-.15*Wp.shot;const a=Math.atan2(tg.x-player.x,tg.z-player.z),n=Wp.shot+2;
+     for(let i=0;i<n;i++){const aa=a+(i-(n-1)/2)*.22,r=roll(4+3*Wp.shot);spawnProj({x:player.x+Math.sin(aa)*.4,z:player.z+Math.cos(aa)*.4,y:.7+player.y,a:aa,speed:15,dmg:r.d,crit:r.crit,owner:'p',kind:'rock',pierce:0,r:.14,life:.85})}S('shot','rock')}}}
+  if(Wp.frost){frostT-=dt;
+    if(frostT<=0){frostT=6;const n=Wp.frost>=4?2:1,cand=enemies.filter(e=>!e.dead&&!e.boss&&Math.hypot(e.x-player.x,e.z-player.z)<15);
+     for(let c=0;c<n;c++){const src=cand.splice(Math.floor(Math.random()*cand.length),1)[0];if(!src)break;
+      const zone={x:src.x,z:src.z,t:1.8+.4*Wp.frost,cd:0,m:flatMesh(new THREE.CircleGeometry(2.4,22),0x9fe8ff,.28)};zone.m.position.set(src.x,relief(src.x,src.z)+.06,src.z);wGroup.add(zone.m);frostZones.push(zone);ringFX(src.x,src.z,2.4,0x9fe8ff,.5);S('ability')}}}
+  for(let i=frostZones.length-1;i>=0;i--){const z=frostZones[i];z.t-=dt;z.cd-=dt;
+    for(const e of enemies.slice()){if(e.dead)continue;if(Math.hypot(e.x-z.x,e.z-z.z)<2.4+e.r){e.slowF=Math.min(e.slowF||1,.5);e.slowT=Math.max(e.slowT||0,.3);
+     if(z.cd<=0)damageEnemy(e,9+5*Wp.frost,false,0,0,true)}}
+    if(z.cd<=0)z.cd=.5;z.m.material.opacity=.16+.1*Math.sin(runTime*3+i*2);
+    if(z.t<=0){wGroup.remove(z.m);frostZones.splice(i,1)}}
+  if(Wp.time){timeT-=dt;
+    if(timeT<=0){timeT=36-3*Wp.time;ringFX(player.x,player.z,9,0x9fe8ff,.7);burst(player.x,1,player.z,0x9fe8ff,14,{emi:1,speed:5});S('ability');
+     for(const e of enemies.slice())if(!e.dead&&Math.hypot(e.x-player.x,e.z-player.z)<9+e.r){e.slowF=Math.min(e.slowF||1,.6);e.slowT=Math.max(e.slowT||0,4)}}}
+  if(Wp.golem){
+    if(!golemG){golemCd-=dt;if(golemCd<=0){golemG=makeTurret();golemG.position.set(player.x,relief(player.x,player.z),player.z);wGroup.add(golemG);golemT=12+4*Wp.golem;golemFire=.4;ringFX(player.x,player.z,1.6,0x8a8f9a,.5);S('chest')}}
+    else{golemT-=dt;
+     if(golemT<=0){burst(golemG.position.x,.6,golemG.position.z,0x8a8f9a,18,{speed:4});wGroup.remove(golemG);golemG=null;golemCd=6}
+     else{golemFire-=dt;
+      if(golemFire<=0){let bt=null,bd=13;for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-golemG.position.x,e.z-golemG.position.z);if(d<bd){bd=d;bt=e}}
+       if(bt){golemFire=.9-.1*Wp.golem;const a=Math.atan2(bt.x-golemG.position.x,bt.z-golemG.position.z),r=roll(14+8*Wp.golem);
+        spawnProj({x:golemG.position.x,y:1.3,z:golemG.position.z,a:a,speed:18,dmg:r.d,crit:r.crit,owner:'p',kind:'bullet',pierce:0,r:.16,life:1});S('shot','bullet')}}}}}
+function makeTurret(){const g=new THREE.Group();vox(g,0,.5,0,.75,1,.75,0x8a8f9a,.22);vox(g,0,1.18,0,.55,.4,.55,0x9aa0ac,.28);vox(g,-.14,1.26,.2,.1,.12,.07,0x4aa8e8,1);vox(g,.14,1.26,.2,.1,.12,.07,0x4aa8e8,1);vox(g,0,1.62,0,.08,.5,.08,0x6a707c,.3);return g}

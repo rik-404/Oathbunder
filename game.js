@@ -117,16 +117,16 @@ const ICONS={
   'Punho Fatal':'💢','Velocidade de Tiro':'🚀','Empurrão':'🫱','Reflexo Relâmpago':'💨','Pulso Congelante':'❄️',
 };
 // ícones de classe: pixel art 16×16 gerada em assets/images/icons/ (via node _genicons.js) — um rosto por herói
-const CLSICON={mago:'assets/images/icons/mago.png?v=2',arqueiro:'assets/images/icons/arqueiro.png?v=2',guerreiro:'assets/images/icons/guerreiro.png?v=2',tank:'assets/images/icons/tank.png?v=2',necro:'assets/images/icons/necro.png?v=2',chrono:'assets/images/icons/chrono.png?v=2',pistol:'assets/images/icons/pistol.png?v=2',dracula:'assets/images/icons/dracula.png?v=2',demon:'assets/images/icons/demon.png?v=2',future:'assets/images/icons/future.png?v=2',human:'assets/images/icons/human.png?v=2',king:'assets/images/icons/king.png?v=2'};
+const CLSICON={mago:'assets/images/icons/mago.png?v=3',arqueiro:'assets/images/icons/arqueiro.png?v=3',guerreiro:'assets/images/icons/guerreiro.png?v=3',tank:'assets/images/icons/tank.png?v=3',necro:'assets/images/icons/necro.png?v=3',chrono:'assets/images/icons/chrono.png?v=3',pistol:'assets/images/icons/pistol.png?v=3',dracula:'assets/images/icons/dracula.png?v=3',demon:'assets/images/icons/demon.png?v=3',future:'assets/images/icons/future.png?v=3',human:'assets/images/icons/human.png?v=3',king:'assets/images/icons/king.png?v=3'};
 let CLSIMG={};try{for(const k in CLSICON){const im=new Image();im.src=CLSICON[k];CLSIMG[k]=im}}catch(e){} // preload p/ canvas (menu 3D)
 const clsImg=k=>`<img class="cimg" src="${CLSICON[k]}" alt="" title="${CLASSES[k]?CLASSES[k].nome:k}">`; // HTML: tamanho segue o font-size do pai (em)
 const CLSTIPO={mago:'Mago',arqueiro:'Arqueiro',guerreiro:'Guerreiro',tank:'Guardião',necro:'Necromante',chrono:'Chronomante',pistol:'Pistoleiro',dracula:'Vampiro',demon:'Demônio',future:'Viajante',human:'Humano',king:'Rei'};
 // ícones de poder/melhoria/interface: pixel art 16×16 em assets/images/icons/upg/ (via node _genicons.js)
 const UPGSLUG={'Orbes Giratórios':'orbes-giratorios','Raio Celeste':'raio-celeste','Aura de Brasa':'aura-brasa','Força':'forca','Mãos Rápidas':'maos-rapidas','Botas Leves':'botas-leves','Coração de Pedra':'coracao-pedra','Olho Certeiro':'olho-certeiro','Sede de Sangue':'sede-sangue','Placas de Ferro':'placas-ferro','Regeneração':'regeneracao','Ímã':'ima','Sabedoria':'sabedoria','Alcance Maior':'alcance-maior','Foco':'foco','Poção Grande':'picao-grande','Projétil Extra':'projetil-extra','Perfuração':'perfuracao','Espinhos':'espinhos','Horda Óssea':'horda-ossea','Ossos Afiados':'ossos-afiados','Punho Fatal':'punho-fatal','Velocidade de Tiro':'vel-tiro','Empurrão':'empurrao','Reflexo Relâmpago':'reflexo-relampago','Pulso Congelante':'pulso-congelante'};
-const upgImg=n=>{const s=UPGSLUG[n];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=2" alt="">`:''};
+const upgImg=n=>{const s=UPGSLUG[n];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=3" alt="">`:''};
 // emojis antigos → PNG (shop/ conquistas/ HUD continuam usando o char no fonte)
 const EMICON={'❤️':'coracao','💪':'forca','⚡':'maos-rapidas','👟':'botas-leves','🎯':'olho-certeiro','💥':'alcance-maior','⏳':'foco','⌛':'foco','⏱️':'foco','🧱':'placas-ferro','💚':'regeneracao','🩸':'sede-sangue','✨':'projetil-extra','➡️':'perfuracao','🌵':'espinhos','💢':'punho-fatal','🚀':'vel-tiro','🫱':'empurrao','💨':'reflexo-relampago','❄️':'pulso-congelante','📖':'sabedoria','🧲':'ima','🪙':'ouro','🔒':'trancado','🔓':'desbloquear','💀':'craneo','☠️':'craneo','⭐':'estrela','🎖️':'estrela','👹':'golem','⚔️':'espadas','🗡️':'ossos-afiados','🦴':'horda-ossea','🧠':'ia'};
-const emIc=e=>{const s=EMICON[e];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=2" alt="">`:''};
+const emIc=e=>{const s=EMICON[e];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=3" alt="">`:''};
 const icon=n=>upgImg(n)||ICONS[n]||'';
 const WEAPONS_NAMES=new Set(Object.values(WEAPONS).map(w=>w.nome));
 const UNLOCK={guerreiro:150}; // compra com ouro (Mago começa liberado)
@@ -162,6 +162,7 @@ const SHOP=[
   {id:'magnet',ic:'🧲',nome:'Magnetismo',desc:l=>'+'+(l*20)+'% de coleta de orbes',max:3,cost:l=>60+(l-1)*60},
   {id:'greed',ic:'🪙',nome:'Ganância',desc:l=>'+'+(l*15)+'% de ouro ganho',max:5,cost:l=>50+(l-1)*55},
 ];
+// a loja vai crescer: skins e outros itens entram na mesma lista SHOP no futuro
 function applyShop(p){const s=shopLv();
   if(s.hp){p.maxHp+=s.hp*15;p.hp+=s.hp*15}
   if(s.dmg)p.stats.dmg*=1+s.dmg*.05;
@@ -393,7 +394,7 @@ const PROJ_GEO={
 
 /* ================= estado ================= */
 let state='menu',selCls=store.get('cv_cls','guerreiro');if(!CLASSES[selCls])selCls='guerreiro';
-let grid=null,hgt=null,level=null,fxGroup=null,wGroup=null,enemies=[],projs=[],pickups=[],fxs=[],parts=[],texts=[],chests=[],landPos=null,flameMat=null,fireFx=null;
+let grid=null,hgt=null,level=null,fxGroup=null,wGroup=null,enemies=[],projs=[],pickups=[],fxs=[],parts=[],texts=[],chests=[],totems=[],landPos=null,flameMat=null,fireFx=null;
 let kills=0,runTime=0,shake=0,boss=null,hurtA=0,deadT=0,hordeN=0,nextHorde=60,nextBoss=240,bossCount=0,spawnAcc=0,pendingUps=0,upSource='lvl',bossKills=0,lastReward=null,runDmg=0,runSkel=0,runBat=0,cheatGod=false,ogreLoose=false;
 const player={model:null};
 let camYaw=0,camDist=5.4,camPitch=.5,camZoom=6.5,camFx=0,camFz=0;
@@ -528,6 +529,10 @@ function buildField(){
   // baús
   chests=[];let tries=0;while(chests.length<20&&tries++<800){const x=randi(6,W-7),z=randi(6,H-7);if(isWall(x,z)||Math.hypot(x-W/2,z-H/2)<14)continue;if(chests.some(c=>Math.hypot(c.x-x,c.z-z)<10))continue;
     const {g,lid}=makeChest();g.position.set(x,relief(x,z)+jv(x,z)*.06,z);g.rotation.y=rand(0,TAU);level.add(g);chests.push({x,z,g,lid,open:false})}
+  // totens de íma — dois por partida, bem afastados. Ao usar: puxa orbes e moedas de todo o mapa e fica apagado
+  totems=[];let tt=0;while(totems.length<2&&tt++<900){const x=randi(12,W-13),z=randi(12,H-13);if(isWall(x,z)||Math.hypot(x-W/2,z-H/2)<22)continue;if(totems.some(c=>Math.hypot(c.x-x,c.z-z)<40))continue;if(chests.some(c=>Math.hypot(c.x-x,c.z-z)<4))continue;
+    const {g,m,off}=makeTotem();g.position.set(x,relief(x,z)+jv(x,z)*.06,z);level.add(g);
+    totems.push({x,z,g,m,off,t:rand(0,5),used:false})}
 }
 
 /* ================= entidades ================= */
@@ -587,7 +592,8 @@ function director(dt){
   spawnAcc+=rate*dt;while(spawnAcc>=1){spawnAcc--;if(enemies.length<maxAlive){const p=spawnPos(18,25);if(p){const el=t>150&&Math.random()<Math.min(.07,(t-150)/2500);spawnEnemy(pickType(),p[0],p[1],el)}}}
   if(t>=nextHorde){hordeN++;const SA=scaleT();nextHorde+=60/(1+SA.extra*.5);const n0=16+hordeN*7,n=n0+(SA.extra>.3?Math.round(n0*SA.extra*.35):0),tp=pickType();toast('Horda '+hordeN,'Estão te cercando');addShake(.15);
     for(let i=0;i<n;i++){const a=i/n*TAU,d=15+rand(0,2.5),x=player.x+Math.sin(a)*d,z=player.z+Math.cos(a)*d;if(!collide(x,z,.4))spawnEnemy(i%5===0?pickType():tp,x,z,hordeN>=4&&i%17===0)}}
-  if(t>=nextBoss){nextBoss+=240;if(!boss)spawnBoss()}
+  const bgap=Math.max(140,Math.round(240-Math.max(0,aiSkill-.4)*180)); // iá silenciosa: quanto melhor o jogador, mais cedo o próximo chefe (4 min -> ~2,3 min)
+  if(t>=nextBoss){nextBoss+=bgap;if(!boss)spawnBoss()}
 }
 
 /* ================= projéteis, cristais, coletáveis ================= */
@@ -671,7 +677,7 @@ function killEnemy(e){
     else toast('Golem derrotado!','O próximo vai ser mais forte');
     if(!store.get('cv_unlocked',{}).demon&&metaStat().bosses+bossKills>=MISSION.demon.goal){doUnlock('demon');toast('😈 '+CLASSES.demon.nome+' liberado!','Missão cumprida: '+MISSION.demon.goal+' Golens derrotados')}}
   else{S('kill');killStop(e.type==='brute'||e.elite?.05:.04);dropGem(e.x,e.z,e.xp);const r=Math.random();
-    if(r<.022)dropPickup(e.x,e.z,'heart');else if(r<.027)dropPickup(e.x,e.z,'magnet');
+    if(r<.022)dropPickup(e.x,e.z,'heart'); // íma: saiu do drop dos bichos — agora é totem fixo no mapa
     if(Math.random()<(e.elite?1:.16))dropPickup(e.x,e.z,'coin',e.elite?randi(3,6):randi(1,2))} // moeda no chão
   if(e.type==='skel'){runSkel++; // missão do Necromante: abater esqueletos no total
     if(!store.get('cv_unlocked',{}).necro&&metaStat().skelKills+runSkel>=MISSION.necro.goal){doUnlock('necro');toast('💀 '+CLASSES.necro.nome+' liberado!','Missão cumprida: '+MISSION.necro.goal+' esqueletos abatidos')}}
@@ -1269,7 +1275,7 @@ function update(dt){
   // coletáveis
   for(let i=pickups.length-1;i>=0;i--){const k=pickups[i];k.t+=dt;
     if(k.type==='coin'){const dx=player.x-k.x,dz=player.z-k.z,d=Math.hypot(dx,dz)||.01,mag=2.4*player.stats.magnet; // moeda é puxada como os orbes
-      if(d<mag){k.pt+=dt;const sp=Math.min(24,8+k.pt*20);k.x+=dx/d*sp*dt;k.z+=dz/d*sp*dt}else k.pt=0;
+      if(d<mag||k.vac){k.pt+=dt;const sp=Math.min(24,8+k.pt*20);k.x+=dx/d*sp*dt;k.z+=dz/d*sp*dt}else k.pt=0;
       k.g.position.set(k.x,.42+Math.sin(k.t*4)*.08,k.z);k.g.rotation.y+=dt*4;}
     else{k.g.position.y=.5+Math.sin(k.t*3)*.1;k.g.rotation.y+=dt*2;}
     if(Math.hypot(player.x-k.x,player.z-k.z)<(k.type==='coin'?.7:.9)){
@@ -1279,6 +1285,9 @@ function update(dt){
       fxGroup.remove(k.g);pickups.splice(i,1)}}
   // baús
   for(const c of chests){if(c.open)continue;if(Math.hypot(player.x-c.x,player.z-c.z)<1.1){c.open=true;c.lid.rotation.x=-1.9;burst(c.x,.6,c.z,0xf2b84b,24,{emi:1,speed:5});S('chest');upSource='chest';openUpgrade();break}}
+  // totens de íma: giram enquanto estão ativos; ao se aproximar, disparam o vácuo global e ficam apagados
+  for(const T of totems){if(T.used)continue;T.t+=dt;T.m.rotation.y+=dt*1.6;T.m.position.y=1.95+Math.sin(T.t*2.2)*.09;
+    if(Math.hypot(player.x-T.x,player.z-T.z)<2){T.used=true;T.m.visible=false;T.off.visible=true;S('magnet');addShake(.25);burst(T.x,1.6,T.z,0xd23b2f,24,{emi:.7,speed:5,up0:1,up1:4});toast('Totem de Ímã!','Orbes e moedas de todo o mapa vêm até você');for(const G of gems)G.vac=true;for(const K of pickups)if(K.type==='coin')K.vac=true}}
   animHero(dt,moving||player.dashT>0);
 }
 // física dos minions (bando do Rei do Slime): empurro suave para não atravessarem um ao outro
@@ -1395,6 +1404,7 @@ function drawMini(){
   for(let j=-half;j<half;j++)for(let i=-half;i<half;i++){const X=Math.round(cx)+i,Z=Math.round(cz)+j;if(X<0||Z<0||X>=W||Z>=H){x.fillStyle='#2a2a26';}else{const g=grid[Z*W+X];if(!g)continue;x.fillStyle=g===1?'#4a4c44':g===2?'#2f5a2a':'#6a6a66'}x.fillRect((i+half)*S,(j+half)*S,S,S)}
   const P=(px,pz)=>[(px-cx+half)*S,(pz-cz+half)*S];
   x.fillStyle='#f2b84b';for(const ch of chests)if(!ch.open){const[a,b]=P(ch.x,ch.z);x.fillRect(a-3,b-3,6,6)}
+  x.fillStyle='#d23b2f';for(const T of totems)if(!T.used){const[a,b]=P(T.x,T.z);x.fillRect(a-3,b-3,6,6)}
   if(landPos){x.fillStyle='#ff8a3a';for(const f of landPos.fire){const[a,b]=P(f.x,f.z);x.fillRect(a-2,b-2,4,4)}
     x.fillStyle='#b08aff';for(const cr of landPos.cry){const[a,b]=P(cr.x,cr.z);x.fillRect(a-1.5,b-1.5,3,3)}}
   x.fillStyle='#e5473c';for(const e of enemies){const[a,b]=P(e.x,e.z);if(e.boss){x.fillStyle='#ff8a4a';x.fillRect(a-5,b-5,10,10);x.fillStyle='#e5473c'}else x.fillRect(a-1.5,b-1.5,3,3)}
@@ -1407,10 +1417,10 @@ function buildMapUI(){
   mapScreen=document.createElement('div');
   mapScreen.style.cssText='position:fixed;inset:0;z-index:40;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(8,6,12,.84)';
   const title=document.createElement('div');title.style.cssText='font-family:var(--display,monospace);color:var(--gold,#f2b84b);font-size:16px;letter-spacing:.06em;text-shadow:2px 2px 0 #000';
-  title.textContent='🗺️ MAPA — 🪙 tesouro · 🔥 fogueira · 💎 cristal';
+  title.textContent='🗺️ MAPA — 🪙 tesouro · 🔥 fogueira · 💎 cristal · 🧲 totem';
   mapCanvas=document.createElement('canvas');mapCanvas.width=512;mapCanvas.height=512;
   mapCanvas.style.cssText='width:min(80vmin,560px);height:min(80vmin,560px);border:2px solid var(--edge,#3b3249);box-shadow:6px 6px 0 #000;background:#0c0a12;image-rendering:pixelated';
-  const hint=document.createElement('div');hint.style.cssText='font-family:var(--body,sans-serif);color:var(--dust,#a99db8);font-size:12px';hint.textContent='M ou ESC fecha · ◆ tesouro · ◇ aberto · 🔥 fogueira · 💎 cristal';
+  const hint=document.createElement('div');hint.style.cssText='font-family:var(--body,sans-serif);color:var(--dust,#a99db8);font-size:12px';hint.textContent='M ou ESC fecha · ◆ tesouro · ◇ aberto · 🔥 fogueira · 💎 cristal · 🧲 totem';
   mapScreen.append(title,mapCanvas,hint);document.body.appendChild(mapScreen);
   mapScreen.addEventListener('click',()=>toggleMap());
 }
@@ -1428,6 +1438,8 @@ function drawMap(){
   if(landPos){x.fillStyle='#ff8a3a';for(const f of landPos.fire)x.fillRect(f.x*S-2,f.z*S-2,4,4);
     x.fillStyle='#b08aff';for(const cr of landPos.cry)x.fillRect(cr.x*S-2,cr.z*S-2,4,4);
     x.fillStyle='#8a8a80';for(const g of landPos.grave)x.fillRect(g.x*S-1,g.z*S-1,2,2)}
+  // totens de íma
+  for(const T of totems){const a=T.x*S,b=T.z*S;if(!T.used){x.fillStyle='#ffd9d0';x.fillRect(a-4,b-4,8,8)}x.fillStyle=T.used?'#5c4a40':'#e5473c';x.fillRect(a-3,b-3,6,6)}
   // inimigos + chefe
   x.fillStyle='#e5473c';for(const e of enemies)x.fillRect(e.x*S-1.5,e.z*S-1.5,3,3);
   if(boss){x.fillStyle='#ff8a4a';x.fillRect(boss.x*S-5,boss.z*S-5,10,10)}
@@ -1546,7 +1558,7 @@ function updateCoins(){$('#coins-n').textContent=coins();$('#coins').hidden=!['t
 function renderShop(){const w=$('#shop-list');w.innerHTML='';const s=shopLv();
   SHOP.forEach(it=>{const lv=s[it.id]||0,maxed=lv>=it.max,cost=it.cost(lv+1);
     const b=document.createElement('div');b.className='shopit'+(maxed?' max':'');
-    b.innerHTML=`<div class="up-ic">${emIc(it.ic)||it.ic}</div><div class="up-body"><div class="up-top"><span class="rar" style="color:var(--gold)">${it.nome}</span><span class="lvl">${lv}/${it.max}</span></div><p>${it.desc(lv+1).replace(/(\+?\d[\d.,]*\s?%?)/g,'<b class="hl">$1</b>')}</p><div class="pips2">${'<b class="on"></b>'.repeat(lv)}${'<b></b>'.repeat(it.max-lv)}</div></div><button class="buy" ${maxed?'disabled':''}>${maxed?'MÁX':'🪙 '+cost}</button>`;
+    b.innerHTML=`<div class="up-ic">${emIc(it.ic)||it.ic}</div><div class="up-body"><h3>${it.nome}</h3><p>${it.desc(lv+1)}</p></div><button class="buy" ${maxed?'disabled':''}>${maxed?'MÁX':'🪙 '+cost}</button>`;
     const btn=b.querySelector('.buy');if(!maxed)btn.onclick=()=>{if(coins()>=cost){addCoins(-cost);s[it.id]=lv+1;store.set('cv_shop',s);renderShop();updateCoins()}else{btn.classList.add('no');btn.textContent='sem ouro';setTimeout(()=>{btn.classList.remove('no');btn.textContent='🪙 '+cost},700)}};
     w.appendChild(b)})}
 function renderAch(){const w=$('#ach-list');w.innerHTML='';const st=metaStat();
@@ -1642,6 +1654,17 @@ function buildGalleryItems(){const items=[];
   items.push({name:'Baú · tesouro',make:buildChestDisplay});
   items.push({name:'Caixão · decoração',make:()=>buildCoffin(true)});
   return items}
+// totem de íma (uso único): pilar de pedra com íma flutuando. Ao gastar, o íma apaga e sobra uma tampa escura
+function makeTotem(){const g=new THREE.Group();
+  vox(g,0,.11,0,1.05,.22,1.05,0x6f6a63);vox(g,0,.28,0,.82,.14,.82,0x837e74);vox(g,0,.42,0,.6,.1,.6,0x74706a);
+  vox(g,0,.95,0,.46,1,.46,0x8f8a80);vox(g,-.23,.95,0,.1,1,.5,0x7d786f);vox(g,.23,.95,0,.1,1,.5,0x7d786f);
+  vox(g,0,.7,.25,.4,.14,.07,0xd23b2f,.6); // runa vermelha na frente
+  const m=new THREE.Group();m.name='mag';m.position.y=1.95;
+  vox(m,-.13,.06,0,.13,.34,.15,0xd23b2f,.45);vox(m,.13,.06,0,.13,.34,.15,0xd23b2f,.45);vox(m,0,-.11,0,.39,.13,.15,0xd23b2f,.45);
+  vox(m,-.13,.24,0,.13,.1,.16,0xeeeeee,.5);vox(m,.13,.24,0,.13,.1,.16,0xeeeeee,.5);
+  g.add(m);
+  const off=new THREE.Group();off.name='off';off.visible=false;vox(off,0,1.5,0,.3,.22,.3,0x6b665e);g.add(off);
+  return {g,m,off}}
 // baú detalhado (madeira + ferro + bandas douradas + ferrolho). Retorna {g, lid} pro lid animar ao abrir.
 function makeChest(){const g=new THREE.Group();
   vox(g,0,.22,0,.72,.44,.5,0x7a4e24);                                       // corpo de madeira
@@ -1737,7 +1760,7 @@ function buildMediaUI(){
   g2.append(cell(im,nm))});
  sec('EMOTICONS DO JOGO · ícones de poderes e melhorias (pixel art 16×16 · assets/images/icons/upg/)');
  const icView=(slug,fb)=>{const v=document.createElement('div');v.style.cssText='height:64px;display:flex;align-items:center;justify-content:center';
-   if(slug){const im=new Image();im.src='assets/images/icons/upg/'+slug+'.png?v=2';im.width=56;im.height=56;im.style.imageRendering='pixelated';v.append(im)}
+   if(slug){const im=new Image();im.src='assets/images/icons/upg/'+slug+'.png?v=3';im.width=56;im.height=56;im.style.imageRendering='pixelated';v.append(im)}
    else{v.textContent=fb||'';v.style.fontSize='34px'}return v};
  const g3=grid(130);
  Object.entries(ICONS).forEach(([n,e])=>{const em=icView(UPGSLUG[n],e);em.title=n;
