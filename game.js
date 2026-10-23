@@ -121,7 +121,13 @@ const CLSICON={mago:'assets/images/icons/mago.png?v=1',arqueiro:'assets/images/i
 let CLSIMG={};try{for(const k in CLSICON){const im=new Image();im.src=CLSICON[k];CLSIMG[k]=im}}catch(e){} // preload p/ canvas (menu 3D)
 const clsImg=k=>`<img class="cimg" src="${CLSICON[k]}" alt="" title="${CLASSES[k]?CLASSES[k].nome:k}">`; // HTML: tamanho segue o font-size do pai (em)
 const CLSTIPO={mago:'Mago',arqueiro:'Arqueiro',guerreiro:'Guerreiro',tank:'Guardião',necro:'Necromante',chrono:'Chronomante',pistol:'Pistoleiro',dracula:'Vampiro',demon:'Demônio',future:'Viajante',human:'Humano',king:'Rei'};
-const icon=n=>ICONS[n]||'';
+// ícones de poder/melhoria/interface: pixel art 16×16 em assets/images/icons/upg/ (via node _genicons.js)
+const UPGSLUG={'Orbes Giratórios':'orbes-giratorios','Raio Celeste':'raio-celeste','Aura de Brasa':'aura-brasa','Força':'forca','Mãos Rápidas':'maos-rapidas','Botas Leves':'botas-leves','Coração de Pedra':'coracao-pedra','Olho Certeiro':'olho-certeiro','Sede de Sangue':'sede-sangue','Placas de Ferro':'placas-ferro','Regeneração':'regeneracao','Ímã':'ima','Sabedoria':'sabedoria','Alcance Maior':'alcance-maior','Foco':'foco','Poção Grande':'picao-grande','Projétil Extra':'projetil-extra','Perfuração':'perfuracao','Espinhos':'espinhos','Horda Óssea':'horda-ossea','Ossos Afiados':'ossos-afiados','Punho Fatal':'punho-fatal','Velocidade de Tiro':'vel-tiro','Empurrão':'empurrao','Reflexo Relâmpago':'reflexo-relampago','Pulso Congelante':'pulso-congelante'};
+const upgImg=n=>{const s=UPGSLUG[n];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=1" alt="">`:''};
+// emojis antigos → PNG (shop/ conquistas/ HUD continuam usando o char no fonte)
+const EMICON={'❤️':'coracao','💪':'forca','⚡':'maos-rapidas','👟':'botas-leves','🎯':'olho-certeiro','💥':'alcance-maior','⏳':'foco','⌛':'foco','⏱️':'foco','🧱':'placas-ferro','💚':'regeneracao','🩸':'sede-sangue','✨':'projetil-extra','➡️':'perfuracao','🌵':'espinhos','💢':'punho-fatal','🚀':'vel-tiro','🫱':'empurrao','💨':'reflexo-relampago','❄️':'pulso-congelante','📖':'sabedoria','🧲':'ima','🪙':'ouro','🔒':'trancado','🔓':'desbloquear','💀':'craneo','☠️':'craneo','⭐':'estrela','🎖️':'estrela','👹':'golem','⚔️':'espadas','🗡️':'ossos-afiados','🦴':'horda-ossea'};
+const emIc=e=>{const s=EMICON[e];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=1" alt="">`:''};
+const icon=n=>upgImg(n)||ICONS[n]||'';
 const WEAPONS_NAMES=new Set(Object.values(WEAPONS).map(w=>w.nome));
 const UNLOCK={guerreiro:150}; // compra com ouro (Mago começa liberado)
 // Classes liberadas por missão (não por ouro). prog(): progresso atual rumo a goal.
@@ -859,13 +865,15 @@ function renderWeap(){const el=$('#h-weap');el.innerHTML='';for(const k in WEAPO
 function die(){
   state='dying';deadT=1.2;player.model.root.visible=false;burst(player.x,.6,player.z,CLASSES[player.cls].pal.body,36,{speed:6,size:.16,life:1.2});burst(player.x,.6,player.z,0xe5473c,18,{speed:5});addShake(.5);
   $('#touch').hidden=true;const best=store.get('cv_bestT',{});if((best[player.cls]||0)<runTime){best[player.cls]=Math.floor(runTime);store.set('cv_bestT',best)}
+  const bk=store.get('cv_bestK',{});if((bk[player.cls]||0)<kills){bk[player.cls]=kills;store.set('cv_bestK',bk)} // recorde: mais abates numa corrida
+  const bl=store.get('cv_bestL',{});if((bl[player.cls]||0)<player.lvl){bl[player.cls]=player.lvl;store.set('cv_bestL',bl)} // recorde: maior nível
   clearMinions();lastReward=recordRun();
 }
 function showDeath(){
   setScreen('dead');const C=CLASSES[player.cls];
   $('#dead-title').textContent='Você caiu aos '+fmtT(runTime);
   const best=store.get('cv_bestT',{})[player.cls]||runTime;const rw=lastReward||{earned:0,bonus:0};
-  $('#dead-sub').innerHTML=C.nome+' · recorde: '+fmtT(best)+(hordeN?' · horda '+hordeN:'')+' · ganhou <b style="color:var(--gold)">🪙 '+(rw.earned+rw.bonus)+'</b>'+(rw.bonus?' (+'+rw.bonus+' de conquistas!)':'')+(rw.newCls?'<br><b style="color:var(--moss)">'+clsImg(rw.newCls)+' '+CLASSES[rw.newCls].nome+' liberado!</b>':'');
+  $('#dead-sub').innerHTML=C.nome+' · recorde: '+fmtT(best)+(hordeN?' · horda '+hordeN:'')+' · ganhou <b style="color:var(--gold)">'+emIc('🪙')+' '+(rw.earned+rw.bonus)+'</b>'+(rw.bonus?' (+'+rw.bonus+' de conquistas!)':'')+(rw.newCls?'<br><b style="color:var(--moss)">'+clsImg(rw.newCls)+' '+CLASSES[rw.newCls].nome+' liberado!</b>':'');
   $('#d-time').textContent=fmtT(runTime);$('#d-lvl').textContent=player.lvl;$('#d-kills').textContent=kills;
   chips($('#d-chips'),player.picks,'Nenhuma melhoria escolhida');
 }
@@ -891,20 +899,20 @@ function renderPause(){
   $('#pause-inv').innerHTML=`<div class="invlabel">Armas</div><div class="invgrid">${w.length?w.join(''):'<span class="pnum">nenhuma ainda</span>'}</div>`+
     `<div class="invlabel">Melhorias</div><div class="invgrid">${up.length?up.join(''):'<span class="pnum">nenhuma ainda</span>'}</div>`;
   const st=player.stats,pct=v=>Math.round(v*100)+'%',mul=v=>'×'+(Math.round(v*100)/100);
-  const S=[['❤️ Vida',Math.round(player.maxHp)],['💪 Dano',mul(st.dmg)],['⚡ Vel. ataque',mul(st.atkSpd)],['👟 Vel. movimento',mul(st.move)],['🎯 Crítico',pct(st.crit)],['💥 Área',mul(st.area)],['⏳ Recarga hab.',mul(st.cdr)],['🧱 Armadura',pct(st.armor)]];
-  if(st.regen)S.push(['💚 Regeneração','+'+(Math.round(st.regen*10)/10)+'/s']);
-  if(st.ls)S.push(['🩸 Roubo de vida',pct(st.ls)]);
-  if(st.thorns)S.push(['🌵 Espinhos',pct(st.thorns)]);
-  if(st.multi)S.push(['✨ Projéteis extra','+'+st.multi]);
-  if(st.pierce)S.push(['➡️ Perfuração','+'+st.pierce]);
-  if(st.critDmg>2)S.push(['💢 Dano crítico','×'+(Math.round(st.critDmg*100)/100)]);
-  if(st.pspd>1)S.push(['🚀 Vel. de tiro',mul(st.pspd)]);
-  if(st.kb>1)S.push(['🫱 Recuo',mul(st.kb)]);
-  if(st.dashCd<1)S.push(['💨 Esquiva rápida',mul(st.dashCd)]);
-  if(st.chill)S.push(['❄️ Pulso Congelante',st.chill*20+'% lento']);
-  S.push(['🧲 Ímã',mul(st.magnet)],['📖 XP',mul(st.xpMul)]);
-  if(player.cls==='necro')S.push(['💀 Esqueletos',minions.length+' / '+player.minCap]);
-  if(player.cls==='king')S.push(['⚔️ Soldados',minions.length+' / 8']);
+  const S=[[emIc('❤️')+' Vida',Math.round(player.maxHp)],[emIc('💪')+' Dano',mul(st.dmg)],[emIc('⚡')+' Vel. ataque',mul(st.atkSpd)],[emIc('👟')+' Vel. movimento',mul(st.move)],[emIc('🎯')+' Crítico',pct(st.crit)],[emIc('💥')+' Área',mul(st.area)],[emIc('⏳')+' Recarga hab.',mul(st.cdr)],[emIc('🧱')+' Armadura',pct(st.armor)]];
+  if(st.regen)S.push([emIc('💚')+' Regeneração','+'+(Math.round(st.regen*10)/10)+'/s']);
+  if(st.ls)S.push([emIc('🩸')+' Roubo de vida',pct(st.ls)]);
+  if(st.thorns)S.push([emIc('🌵')+' Espinhos',pct(st.thorns)]);
+  if(st.multi)S.push([emIc('✨')+' Projéteis extra','+'+st.multi]);
+  if(st.pierce)S.push([emIc('➡️')+' Perfuração','+'+st.pierce]);
+  if(st.critDmg>2)S.push([emIc('💢')+' Dano crítico','×'+(Math.round(st.critDmg*100)/100)]);
+  if(st.pspd>1)S.push([emIc('🚀')+' Vel. de tiro',mul(st.pspd)]);
+  if(st.kb>1)S.push([emIc('🫱')+' Recuo',mul(st.kb)]);
+  if(st.dashCd<1)S.push([emIc('💨')+' Esquiva rápida',mul(st.dashCd)]);
+  if(st.chill)S.push([emIc('❄️')+' Pulso Congelante',st.chill*20+'% lento']);
+  S.push([emIc('🧲')+' Ímã',mul(st.magnet)],[emIc('📖')+' XP',mul(st.xpMul)]);
+  if(player.cls==='necro')S.push([emIc('💀')+' Esqueletos',minions.length+' / '+player.minCap]);
+  if(player.cls==='king')S.push([emIc('⚔️')+' Soldados',minions.length+' / 8']);
   $('#pause-stats').innerHTML=S.map(([n,v])=>`<span>${n}</span><b>${v}</b>`).join('');
   $('#pause-missions').innerHTML=ORDER.filter(k=>MISSION[k]).map(k=>{
     const M=MISSION[k],done=isUnlocked(k),cur=M.prog(),pct=done?100:Math.min(100,Math.round(cur/M.goal*100));
@@ -1103,8 +1111,8 @@ function renderCards(){
     b.onclick=()=>selectClass(k);b.ondblclick=()=>newRun(k);
     if(!isUnlocked(k)){b.classList.add('locked');const lk=document.createElement('div');lk.className='lock';
       if(MISSION[k]){const M=MISSION[k],pv=M.fmt?M.fmt(M.prog()):fmtN(M.prog()),gv=M.fmt?M.fmt(M.goal):fmtN(M.goal);
-        lk.innerHTML=`<span class="lk">🔒</span><b>Missão</b><small>${pv} / ${gv} ${M.label}</small>`;}
-      else{lk.innerHTML=`<span class="lk">🔒</span><b>🪙 ${UNLOCK[k]}</b><small>clique para ver</small>`;}
+        lk.innerHTML=`<span class="lk">${emIc('🔒')}</span><b>Missão</b><small>${pv} / ${gv} ${M.label}</small>`;}
+      else{lk.innerHTML=`<span class="lk">${emIc('🔒')}</span><b>${emIc('🪙')} ${UNLOCK[k]}</b><small>clique para ver</small>`;}
       b.appendChild(lk)}
     wrap.appendChild(b)});
   renderDetail(selCls);
@@ -1117,11 +1125,11 @@ function renderDetail(k){const C=CLASSES[k],best=store.get('cv_bestT',{}),det=$(
     `<p class="cd-role">${C.role}</p>`+
     `<div class="pips">${Object.entries(C.stats).map(([n,v])=>`<div class="pip-row" style="--c:${C.ui}"><span>${n}</span><i>${'<b class="on"></b>'.repeat(v)}${'<b></b>'.repeat(5-v)}</i></div>`).join('')}</div>`+
     `<div class="ab"><strong>${clsImg(k)} ${C.ab.nome}<small>Q · ${C.ab.cd}s</small></strong><span>${C.ab.desc}</span></div>`+
-    (locked&&MISSION[k]?`<div class="rec" style="color:var(--gold)">🎯 ${MISSION[k].desc}<br>Progresso: ${MISSION[k].fmt?MISSION[k].fmt(MISSION[k].prog()):fmtN(MISSION[k].prog())} / ${MISSION[k].fmt?MISSION[k].fmt(MISSION[k].goal):fmtN(MISSION[k].goal)} ${MISSION[k].label}</div>`:'')+
+    (locked&&MISSION[k]?`<div class="rec" style="color:var(--gold)">${emIc('🎯')} ${MISSION[k].desc}<br>Progresso: ${MISSION[k].fmt?MISSION[k].fmt(MISSION[k].prog()):fmtN(MISSION[k].prog())} / ${MISSION[k].fmt?MISSION[k].fmt(MISSION[k].goal):fmtN(MISSION[k].goal)} ${MISSION[k].label}</div>`:'')+
     (locked
-      ?(MISSION[k]?`<button class="btn" id="startbtn" type="button" disabled style="opacity:.6;cursor:default">🔒 CUMPRA A MISSÃO</button>`
-                  :(buyConfirm===k?`<button class="btn" id="startbtn" type="button" style="border-color:var(--gold)">✓ CONFIRMAR COMPRA · 🪙 ${UNLOCK[k]}</button>`
-                                  :`<button class="btn" id="startbtn" type="button">🔓 DESBLOQUEAR · 🪙 ${UNLOCK[k]}</button>`))
+      ?(MISSION[k]?`<button class="btn" id="startbtn" type="button" disabled style="opacity:.6;cursor:default">${emIc('🔒')} CUMPRA A MISSÃO</button>`
+                  :(buyConfirm===k?`<button class="btn" id="startbtn" type="button" style="border-color:var(--gold)">✓ CONFIRMAR COMPRA · ${emIc('🪙')} ${UNLOCK[k]}</button>`
+                                  :`<button class="btn" id="startbtn" type="button">${emIc('🔓')} DESBLOQUEAR · ${emIc('🪙')} ${UNLOCK[k]}</button>`))
       :`<button class="btn" id="startbtn" type="button">CONFIRMAR</button>`);
   $('#startbtn').onclick=()=>{
     if(!locked){newRun(k);return}
@@ -1479,24 +1487,31 @@ function frame(now){
   renderer.render(scene,camera);
 }
 function renderBest(){const b=store.get('cv_bestT',{});let k=null;for(const c of ORDER)if(b[c]&&(!k||b[c]>b[k]))k=c;$('#t-best').textContent=k?'★ MELHOR '+fmtT(b[k])+' · '+CLASSES[k].nome:''}
-function renderRecs(){const b=store.get('cv_bestT',{}),st=metaStat(),w=$('#recs-list');w.innerHTML='';
-  const rows=ORDER.map(c=>({c,t:b[c]||0})).sort((x,y)=>y.t-x.t);
-  rows.forEach((r,i)=>{const d=document.createElement('div');d.className='lbrow'+(r.t?'':' empty');
-    d.innerHTML=`<span class="rk">#${i+1}</span><span class="cic">${clsImg(r.c)}</span><span class="nm" style="color:${CLASSES[r.c].ui}">${CLASSES[r.c].nome}</span><span class="tm">${r.t?fmtT(r.t):'--:--'}</span>`;w.appendChild(d)});
+function renderRecs(){const st=metaStat(),w=$('#recs-list');w.innerHTML='';
+  // os 3 recordes da arena, cada um ranqueado por classe (top 5 cada)
+  const cats=[
+    {ic:'⏳',t:'MAIOR TEMPO VIVO',key:'cv_bestT',fmt:v=>fmtT(v),zero:'--:--'},
+    {ic:'💀',t:'MAIS ABATES',key:'cv_bestK',fmt:v=>fmtN(v)+' abates',zero:'0'},
+    {ic:'⭐',t:'MAIOR NÍVEL',key:'cv_bestL',fmt:v=>'NV '+v,zero:'--'}];
+  cats.forEach(c=>{const m=store.get(c.key,{});
+    const h=document.createElement('div');h.className='rec-cat-h';h.innerHTML=`${emIc(c.ic)} ${c.t}`;w.appendChild(h);
+    const rows=ORDER.map(k=>({k,v:m[k]||0})).sort((a,b)=>b.v-a.v);
+    rows.slice(0,5).forEach((r,i)=>{const d=document.createElement('div');d.className='lbrow'+(r.v?'':' empty')+(i===0&&r.v?' win':'');
+      d.innerHTML=`<span class="rk">${i===0&&r.v?'★':'#'+(i+1)}</span><span class="cic">${clsImg(r.k)}</span><span class="nm" style="color:${CLASSES[r.k].ui}">${CLASSES[r.k].nome}</span><span class="tm">${r.v?c.fmt(r.v):c.zero}</span>`;w.appendChild(d)})});
   $('#recs-sum').textContent=`${st.runs} partidas · ${st.kills} abates no total · ${st.bosses} golens derrotados`;}
 function updateCoins(){$('#coins-n').textContent=coins();$('#coins').hidden=!['title','menu','shop','ach','recs','play','pause','upgrade','dying'].includes(state);
   if(!store.get('cv_unlocked',{}).king&&coins()>=MISSION.king.goal){doUnlock('king');toast('👑 '+CLASSES.king.nome+' liberado!','Missão cumprida: '+fmtN(MISSION.king.goal)+' de ouro acumulado')}}
 function renderShop(){const w=$('#shop-list');w.innerHTML='';const s=shopLv();
   SHOP.forEach(it=>{const lv=s[it.id]||0,maxed=lv>=it.max,cost=it.cost(lv+1);
     const b=document.createElement('div');b.className='shopit'+(maxed?' max':'');
-    b.innerHTML=`<div class="up-ic">${it.ic}</div><div class="up-body"><div class="up-top"><span class="rar" style="color:var(--gold)">${it.nome}</span><span class="lvl">${lv}/${it.max}</span></div><p>${it.desc(lv+1).replace(/(\+?\d[\d.,]*\s?%?)/g,'<b class="hl">$1</b>')}</p><div class="pips2">${'<b class="on"></b>'.repeat(lv)}${'<b></b>'.repeat(it.max-lv)}</div></div><button class="buy" ${maxed?'disabled':''}>${maxed?'MÁX':'🪙 '+cost}</button>`;
+    b.innerHTML=`<div class="up-ic">${emIc(it.ic)||it.ic}</div><div class="up-body"><div class="up-top"><span class="rar" style="color:var(--gold)">${it.nome}</span><span class="lvl">${lv}/${it.max}</span></div><p>${it.desc(lv+1).replace(/(\+?\d[\d.,]*\s?%?)/g,'<b class="hl">$1</b>')}</p><div class="pips2">${'<b class="on"></b>'.repeat(lv)}${'<b></b>'.repeat(it.max-lv)}</div></div><button class="buy" ${maxed?'disabled':''}>${maxed?'MÁX':'🪙 '+cost}</button>`;
     const btn=b.querySelector('.buy');if(!maxed)btn.onclick=()=>{if(coins()>=cost){addCoins(-cost);s[it.id]=lv+1;store.set('cv_shop',s);renderShop();updateCoins()}else{btn.classList.add('no');btn.textContent='sem ouro';setTimeout(()=>{btn.classList.remove('no');btn.textContent='🪙 '+cost},700)}};
     w.appendChild(b)})}
 function renderAch(){const w=$('#ach-list');w.innerHTML='';const st=metaStat();
   ACH.forEach(a=>{const cur=a.cur(st),done=cur>=a.goal,pct=Math.min(1,cur/a.goal)*100;
     const curT=a.time?fmtT(Math.min(cur,a.goal)):Math.min(cur,a.goal),goalT=a.time?fmtT(a.goal):a.goal;
     const d=document.createElement('div');d.className='achit'+(done?' done':'');
-    d.innerHTML=`<div class="up-ic">${done?'✅':a.ic}</div><div class="up-body"><div class="up-top"><span class="rar">${a.nome}</span><span class="lvl">${done?'✓ ':''}🪙 ${a.rw}</span></div><p>${a.desc}</p><div class="pbar"><i style="width:${pct}%"></i></div><span class="pnum">${curT} / ${goalT}</span></div>`;
+    d.innerHTML=`<div class="up-ic">${done?'✅':(emIc(a.ic)||a.ic)}</div><div class="up-body"><div class="up-top"><span class="rar">${a.nome}</span><span class="lvl">${done?'✓ ':''}${emIc('🪙')} ${a.rw}</span></div><p>${a.desc}</p><div class="pbar"><i style="width:${pct}%"></i></div><span class="pnum">${curT} / ${goalT}</span></div>`;
     w.appendChild(d)})}
 /* ================= terminal de cheats (Ctrl+Alt+C) ================= */
 let cheatOpen=false,cheatBox=null,cheatLog=null,cheatIn=null,cheatHist=[],cheatHi=0;
@@ -1678,14 +1693,18 @@ function buildMediaUI(){
  MEDIA_SKINS.forEach(f=>{const im=new Image();im.src=f[0];im.style.cssText='max-width:150px;max-height:150px;image-rendering:pixelated;background:'+checker+';padding:6px';
   const nm=document.createElement('div');nm.style.cssText='font-size:11px;color:#cfc4da;line-height:1.35';nm.textContent=f[1];
   g2.append(cell(im,nm))});
- sec('EMOTICONS DO JOGO · ícones de poderes e melhorias (mapa ICONS)');
+ sec('EMOTICONS DO JOGO · ícones de poderes e melhorias (pixel art 16×16 · assets/images/icons/upg/)');
+ const icView=(slug,fb)=>{const v=document.createElement('div');v.style.cssText='height:64px;display:flex;align-items:center;justify-content:center';
+   if(slug){const im=new Image();im.src='assets/images/icons/upg/'+slug+'.png?v=1';im.width=56;im.height=56;im.style.imageRendering='pixelated';v.append(im)}
+   else{v.textContent=fb||'';v.style.fontSize='34px'}return v};
  const g3=grid(130);
- Object.entries(ICONS).forEach(([n,e])=>{const em=document.createElement('div');em.textContent=e;em.style.fontSize='34px';em.title=n;
+ Object.entries(ICONS).forEach(([n,e])=>{const em=icView(UPGSLUG[n],e);em.title=n;
   const nm=document.createElement('div');nm.style.cssText='font-size:11px;color:#cfc4da;line-height:1.3';nm.textContent=n;
   g3.append(cell(em,nm))});
- sec('EMOTICONS DE INTERFACE');
+ sec('EMOTICONS DE INTERFACE · pixel art');
  const g4=grid(130);
- [['🪙','ouro / recompensas'],['🔒','classe bloqueada'],['🔓','desbloquear'],['🎯','missão de desbloqueio'],['💀','abates (HUD)'],['⭐','nível / recorde'],['👹','Golem do Campo'],['⚔️','melee / título']].forEach(p=>{const em=document.createElement('div');em.textContent=p[0];em.style.fontSize='34px';const nm=document.createElement('div');nm.style.cssText='font-size:11px;color:#cfc4da;line-height:1.3';nm.textContent=p[1];g4.append(cell(em,nm))});
+ [['🪙','ouro / recompensas'],['🔒','classe bloqueada'],['🔓','desbloquear'],['🎯','missão de desbloqueio'],['💀','abates (HUD)'],['⭐','nível / recorde'],['👹','Golem do Campo'],['⚔️','melee / título']].forEach(p=>{const em=icView(EMICON[p[0]],p[0]);
+  const nm=document.createElement('div');nm.style.cssText='font-size:11px;color:#cfc4da;line-height:1.3';nm.textContent=p[1];g4.append(cell(em,nm))});
  mediaUI.style.paddingBottom='60px';
  document.body.appendChild(mediaUI)}
 function toggleMedia(force){if(!mediaUI)buildMediaUI();mediaOpen=force!==undefined?force:!mediaOpen;mediaUI.style.display=mediaOpen?'block':'none';if(mediaOpen&&cheatOpen)toggleCheat()}

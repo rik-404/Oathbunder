@@ -331,3 +331,9 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 }
 /* ícone de classe: pixel art 16×16 (assets/images/icons/) — o tamanho segue o font-size do elemento pai */
 .cimg{width:1em;height:1em;image-rendering:pixelated;vertical-align:-.12em;flex:none}
+/* recordes: 3 categorias (tempo vivo / abates / nível) */
+.recs3{display:flex;flex-direction:column;gap:9px;width:100%;max-width:720px;margin:4px auto}
+.rec-cat-h{display:flex;align-items:center;gap:9px;font-family:var(--display);font-size:14px;letter-spacing:.06em;color:var(--gold);margin-top:14px;padding-bottom:6px;border-bottom:2px solid var(--edge)}
+.lbrow.win{border-color:var(--gold);background:linear-gradient(90deg,rgba(242,184,75,.14),var(--stone) 60%)}
+.lbrow.win .tm{color:var(--gold)}
+@media (max-width:640px){.rec-cat-h{font-size:12px;margin-top:10px}}
