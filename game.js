@@ -19,20 +19,37 @@ const fmtT=s=>{s=Math.floor(s);return String(Math.floor(s/60)).padStart(2,'0')+'
 const fmtN=n=>String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.'); // separador de milhar (1.240)
 
 /* ================= som (SFX sintetizados) e hit-stop ================= */
-let actx=null,amaster=null,muted=store.get('cv_muted',false);
+let actx=null,amaster=null,sfxGain=null,musicGain=null;
+let muted=store.get('cv_muted',false);
+let musicVol=store.get('cv_musicVol',.5);
+let sfxVol=store.get('cv_sfxVol',.7);
 const sfxLast={};const SFX_GAP={hit:60,gem:70,shot:55,melee:80,bone:120,coin:60,level:350,click:40,hurt:150,kill:70};
-function audioCtx(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)();amaster=actx.createGain();amaster.gain.value=.5;amaster.connect(actx.destination)}catch(e){actx=null}}
+function audioCtx(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)();
+  sfxGain=actx.createGain();sfxGain.gain.value=sfxVol;sfxGain.connect(actx.destination);
+  musicGain=actx.createGain();musicGain.gain.value=musicVol;musicGain.connect(actx.destination);
+  amaster=actx.createGain();amaster.gain.value=1;amaster.connect(actx.destination)}catch(e){actx=null}}
   if(actx&&actx.state==='suspended')actx.resume();return actx}
+function setSfxVol(v){sfxVol=clamp(v,0,1);store.set('cv_sfxVol',sfxVol);if(sfxGain)sfxGain.gain.value=sfxVol;updateVolUI()}
+function setMusicVol(v){musicVol=clamp(v,0,1);store.set('cv_musicVol',musicVol);if(musicGain)musicGain.gain.value=musicVol;if(fieldMusic)fieldMusic.volume=musicVol;updateVolUI()}
+function setMuted(m){muted=m;store.set('cv_muted',m);updateVolUI();const b=$('#sndbtn');if(b)b.textContent=m?'🔇 Mudo':'🔊 Som';const b2=$('#optMuteAll');if(b2)b2.checked=m}
+function updateVolUI(){
+  const mv=Math.round(musicVol*100),sv=Math.round(sfxVol*100);
+  $('#musicVol').value=mv;$('#musicVolVal').textContent=mv+'%';
+  $('#sfxVol').value=sv;$('#sfxVolVal').textContent=sv+'%';
+  $('#optMusicVol').value=mv;$('#optMusicVolVal').textContent=mv+'%';
+  $('#optSfxVol').value=sv;$('#optSfxVolVal').textContent=sv+'%';
+  $('#muteAll').checked=muted;$('#optMuteAll').checked=muted;
+}
 function tone(f0,f1,d,type,v,delay=0){if(muted||!audioCtx())return;const t=actx.currentTime+delay,o=actx.createOscillator(),g=actx.createGain();
   o.type=type;o.frequency.setValueAtTime(Math.max(1,f0),t);o.frequency.exponentialRampToValueAtTime(Math.max(1,f1),t+d);
   g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);
-  o.connect(g);g.connect(amaster);o.start(t);o.stop(t+d+.02)}
+  o.connect(g);g.connect(sfxGain);o.start(t);o.stop(t+d+.02)}
 function noiseFx(d,v,freq,q=.9,type='bandpass',delay=0){if(muted||!audioCtx())return;const t=actx.currentTime+delay,len=Math.max(1,Math.floor(actx.sampleRate*d));
   const buf=actx.createBuffer(1,len,actx.sampleRate),data=buf.getChannelData(0);
   for(let i=0;i<len;i++)data[i]=Math.random()*2-1;
   const src=actx.createBufferSource();src.buffer=buf;const f=actx.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q;
   const g=actx.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);
-  src.connect(f);f.connect(g);g.connect(amaster);src.start(t);src.stop(t+d)}
+  src.connect(f);f.connect(g);g.connect(sfxGain);src.start(t);src.stop(t+d)}
 // S(n,arg): dispara um efeito sonoro nomeado, com limite de repetição por tipo pra não vir uma metralhadora
 function S(n,arg){const gap=SFX_GAP[n],now=performance.now();if(gap&&now-(sfxLast[n]||0)<gap)return;sfxLast[n]=now;
   switch(n){
@@ -58,14 +75,20 @@ function S(n,arg){const gap=SFX_GAP[n],now=performance.now();if(gap&&now-(sfxLas
     case'bossin':tone(90,45,.5,'sawtooth',.3);noiseFx(.4,.2,150,.6,'lowpass');break;
     case'bossdie':tone(200,40,.6,'sawtooth',.3);noiseFx(.5,.3,300,.7);break;
   }}
-function setMuted(m){muted=m;store.set('cv_muted',m);const b=$('#sndbtn');if(b)b.textContent=m?'🔇 Mudo':'🔊 Som'}
 ['pointerdown','keydown'].forEach(ev=>addEventListener(ev,()=>audioCtx(),{passive:true})); // desbloqueia o áudio no primeiro gesto
 let titleAmb=null,ambT=0; // crepitar da fogueira na tela de título
+let fieldMusic=null; // música de fundo do campo (flores-sond.mp3)
 function updTitleAmb(){if(typeof Audio!=='function')return;const want=state==='title';
   if(want){if(!titleAmb){titleAmb=new Audio('assets/sounds/campfire-sond.mp3');titleAmb.loop=true;ambT=0}
-    titleAmb.volume=muted?0:.4;
-    if(titleAmb.paused&&--ambT<=0){ambT=10;titleAmb.play().catch(()=>{ambT=25})}} // tenta de novo até o 1º clique (autoplay bloqueado)
+    titleAmb.volume=muted?0:musicVol*.4;
+    if(titleAmb.paused&&--ambT<=0){ambT=10;titleAmb.play().catch(()=>{ambT=25})}}
   else if(titleAmb&&!titleAmb.paused)titleAmb.pause()}
+function updFieldMusic(){if(typeof Audio!=='function')return;const want=state==='play'||state==='pause'||state==='upgrade'||state==='dying';
+  if(want){
+    if(!fieldMusic){fieldMusic=new Audio('assets/sounds/flores-sond.mp3');fieldMusic.loop=true}
+    fieldMusic.volume=muted?0:musicVol;
+    if(fieldMusic.paused)fieldMusic.play().catch(()=>{})}
+  else if(fieldMusic&&!fieldMusic.paused){fieldMusic.pause();fieldMusic.currentTime=0}}
 let hitStopT=0,lastKillStop=0;
 function hitStop(t){if(!reduceMotion)hitStopT=Math.max(hitStopT,t)}
 function killStop(t){const n=performance.now();if(n-lastKillStop>90){lastKillStop=n;hitStop(t)}}
@@ -385,6 +408,10 @@ function buildOgre(){const b=buildBody({body:0x6a5a3a,trim:0x4a3a28,skin:0x7aa84
   vox(club,0,.38,0,.12,1.15,.12,0x5a3f26);vox(club,0,1.05,0,.38,.52,.38,0x7a5a3a);vox(club,0,1.05,0,.44,.17,.44,0x5a3f26);
   vox(club,.21,1.1,0,.11,.15,.11,0x9a9a90);vox(club,-.19,.92,.13,.11,.15,.11,0x9a9a90);vox(club,.1,1.2,-.1,.1,.13,.1,0x9a9a90);
   b.root.scale.setScalar(2.4);collect(b.root);return b}
+
+// Registrar builders no módulo BOSS (precisa rodar depois que boss.js carregar)
+window.BOSS_BUILDERS.buildGolem = buildGolem;
+window.BOSS_BUILDERS.buildOgre = buildOgre;
 const PROJ_GEO={
   fire:mergeBoxes([[0,0,0,.26,.26,.26,0x8fe1ff],[0,0,-.13,.14,.14,.3,0xd6f3ff]]),
   arrow:mergeBoxes([[0,0,0,.05,.05,.58,0x8a6a42],[0,0,.31,.09,.09,.1,0xcfd6dd],[0,0,-.26,.13,.02,.12,0xeeeeee]]),
@@ -403,7 +430,8 @@ const PROJ_GEO={
 /* ================= estado ================= */
 let state='menu',selCls=store.get('cv_cls','guerreiro');if(!CLASSES[selCls])selCls='guerreiro';
 let grid=null,hgt=null,level=null,fxGroup=null,wGroup=null,enemies=[],projs=[],pickups=[],fxs=[],parts=[],texts=[],chests=[],totems=[],landPos=null,flameMat=null,fireFx=null;
-let kills=0,runTime=0,shake=0,boss=null,hurtA=0,deadT=0,hordeN=0,nextHorde=60,nextBoss=240,bossCount=0,spawnAcc=0,pendingUps=0,upSource='lvl',bossKills=0,lastReward=null,runDmg=0,runSkel=0,runBat=0,cheatGod=false,ogreLoose=false;
+let kills=0,runTime=0,shake=0,hurtA=0,deadT=0,hordeN=0,nextHorde=60,spawnAcc=0,pendingUps=0,upSource='lvl',lastReward=null,runDmg=0,runSkel=0,runBat=0,cheatGod=false;
+// Boss state moved to BOSS module
 const player={model:null};
 let camYaw=0,camDist=5.4,camPitch=.5,camZoom=6.5,camFx=0,camFz=0;
 const W=128,H=128;
@@ -579,29 +607,16 @@ function spawnEnemy(type,x,z,elite,opts){
     kx:0,kz:0,cd:rand(.4,1.2),t:rand(0,10),face:0,flash:0,side:Math.random()<.5?-1:1,wind:0,elite:!!elite,xp:D.xp*(elite?8:1),fly:!!D.fly,orbCd:0,dead:false,atk:0};
   enemies.push(e);return e;
 }
-function spawnBoss(){
-  const SC=scaleT();bossCount++;const a=player.facing+rand(-.6,.6);let x=player.x+Math.sin(a)*14,z=player.z+Math.cos(a)*14;
-  for(let i=0;i<20&&collide(x,z,1);i++){const b=rand(0,TAU);x=player.x+Math.sin(b)*14;z=player.z+Math.cos(b)*14}
-  const cyc=bossCount%3,isSlime=cyc===2,isOgre=cyc===0; // 1º Golem, 2º Rei do Slime, 3º Ogro — em ciclo
-  let mdl;
-  if(isSlime){const body=new THREE.Mesh(enemyGeo('slime'),vcMat);body.castShadow=true;const g=new THREE.Group();g.add(body);mdl={root:collect(g)}} // o slime comum, ampliado 4.4×
-  else mdl=isOgre?buildOgre():buildGolem();
-  const obj=new THREE.Group();obj.add(mdl.root);obj.position.set(x,0,z);level.add(obj);
-  const hp=(isSlime?1150:(isOgre?950:1100))*(1+.8*(bossCount-1))*(1+runTime/600);
-  const type=isSlime?'slimeking':isOgre?'ogre':'golem';
-  boss={type,x,z,r:isSlime?1.5:1,hp,maxHp:hp,speed:isSlime?3.2:(isOgre?2.9:2.6),dmg:(isSlime?25:(isOgre?27:24))*SC.dmg,h:3,sc:isSlime?4.4:1,color:isSlime?0x5fcf5a:isOgre?0x7aa84a:0x6e6578,obj,mdl,kx:0,kz:0,cd:1,t:0,face:0,faceT:0,flash:0,mode:'chase',phaseT:2.5,boss:true,xp:60,orbCd:0,dead:false};
-  enemies.push(boss);$('#bossbar').hidden=false;$('#bossbar').querySelector('span').textContent=isSlime?'REI DO SLIME':isOgre?'OGRO BRUTAMONTES':'GOLEM DO CAMPO';
-  toast(isSlime?'O Rei do Slime apareceu':isOgre?'O Ogro apareceu':'O Golem chegou',isSlime?'Ao cair, o bando inteiro escapa':isOgre?'Cuidado com as bastonadas no chão':'Ele fica mais bravo com metade da vida');addShake(.4);S('bossin');
-}
-function pickType(){const t=runTime,w=[['slime',5],['bat',t>15?3:0],['zombie',t>40?4:0],['slimeB',t>80?3:0],['skel',t>100?2:0],['brute',t>160?1:0],['ogre',ogreLoose?2:0]];
+function pickType(){const t=runTime,w=[['slime',5],['bat',t>15?3:0],['zombie',t>40?4:0],['slimeB',t>80?3:0],['skel',t>100?2:0],['brute',t>160?1:0],['ogre',BOSS.ogreLoose()?2:0]];
   let tot=0;for(const x of w)tot+=x[1];let r=Math.random()*tot;for(const x of w){r-=x[1];if(r<=0)return x[0]}return'slime'}
 function spawnPos(dmin,dmax){for(let i=0;i<12;i++){const a=rand(0,TAU),d=rand(dmin,dmax),x=player.x+Math.sin(a)*d,z=player.z+Math.cos(a)*d;if(!collide(x,z,.5))return[x,z]}return null}
 function director(dt){
   const t=runTime,rate=Math.min(8,1.1+t/28),maxAlive=Math.min(isTouch?95:130,32+t*.38);
   spawnAcc+=rate*dt;while(spawnAcc>=1){spawnAcc--;if(enemies.length<maxAlive){const p=spawnPos(18,25);if(p){const el=t>150&&Math.random()<Math.min(.07,(t-150)/2500);spawnEnemy(pickType(),p[0],p[1],el)}}}
-  if(t>=nextHorde&&!moonOn&&!boss){hordeN++;const SA=scaleT();nextHorde+=60;const n0=14+hordeN*5,n=n0+(SA.extra>.03?Math.round(n0*SA.extra):0),tp=pickType();toast('Horda '+hordeN,'Estão te cercando');addShake(.15);
+  if(t>=nextHorde&&!moonOn&&!BOSS.boss()){hordeN++;const SA=scaleT();nextHorde+=60;const n0=14+hordeN*5,n=n0+(SA.extra>.03?Math.round(n0*SA.extra):0),tp=pickType();toast('Horda '+hordeN,'Estão te cercando');addShake(.15);
     for(let i=0;i<n;i++){const a=i/n*TAU,d=15+rand(0,2.5),x=player.x+Math.sin(a)*d,z=player.z+Math.cos(a)*d;if(!collide(x,z,.4))spawnEnemy(i%5===0?pickType():tp,x,z,hordeN>=4&&i%17===0)}}
-  if(t>=nextBoss&&!moonOn){nextBoss+=240;if(!boss)spawnBoss()}
+  BOSS.checkBossSpawn(dt);
+}
 }
 
 /* ================= projéteis, cristais, coletáveis ================= */
@@ -689,14 +704,7 @@ function killEnemy(e){
   if(player.weap&&player.weap.gold&&Math.random()<player.weap.gold*.10){
     const amt=1+Math.floor(player.weap.gold/2);addCoins(amt);updateCoins();dmgText(e.x,e.h+.4,e.z,'+'+amt+' 🪙','gold');S('coin');
   }
-  if(e.boss){S('bossdie');hitStop(.16);for(let i=0;i<12;i++)dropGem(e.x+rand(-2,2),e.z+rand(-2,2),5);dropGem(e.x,e.z,40);for(let i=0;i<3;i++)dropPickup(e.x+rand(-1.5,1.5),e.z+rand(-1.5,1.5),'heart');
-    for(let i=0;i<10;i++)dropPickup(e.x+rand(-1.8,1.8),e.z+rand(-1.8,1.8),'coin',randi(3,6)); // chuva de moedas
-    addShake(.6);$('#bossbar').hidden=true;boss=null;bossKills++;
-    if(e.type==='ogre'){ogreLoose=true;toast('Ogro derrotado!','Agora ogros vagam pelo campo...')}
-    else if(e.type==='slimeking'){toast('Rei do Slime derrotado!','O bando de slimes menores escapou...');
-      for(let i=0;i<12;i++){const a=i/12*TAU+rand(-.25,.25),dd=2.4+rand(0,1.8),sx=e.x+Math.sin(a)*dd,sz=e.z+Math.cos(a)*dd;if(!collide(sx,sz,.4)){const mm=spawnEnemy('slime',sx,sz,false,{ms:.55,mini:true});if(mm){mm.kx=Math.sin(a)*4;mm.kz=Math.cos(a)*4}}}}
-    else toast('Golem derrotado!','O próximo vai ser mais forte');
-    if(!store.get('cv_unlocked',{}).demon&&metaStat().bosses+bossKills>=MISSION.demon.goal){doUnlock('demon');toast('😈 '+CLASSES.demon.nome+' liberado!','Missão cumprida: '+MISSION.demon.goal+' Golens derrotados')}}
+  if(e.boss){BOSS.handleBossDeath(e);}
   else{S('kill');killStop(e.type==='brute'||e.elite?.05:.04);dropGem(e.x,e.z,e.xp);const r=Math.random();
     if(r<.022)dropPickup(e.x,e.z,'heart'); // íma: saiu do drop dos bichos — agora é totem fixo no mapa
     if(Math.random()<(e.elite?1:.16))dropPickup(e.x,e.z,'coin',e.elite?randi(3,6):randi(1,2))} // moeda no chão

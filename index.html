@@ -145,10 +145,111 @@
       <div class="pcol"><h3>Atributos</h3><div class="statlist" id="pause-stats"></div></div>
       <div class="pcol"><h3>Missões</h3><div id="pause-missions"></div></div>
     </div>
+    <div class="pbody" style="margin-top:16px;border-top:1px solid var(--edge);padding-top:16px">
+      <h3>🔊 Áudio</h3>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="min-width:110px;color:var(--dust)">Música</span>
+          <input type="range" id="musicVol" min="0" max="100" value="50" style="flex:1">
+          <span id="musicVolVal" style="min-width:36px;text-align:right;color:var(--bone)">50%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="min-width:110px;color:var(--dust)">Efeitos (SFX)</span>
+          <input type="range" id="sfxVol" min="0" max="100" value="70" style="flex:1">
+          <span id="sfxVolVal" style="min-width:36px;text-align:right;color:var(--bone)">70%</span>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text)">
+          <input type="checkbox" id="muteAll" style="accent-color:var(--gold)">
+          <span>Mutar tudo</span>
+        </label>
+      </div>
+    </div>
     <div class="row">
       <button class="btn" id="resumebtn" type="button">Continuar</button>
+      <button class="btn ghost" id="optbtn" type="button">⚙ Opções</button>
       <button class="btn ghost" id="quitbtn" type="button">Desistir</button>
-      <button class="btn ghost" id="sndbtn" type="button">🔊 Som</button>
+    </div>
+  </div>
+</section>
+
+<!-- Tela de Opções -->
+<section id="options" class="screen panel-screen" hidden>
+  <div class="panel">
+    <h2>⚙ Opções</h2>
+    <div style="display:flex;flex-direction:column;gap:16px;margin-top:8px">
+      <div>
+        <h3>🔊 Áudio</h3>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="min-width:110px;color:var(--dust)">Música</span>
+            <input type="range" id="optMusicVol" min="0" max="100" value="50" style="flex:1">
+            <span id="optMusicVolVal" style="min-width:36px;text-align:right;color:var(--bone)">50%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="min-width:110px;color:var(--dust)">Efeitos (SFX)</span>
+            <input type="range" id="optSfxVol" min="0" max="100" value="70" style="flex:1">
+            <span id="optSfxVolVal" style="min-width:36px;text-align:right;color:var(--bone)">70%</span>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text)">
+            <input type="checkbox" id="optMuteAll" style="accent-color:var(--gold)">
+            <span>Mutar tudo</span>
+          </label>
+        </div>
+      </div>
+      <div>
+        <h3>🎮 Jogabilidade</h3>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text)">
+            <input type="checkbox" id="optAutoPause" checked style="accent-color:var(--gold)">
+            <span>Pausar ao perder foco (Alt+Tab)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text)">
+            <input type="checkbox" id="optShowDamage" checked style="accent-color:var(--gold)">
+            <span>Mostrar números de dano</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text)">
+            <input type="checkbox" id="optScreenShake" checked style="accent-color:var(--gold)">
+            <span>Tremor de tela (screen shake)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text)">
+            <input type="checkbox" id="optReduceMotion" style="accent-color:var(--gold)">
+            <span>Reduzir movimento (acessibilidade)</span>
+          </label>
+        </div>
+      </div>
+      <div>
+        <h3>🎨 Visual</h3>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="min-width:110px;color:var(--dust)">Qualidade</span>
+            <select id="optQuality" style="flex:1;background:var(--panel);border:1px solid var(--edge);color:var(--text);padding:6px 10px;border-radius:6px">
+              <option value="low">Baixa (mais FPS)</option>
+              <option value="medium" selected>Média</option>
+              <option value="high">Alta (melhor visual)</option>
+            </select>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text)">
+            <input type="checkbox" id="optShadows" checked style="accent-color:var(--gold)">
+            <span>Sombras dinâmicas</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text)">
+            <input type="checkbox" id="optParticles" checked style="accent-color:var(--gold)">
+            <span>Partículas e efeitos</span>
+          </label>
+        </div>
+      </div>
+      <div>
+        <h3>💾 Dados</h3>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn ghost" id="optExportSave" type="button">📤 Exportar save (JSON)</button>
+          <button class="btn ghost" id="optImportSave" type="button">📥 Importar save (JSON)</button>
+          <input type="file" id="optImportFile" accept=".json" hidden>
+          <button class="btn ghost" id="optResetSave" type="button" style="color:var(--blood)">🗑️ Apagar TODOS os dados do jogo</button>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn" id="optBack" type="button">Voltar</button>
     </div>
   </div>
 </section>
@@ -172,23 +273,25 @@
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- heróis (registram em window.CHARACTERS; precisam vir antes do game.js) -->
-<script src="assets/js/characters/mage.js"></script>
-<script src="assets/js/characters/archer.js?v=79"></script>
-<script src="assets/js/characters/guerreiro.js?v=76"></script>
-<script src="assets/js/characters/tank.js?v=75"></script>
-<script src="assets/js/characters/necromancer.js?v=77"></script>
-<script src="assets/js/characters/chronomancer.js?v=77"></script>
-<script src="assets/js/characters/pistol.js?v=75"></script>
-<script src="assets/js/characters/dracula.js?v=76"></script>
-<script src="assets/js/characters/demon.js?v=76"></script>
-<script src="assets/js/characters/future.js?v=75"></script>
-<script src="assets/js/characters/human.js?v=75"></script>
-<script src="assets/js/characters/king.js?v=77"></script>
+<!-- classes (registram em window.CLASSES; precisam vir antes do game.js) -->
+<script src="assets/js/class/mago.js"></script>
+<script src="assets/js/class/arqueiro.js"></script>
+<script src="assets/js/class/guerreiro.js"></script>
+<script src="assets/js/class/tank.js"></script>
+<script src="assets/js/class/necro.js"></script>
+<script src="assets/js/class/chrono.js"></script>
+<script src="assets/js/class/pistol.js"></script>
+<script src="assets/js/class/dracula.js"></script>
+<script src="assets/js/class/demon.js"></script>
+<script src="assets/js/class/future.js"></script>
+<script src="assets/js/class/human.js"></script>
+<script src="assets/js/class/king.js"></script>
+<script src="assets/js/class/index.js"></script>
 <script src="assets/js/enimies/skeleton.js?v=4"></script>
 <script src="assets/js/enimies/zombie.js?v=3"></script>
 <script src="assets/js/weapons.js?v=1"></script>
 <script src="assets/js/upgrades.js?v=2"></script>
+<script src="assets/js/boss/boss.js?v=1"></script>
 <script src="game.js?v=114"></script>
 <script>
 // Service worker: autoatualização dos clientes (só funciona em http/https; em file:// fica inativo)
