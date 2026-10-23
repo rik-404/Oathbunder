@@ -98,9 +98,9 @@ const CLASSES={
   future:{nome:'Smith',role:'Rajadas de plasma e salto quântico',ui:'#3bf0d0',hp:92,armor:.05,speed:5.6,atkCd:.38,dmg:13,kind:'proj',proj:'plasma',projSpeed:26,range:16,pierce:2,
     ab:{nome:'Salto Quântico',cd:6,desc:'Teleporta à frente, fica invencível um instante e explode ao chegar, ferindo os inimigos em volta.'},
     pal:{body:0x1c2b3a,trim:0x3bf0d0,skin:0xd9b48a,legs:0x14202c,hat:0x24384a,cape:0x2a4a5a,arm:0x1c2b3a},stats:{Vida:3,Dano:3,Veloc:5,Alcance:5}},
-  human:{nome:'Zé',role:'Joga pedra. É isso mesmo.',ui:'#b0a089',hp:65,armor:0,speed:5.2,atkCd:.6,dmg:10,kind:'proj',proj:'rock',projSpeed:13,range:9,pierce:0,
+  human:{nome:'Zé',role:'Joga pedra. É isso mesmo.',ui:'#b0a089',hp:50,armor:0,speed:2.6,atkCd:.6,dmg:10,kind:'proj',proj:'rock',projSpeed:13,range:9,pierce:0,
     ab:{nome:'Pedrada Caprichada',cd:5,desc:'Joga 3 pedras de uma vez, com bastante vontade. Pronto, esse é o poder especial.'},
-    pal:{body:0x12b5b5,trim:0x3838c8,skin:0xc08a5f,legs:0x3838c8,hat:0x4a2f1e,arm:0xc08a5f,boots:0x555a60},stats:{Vida:2,Dano:2,Veloc:3,Alcance:1}},
+    pal:{body:0x12b5b5,trim:0x3838c8,skin:0xc08a5f,legs:0x3838c8,hat:0x4a2f1e,arm:0xc08a5f,boots:0x555a60},stats:{Vida:1,Dano:2,Veloc:1,Alcance:1}},
   king:{nome:'Midas',role:'Arremessa moedas e convoca a guarda real',ui:'#f2c14b',hp:105,armor:.1,speed:5,atkCd:.5,dmg:17,kind:'proj',proj:'gcoin',projSpeed:17,range:14,pierce:1,
     ab:{nome:'Convocar a Guarda',cd:10,desc:'Chama 4 soldados reais que lutam por você.'},
     pal:{body:0x990000,trim:0xe3ab28,skin:0xc48b6a,legs:0xe8e8e8,hat:0xe3ab28,cape:0x8a1212,arm:0xa10000,boots:0x282828,eye:0x1a3fd1},stats:{Vida:3,Dano:3,Veloc:3,Alcance:4}},
@@ -1492,28 +1492,46 @@ function frame(now){
   if(toastT>0){toastT-=dt;if(toastT<=0)$('#toast').classList.remove('show')}
   renderer.render(scene,camera);
 }
-function renderBest(){const b=store.get('cv_bestT',{});let k=null;for(const c of ORDER)if(b[c]&&(!k||b[c]>b[k]))k=c;$('#t-best').textContent=k?'★ MELHOR '+fmtT(b[k])+' · '+CLASSES[k].nome:''}
+function renderBest(){const b=store.get('cv_bestT',{});let k=null;for(const c of ORDER)if(b[c]&&(!k||b[c]>b[k]))k=c;
+ const local=k?'★ SEU MELHOR '+fmtT(b[k])+' · '+CLASSES[k].nome:'';
+ const wr=WORLD_RECS.length?'🌍 RECORDE MUNDIAL '+WORLD_RECS[0].name+' · '+fmtT(WORLD_RECS[0].time):'';
+ $('#t-best').textContent=[local,wr].filter(Boolean).join('   ')}
 // ============ RECORDES MUNDIAIS (placar da comunidade — os primeiros da história do Oathbound) ============
 // Para adicionar um novo: copie a linha e edite name/cls/time(seg)/kills/lvl/date
 const WORLD_RECS=[
  {name:'C4.09',cls:'mago',time:1944,kills:10008,lvl:65,date:'23/10/26'}, // 1º recorde mundial: 32:24 · 10.008 abates · NV 65
 ];
 function renderRecs(){const st=metaStat(),w=$('#recs-list');w.innerHTML='';
-  // recordes mundiais no topo de tudo
-  if(WORLD_RECS.length){const h0=document.createElement('div');h0.className='rec-cat-h';h0.textContent='🌍 RECORDE MUNDIAL';w.appendChild(h0);
-   WORLD_RECS.forEach(r=>{const d=document.createElement('div');d.className='wrec';
-    d.innerHTML=`<span class="rk">★</span><span class="cic">${clsImg(r.cls)}</span><span class="who">${r.name}</span><span class="nm" style="color:${CLASSES[r.cls]?CLASSES[r.cls].ui:''}">${CLASSES[r.cls]?CLASSES[r.cls].nome:r.cls}</span>`+
-     `<span class="tm">⏳ ${fmtT(r.time)}</span><span class="tm">💀 ${fmtN(r.kills)}</span><span class="tm">⭐ NV ${r.lvl}</span><span class="dt">${r.date}</span>`;w.appendChild(d)})}
-  // os 3 recordes da arena, cada um ranqueado por classe (top 5 cada)
+  // ===== recordes mundiais (estão no código → TODOS os jogadores veem, não depende de dados locais) =====
+  if(WORLD_RECS.length){
+   const r0=WORLD_RECS[0];
+   const hc=document.createElement('div');hc.className='wcard';
+   hc.innerHTML=`<div class="wc-top"><span>🌍</span><b>RECORDE MUNDIAL</b><span class="wc-d">${r0.date}</span></div>
+    <div class="wc-main">
+     <span class="wc-ic">${clsImg(r0.cls)}</span>
+     <div class="wc-id"><b>${r0.name}</b><span style="color:${CLASSES[r0.cls]?CLASSES[r0.cls].ui:''}">${CLASSES[r0.cls]?CLASSES[r0.cls].nome:r0.cls}</span></div>
+     <div class="wc-stats">
+      <div><b>${fmtT(r0.time)}</b><span>tempo vivo</span></div>
+      <div><b>${fmtN(r0.kills)}</b><span>abates</span></div>
+      <div><b>NV ${r0.lvl}</b><span>nível</span></div>
+     </div>
+    </div>`;w.appendChild(hc);
+   WORLD_RECS.slice(1).forEach((r,i)=>{const d=document.createElement('div');d.className='wrow';
+    d.innerHTML=`<span class="rk">#${i+2}</span><span class="cic">${clsImg(r.cls)}</span><span class="who">${r.name}</span>`+
+     `<span class="nm" style="color:${CLASSES[r.cls]?CLASSES[r.cls].ui:''}">${CLASSES[r.cls]?CLASSES[r.cls].nome:r.cls}</span><span class="tm">⏳ ${fmtT(r.time)} · 💀 ${fmtN(r.kills)} · ⭐ NV ${r.lvl}</span>`;w.appendChild(d)})}
+  // ===== seus recordes da arena: as 3 categorias lado a lado =====
   const cats=[
     {ic:'⏳',t:'MAIOR TEMPO VIVO',key:'cv_bestT',fmt:v=>fmtT(v),zero:'--:--'},
-    {ic:'💀',t:'MAIS ABATES',key:'cv_bestK',fmt:v=>fmtN(v)+' abates',zero:'0'},
+    {ic:'💀',t:'MAIS ABATES',key:'cv_bestK',fmt:v=>fmtN(v),zero:'0'},
     {ic:'⭐',t:'MAIOR NÍVEL',key:'cv_bestL',fmt:v=>'NV '+v,zero:'--'}];
+  const g=document.createElement('div');g.className='rec-grid';w.appendChild(g);
   cats.forEach(c=>{const m=store.get(c.key,{});
-    const h=document.createElement('div');h.className='rec-cat-h';h.innerHTML=`${emIc(c.ic)} ${c.t}`;w.appendChild(h);
+    const col=document.createElement('div');col.className='rec-col';
+    const h=document.createElement('div');h.className='rec-cat-h';h.innerHTML=`${emIc(c.ic)} ${c.t}`;col.appendChild(h);
     const rows=ORDER.map(k=>({k,v:m[k]||0})).sort((a,b)=>b.v-a.v);
     rows.slice(0,5).forEach((r,i)=>{const d=document.createElement('div');d.className='lbrow'+(r.v?'':' empty')+(i===0&&r.v?' win':'');
-      d.innerHTML=`<span class="rk">${i===0&&r.v?'★':'#'+(i+1)}</span><span class="cic">${clsImg(r.k)}</span><span class="nm" style="color:${CLASSES[r.k].ui}">${CLASSES[r.k].nome}</span><span class="tm">${r.v?c.fmt(r.v):c.zero}</span>`;w.appendChild(d)})});
+      d.innerHTML=`<span class="rk">${i===0&&r.v?'★':'#'+(i+1)}</span><span class="cic">${clsImg(r.k)}</span><span class="nm" style="color:${CLASSES[r.k].ui}">${CLASSES[r.k].nome}</span><span class="tm">${r.v?c.fmt(r.v):c.zero}</span>`;col.appendChild(d)});
+    g.appendChild(col)});
   $('#recs-sum').textContent=`${st.runs} partidas · ${st.kills} abates no total · ${st.bosses} golens derrotados`;}
 function updateCoins(){$('#coins-n').textContent=coins();$('#coins').hidden=!['title','menu','shop','ach','recs','play','pause','upgrade','dying'].includes(state);
   if(!store.get('cv_unlocked',{}).king&&coins()>=MISSION.king.goal){doUnlock('king');toast('👑 '+CLASSES.king.nome+' liberado!','Missão cumprida: '+fmtN(MISSION.king.goal)+' de ouro acumulado')}}
@@ -1719,7 +1737,7 @@ function buildMediaUI(){
   g3.append(cell(em,nm))});
  sec('EMOTICONS DE INTERFACE · pixel art');
  const g4=grid(130);
- [['🪙','ouro / recompensas'],['🔒','classe bloqueada'],['🔓','desbloquear'],['🎯','missão de desbloqueio'],['💀','abates (HUD)'],['⭐','nível / recorde'],['👹','Golem do Campo'],['⚔️','melee / título']].forEach(p=>{const em=icView(EMICON[p[0]],p[0]);
+ [['🪙','ouro','ouro / recompensas'],['🔒','trancado','classe bloqueada'],['🔓','desbloquear','desbloquear'],['🎯','alvo','missão de desbloqueio'],['💀','craneo','abates (HUD)'],['⭐','estrela','nível / recorde'],['👹','golem','Golem do Campo'],['⚔️','espadas','melee / título'],['⬆','seta-cima','menu: Upgrades'],['📊','grafico','menu: Recordes'],['🏆','trofeu','menu: Conquistas'],['❔','ajuda','menu: Como jogar']].forEach(p=>{const em=icView(p[1]||EMICON[p[0]],p[0]);
   const nm=document.createElement('div');nm.style.cssText='font-size:11px;color:#cfc4da;line-height:1.3';nm.textContent=p[1];g4.append(cell(em,nm))});
  mediaUI.style.paddingBottom='60px';
  document.body.appendChild(mediaUI)}

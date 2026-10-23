@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Chakra+Petch:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=80">
+<link rel="stylesheet" href="style.css?v=81">
 </head>
 <body>
 <div id="game"></div>
@@ -59,12 +59,12 @@
       <div class="tframe"><button class="btn" id="t-play" type="button">Jogar</button></div>
       <div class="tsplit">
         <div class="tcol">
-          <button class="btn ghost" id="t-shop" type="button">⬆ Upgrades</button>
-          <button class="btn ghost" id="t-ach" type="button">🏆 Conquistas</button>
+          <button class="btn ghost" id="t-shop" type="button"><img class="cimg" src="assets/images/icons/upg/seta-cima.png?v=1" alt=""> Upgrades</button>
+          <button class="btn ghost" id="t-ach" type="button"><img class="cimg" src="assets/images/icons/upg/trofeu.png?v=1" alt=""> Conquistas</button>
         </div>
         <div class="tcol">
-          <button class="btn ghost" id="t-recs" type="button">📊 Recordes</button>
-          <button class="btn ghost" id="t-how" type="button">❔ Como jogar</button>
+          <button class="btn ghost" id="t-recs" type="button"><img class="cimg" src="assets/images/icons/upg/grafico.png?v=1" alt=""> Recordes</button>
+          <button class="btn ghost" id="t-how" type="button"><img class="cimg" src="assets/images/icons/upg/ajuda.png?v=1" alt=""> Como jogar</button>
         </div>
       </div>
     </div>
@@ -89,7 +89,7 @@
 <section id="recs" class="screen panel-screen" hidden>
   <div class="panel">
     <h2>Recordes</h2>
-    <p class="sub">O recorde mundial da comunidade no topo · seus 3 recordes da arena ranqueados por classe.</p>
+    <p class="sub">Recorde mundial no topo (todo mundo vê) · seus 3 recordes da arena ranqueados por classe.</p>
     <div class="recs3" id="recs-list"></div>
     <p class="sub" id="recs-sum"></p>
     <button class="btn" id="recs-back" type="button">Voltar</button>
@@ -187,7 +187,7 @@
 <script src="assets/js/enimies/zombie.js?v=3"></script>
 <script src="assets/js/weapons.js?v=1"></script>
 <script src="assets/js/upgrades.js?v=2"></script>
-<script src="game.js?v=96"></script>
+<script src="game.js?v=98"></script>
 <script>
 // Service worker: autoatualização dos clientes (só funciona em http/https; em file:// fica inativo)
 (function(){
