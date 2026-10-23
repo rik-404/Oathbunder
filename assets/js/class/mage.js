@@ -24,7 +24,8 @@ window.CLASSES.mago = {
     trim: 0xf2b84b,
     skin: 0xe8b48a,
     legs: 0x3a2870,
-    hat: 0x4a3290
+    hat: 0x4a3290,
+    boots: 0x2a1d55
   },
   stats: { Vida: 2, Dano: 5, Veloc: 3, Alcance: 4 }
 };

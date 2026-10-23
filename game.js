@@ -1076,6 +1076,8 @@ function updateMenu(dt){
       else if(k==='tank'){h.armR.rotation.x=lerp(-3,-.8,e);h.armL.rotation.x=-1.4}
       else if(k==='mago'||k==='chrono'||k==='pistol'||k==='dracula'||k==='demon'||k==='future'||k==='human'||k==='king'){h.armR.rotation.x=-1.3}else{h.armL.rotation.x=-1.5;h.armR.rotation.x=-1.3}}
     applyKeep(h.keep);
+    if(h.cape)h.cape.rotation.x=.02+Math.sin(menuT*1.4+i)*.015;
+    if(k==='mago'&&h.mageOrb){h.mageOrb.position.y=1.02+Math.sin(menuT*2.2)*.03;h.mageMotes.rotation.y=menuT*1.8}
   });
   for(const k in menuStones)menuStones[k].visible=!isUnlocked(k); // placa no lugar dos que ainda descansam no caixão
   if(royalGrp)royalGrp.visible=isUnlocked('king');
@@ -1407,6 +1409,8 @@ function animHero(dt,moving){
   else if(cls==='mago'||cls==='necro'||cls==='chrono'||cls==='pistol'||cls==='dracula'||cls==='demon'||cls==='future'||cls==='human'||cls==='king'){if(k>0){b.armR.rotation.x=-1.3;b.torso.rotation.y=rel*k}}
   else if(cls==='arqueiro'){if(k>0){b.armL.rotation.x=-1.5;b.armR.rotation.x=-1.35;b.torso.rotation.y=rel*Math.min(1,k*2)}}
   applyKeep(b.keep);
+  if(b.cape)b.cape.rotation.x=(moving?.07+Math.sin(player.walk)*.04:.015+Math.sin(runTime*1.6)*.012);
+  if(cls==='mago'&&b.mageOrb){b.mageOrb.position.y=1.02+Math.sin(runTime*2.4)*.028;b.mageMotes.rotation.y+=dt*1.8}
   setFlash(b.root,player.flash>0);
   b.root.visible=!(player.invuln>0&&player.dashT<=0&&runTime>1&&Math.floor(runTime*20)%2===0);
 }
