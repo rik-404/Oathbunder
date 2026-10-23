@@ -3,7 +3,7 @@
 // - Abas já abertas recebem aviso "Nova versão disponível" (banner no canto).
 // - index.html sempre sai da rede (network-first) → quem recarrega pega o novo.
 // - Assets (js/css/png/mp3) ficam em cache-first; como a URL muda com ?v=, o cache se invalida sozinho.
-const VERSAO='cvsw-v3';
+const VERSAO='cvsw-v4';
 const self_=self;
 
 self_.addEventListener('install',e=>{

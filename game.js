@@ -862,8 +862,9 @@ function chooseUpgrade(u){if(state!=='upgrade')return;u.apply(player);player.pic
   if(upSource==='lvl')pendingUps=Math.max(0,pendingUps-1);upSource='lvl';
   if(pendingUps>0)openUpgrade();else{setScreen('play');lockMouse()}renderWeap()}
 function renderWeap(){const el=$('#h-weap');el.innerHTML='';for(const k in WEAPONS)if(player.weap[k]){const s=document.createElement('span');const ic=icon(WEAPONS[k].nome);s.innerHTML=(ic?'<i class="ic">'+ic+'</i>':'')+WEAPONS[k].nome+' '+player.weap[k];el.appendChild(s)}}
-function die(){
-  state='dying';deadT=1.2;player.model.root.visible=false;burst(player.x,.6,player.z,CLASSES[player.cls].pal.body,36,{speed:6,size:.16,life:1.2});burst(player.x,.6,player.z,0xe5473c,18,{speed:5});addShake(.5);
+let deathText='caiu';
+function die(why){
+  deathText=why||'caiu';state='dying';deadT=1.2;player.model.root.visible=false;burst(player.x,.6,player.z,CLASSES[player.cls].pal.body,36,{speed:6,size:.16,life:1.2});burst(player.x,.6,player.z,0xe5473c,18,{speed:5});addShake(.5);
   $('#touch').hidden=true;const best=store.get('cv_bestT',{});if((best[player.cls]||0)<runTime){best[player.cls]=Math.floor(runTime);store.set('cv_bestT',best)}
   const bk=store.get('cv_bestK',{});if((bk[player.cls]||0)<kills){bk[player.cls]=kills;store.set('cv_bestK',bk)} // recorde: mais abates numa corrida
   const bl=store.get('cv_bestL',{});if((bl[player.cls]||0)<player.lvl){bl[player.cls]=player.lvl;store.set('cv_bestL',bl)} // recorde: maior nível
@@ -871,7 +872,7 @@ function die(){
 }
 function showDeath(){
   setScreen('dead');const C=CLASSES[player.cls];
-  $('#dead-title').textContent='Você caiu aos '+fmtT(runTime);
+  $('#dead-title').textContent='Você '+deathText+' aos '+fmtT(runTime);
   const best=store.get('cv_bestT',{})[player.cls]||runTime;const rw=lastReward||{earned:0,bonus:0};
   $('#dead-sub').innerHTML=C.nome+' · recorde: '+fmtT(best)+(hordeN?' · horda '+hordeN:'')+' · ganhou <b style="color:var(--gold)">'+emIc('🪙')+' '+(rw.earned+rw.bonus)+'</b>'+(rw.bonus?' (+'+rw.bonus+' de conquistas!)':'')+(rw.newCls?'<br><b style="color:var(--moss)">'+clsImg(rw.newCls)+' '+CLASSES[rw.newCls].nome+' liberado!</b>':'');
   $('#d-time').textContent=fmtT(runTime);$('#d-lvl').textContent=player.lvl;$('#d-kills').textContent=kills;
@@ -1178,7 +1179,7 @@ addEventListener('mousemove',e=>{if(document.pointerLockElement===cvs)look(e.mov
 cvs.addEventListener('wheel',e=>{if(state!=='play')return;e.preventDefault();camZoom=clamp(camZoom+e.deltaY*.006,2.5,13)},{passive:false});
 document.addEventListener('pointerlockchange',()=>{const on=document.pointerLockElement===cvs;$('#lockhint').hidden=on||state!=='play'||isTouch;if(!on&&state==='play'&&!mapOpen)setScreen('pause')});
 $('#resumebtn').onclick=()=>{setScreen('play');lockMouse()};
-$('#quitbtn').onclick=()=>goMenu('title');
+$('#quitbtn').onclick=()=>{if(state==='pause'&&player)die('desistiu')}; // desistir = suicídio: morre na arena e registra os recordes
 $('#t-play').onclick=()=>{renderCards();setScreen('menu')};$('#t-how').onclick=()=>setScreen('howto');$('#t-recs').onclick=()=>{renderRecs();setScreen('recs')};
 $('#t-shop').onclick=()=>{renderShop();setScreen('shop')};$('#t-ach').onclick=()=>{renderAch();setScreen('ach')};
 $('#shop-back').onclick=()=>setScreen('title');$('#ach-back').onclick=()=>setScreen('title');
@@ -1501,38 +1502,28 @@ function renderBest(){const b=store.get('cv_bestT',{});let k=null;for(const c of
 const WORLD_RECS=[
  {name:'C4.09',cls:'mago',time:1944,kills:10008,lvl:65,date:'23/10/26'}, // 1º recorde mundial: 32:24 · 10.008 abates · NV 65
 ];
+let recTab=0;
 function renderRecs(){const st=metaStat(),w=$('#recs-list');w.innerHTML='';
-  // ===== recordes mundiais (estão no código → TODOS os jogadores veem, não depende de dados locais) =====
-  if(WORLD_RECS.length){
-   const r0=WORLD_RECS[0];
-   const hc=document.createElement('div');hc.className='wcard';
-   hc.innerHTML=`<div class="wc-top"><span>🌍</span><b>RECORDE MUNDIAL</b><span class="wc-d">${r0.date}</span></div>
-    <div class="wc-main">
-     <span class="wc-ic">${clsImg(r0.cls)}</span>
-     <div class="wc-id"><b>${r0.name}</b><span style="color:${CLASSES[r0.cls]?CLASSES[r0.cls].ui:''}">${CLASSES[r0.cls]?CLASSES[r0.cls].nome:r0.cls}</span></div>
-     <div class="wc-stats">
-      <div><b>${fmtT(r0.time)}</b><span>tempo vivo</span></div>
-      <div><b>${fmtN(r0.kills)}</b><span>abates</span></div>
-      <div><b>NV ${r0.lvl}</b><span>nível</span></div>
-     </div>
-    </div>`;w.appendChild(hc);
-   WORLD_RECS.slice(1).forEach((r,i)=>{const d=document.createElement('div');d.className='wrow';
-    d.innerHTML=`<span class="rk">#${i+2}</span><span class="cic">${clsImg(r.cls)}</span><span class="who">${r.name}</span>`+
-     `<span class="nm" style="color:${CLASSES[r.cls]?CLASSES[r.cls].ui:''}">${CLASSES[r.cls]?CLASSES[r.cls].nome:r.cls}</span><span class="tm">⏳ ${fmtT(r.time)} · 💀 ${fmtN(r.kills)} · ⭐ NV ${r.lvl}</span>`;w.appendChild(d)})}
-  // ===== seus recordes da arena: as 3 categorias lado a lado =====
-  const cats=[
-    {ic:'⏳',t:'MAIOR TEMPO VIVO',key:'cv_bestT',fmt:v=>fmtT(v),zero:'--:--'},
-    {ic:'💀',t:'MAIS ABATES',key:'cv_bestK',fmt:v=>fmtN(v),zero:'0'},
-    {ic:'⭐',t:'MAIOR NÍVEL',key:'cv_bestL',fmt:v=>'NV '+v,zero:'--'}];
-  const g=document.createElement('div');g.className='rec-grid';w.appendChild(g);
-  cats.forEach(c=>{const m=store.get(c.key,{});
-    const col=document.createElement('div');col.className='rec-col';
-    const h=document.createElement('div');h.className='rec-cat-h';h.innerHTML=`${emIc(c.ic)} ${c.t}`;col.appendChild(h);
-    const rows=ORDER.map(k=>({k,v:m[k]||0})).sort((a,b)=>b.v-a.v);
-    rows.slice(0,5).forEach((r,i)=>{const d=document.createElement('div');d.className='lbrow'+(r.v?'':' empty')+(i===0&&r.v?' win':'');
-      d.innerHTML=`<span class="rk">${i===0&&r.v?'★':'#'+(i+1)}</span><span class="cic">${clsImg(r.k)}</span><span class="nm" style="color:${CLASSES[r.k].ui}">${CLASSES[r.k].nome}</span><span class="tm">${r.v?c.fmt(r.v):c.zero}</span>`;col.appendChild(d)});
-    g.appendChild(col)});
-  $('#recs-sum').textContent=`${st.runs} partidas · ${st.kills} abates no total · ${st.bosses} golens derrotados`;}
+ const CATS=[
+  {key:'cv_bestT',ic:'⏳',t:'TEMPO VIVO',get:r=>r.time,fmt:v=>fmtT(v),zero:'--:--'},
+  {key:'cv_bestK',ic:'💀',t:'ABATES',get:r=>r.kills,fmt:v=>fmtN(v),zero:'0'},
+  {key:'cv_bestL',ic:'⭐',t:'NÍVEL',get:r=>r.lvl,fmt:v=>'NV '+v,zero:'--'}];
+ const hd=document.createElement('div');hd.className='rhead';
+ hd.innerHTML=`<b>RECORDES</b><span class="rhs">${emIc('🌍')||'🌍'} ${WORLD_RECS.length?WORLD_RECS.length+' mundial'+(WORLD_RECS.length>1?'is':''):''}</span>`;w.appendChild(hd);
+ const tb=document.createElement('div');tb.className='rtabs';w.appendChild(tb);
+ const tbl=document.createElement('div');tbl.className='rtable';w.appendChild(tbl);
+ const yw=document.createElement('div');yw.className='ryou';w.appendChild(yw);
+ const draw=()=>{const c=CATS[recTab];
+  tb.innerHTML='';
+  CATS.forEach((cc,i)=>{const b=document.createElement('button');b.type='button';b.className='rtab'+(i===recTab?' on':'');b.innerHTML=`${emIc(cc.ic)} ${cc.t}`;b.onclick=()=>{recTab=i;draw()};tb.appendChild(b)});
+  const rows=WORLD_RECS.map(r=>({n:r.name,k:r.cls,v:c.get(r)})).sort((a,b)=>b.v-a.v);
+  const m2=store.get(c.key,{});
+  tbl.innerHTML=`<div class="rrh"><span class="rk">#</span><span class="rc">CLASSE</span><span class="rn">JOGADOR</span><span class="rv">${c.t}</span></div>`+
+   rows.map((r,i)=>`<div class="rr"><span class="rk${i===0?' g':''}">#${i+1}</span><span class="rc">${clsImg(r.k)}</span><span class="rn" title="${CLASSES[r.k]?CLASSES[r.k].nome:''}">${r.n}</span><span class="rv">${c.fmt(r.v)}</span></div>`).join('');
+  const yv=m2[selCls]||0;
+  yw.innerHTML=`<span class="yt">VOCÊ</span><span class="rc">${clsImg(selCls)}</span><b>${CLASSES[selCls].nome}</b><span class="rv">${yv?c.fmt(yv):c.zero}</span>`;};
+ draw();
+ $('#recs-sum').textContent=`${st.runs} partidas · ${st.kills} abates no total · ${st.bosses} golens derrotados`;}
 function updateCoins(){$('#coins-n').textContent=coins();$('#coins').hidden=!['title','menu','shop','ach','recs','play','pause','upgrade','dying'].includes(state);
   if(!store.get('cv_unlocked',{}).king&&coins()>=MISSION.king.goal){doUnlock('king');toast('👑 '+CLASSES.king.nome+' liberado!','Missão cumprida: '+fmtN(MISSION.king.goal)+' de ouro acumulado')}}
 function renderShop(){const w=$('#shop-list');w.innerHTML='';const s=shopLv();
