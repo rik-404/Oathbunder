@@ -76,7 +76,7 @@ const CLASSES={
     pal:{body:0x275447,trim:0x221812,skin:0xecc99d,legs:0x2b231c,cape:0x12483c,arm:0x275447,boots:0x1c1510},stats:{Vida:3,Dano:3,Veloc:5,Alcance:5}},
   guerreiro:{nome:'Darian',role:'Golpes automáticos em arco',ui:'#ff6a55',hp:130,armor:.1,speed:5.3,atkCd:.62,dmg:26,kind:'melee',range:2.2,arc:2.6,knock:5,
     ab:{nome:'Redemoinho',cd:7,desc:'Gira por 1,5 s cortando tudo em volta.'},
-    pal:{body:0x9c2f2a,trim:0x6b4a2b,skin:0xd99b74,legs:0x4a4f58,arm:0x9c2f2a},stats:{Vida:4,Dano:4,Veloc:4,Alcance:2}},
+    pal:{body:0x2b3942,trim:0x593928,skin:0x8c6d4d,legs:0x595655,hat:0x828c99,arm:0x828c99,boots:0x42251b},stats:{Vida:4,Dano:4,Veloc:4,Alcance:2}},
   tank:{nome:'Brom',role:'Pancada no chão em volta',ui:'#6fa8ff',hp:220,armor:.25,speed:4.6,atkCd:1,dmg:22,kind:'slam',radius:2.7,knock:10,
     ab:{nome:'Baluarte',cd:8,desc:'Escudo de 4 s que bloqueia 85% do dano e solta uma onda de choque.'},
     pal:{body:0x5d6672,trim:0x2f5fa8,skin:0xd99b74,legs:0x454b55,arm:0x6d7682},stats:{Vida:5,Dano:2,Veloc:2,Alcance:3}},
