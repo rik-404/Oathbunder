@@ -55,9 +55,9 @@ global.THREE=THREE;
 
 // ---------- carrega o jogo exposto via __G ----------
 // weapons.js e upgrades.js juntos com o game.js (no navegador são <script>s antes do game.js)
-let src=fs.readFileSync('assets/js/weapons.js','utf8')+'\n'+fs.readFileSync('assets/js/upgrades.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
+let src=fs.readFileSync('assets/js/weapons.js','utf8')+'\n'+fs.readFileSync('assets/js/upgrades.js','utf8')+'\n'+fs.readFileSync('assets/js/enimies/skel.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
 const i=src.lastIndexOf('})();');
-const hook=`window.__G={newRun,update,openUpgrade,chooseUpgrade,damageEnemy,gainXP,hurtPlayer,dash,jump,useAbility,spawnBoss,spawnEnemy,killEnemy,S,setMuted,player,keys,setScreen,getBoss:()=>boss,getUps:()=>($('#ups')&&$('#ups')._choice)||null,hs:()=>hitStopT,getState:()=>state,enemies:()=>enemies,projs:()=>projs,mapInfo:()=>({W,H,grid,landPos,chestN:chests.length}),jv:(x,z)=>jv(x,z),relief:(x,z)=>relief(x,z),hills:()=>HILLS.length,runCheat,toggleMap};\n})();`;
+const hook=`window.__G={newRun,update,openUpgrade,chooseUpgrade,damageEnemy,gainXP,hurtPlayer,dash,jump,useAbility,spawnBoss,spawnEnemy,killEnemy,S,setMuted,player,keys,setScreen,getBoss:()=>boss,getUps:()=>($('#ups')&&$('#ups')._choice)||null,hs:()=>hitStopT,getState:()=>state,enemies:()=>enemies,projs:()=>projs,mapInfo:()=>({W,H,grid,landPos,chestN:chests.length}),jv:(x,z)=>jv(x,z),relief:(x,z)=>relief(x,z),hills:()=>HILLS.length,runCheat,toggleMap,skelDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.skel)};\n})();`;
 src=src.slice(0,i)+hook;
 try{eval(src)}catch(e){console.log('ERRO AO CARREGAR:',e.stack);process.exit(1)}
 const G=global.__G;
@@ -66,6 +66,7 @@ const frames=n=>{for(let k=0;k<n;k++){const cb=rafCb;rafCb=null;fakeT+=16.7;cb&&
 try{
 console.log('[1] carregamento / menu');
 ok(G.getState()==='title','estado inicial é título');
+ok(G.skelDef(),'esqueleto registrado via assets/js/enimies/skel.js');
 frames(3);
 console.log('[2] nova corrida (guerreiro)');
 G.runCheat('unlock all'); // localStorage vazio: libera todas as classes
