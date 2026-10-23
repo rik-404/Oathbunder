@@ -819,7 +819,7 @@ espadas:{pal:{W:0xd8dde6,G:0xb8912e},rows:[
 '................',
 '................',
 '................']},
-seta-cima:{pal:{G:0xf2b84b,W:0xfff0a0,g:0xc8912e},rows:[
+'seta-cima':{pal:{G:0xf2b84b,W:0xfff0a0,g:0xc8912e},rows:[
 '.......GG.......',
 '......GGGG......',
 '.....GGWWGG.....',
@@ -836,7 +836,7 @@ seta-cima:{pal:{G:0xf2b84b,W:0xfff0a0,g:0xc8912e},rows:[
 '................',
 '................']
 },
-grafico:{pal:{B:0x4aa8e8,G:0x5ad43a,Y:0xf2c14b,K:0x3a3f4a},rows:[
+'grafico':{pal:{B:0x4aa8e8,G:0x5ad43a,Y:0xf2c14b,K:0x3a3f4a},rows:[
 '................',
 '............YYY.',
 '............YYY.',
@@ -854,7 +854,7 @@ grafico:{pal:{B:0x4aa8e8,G:0x5ad43a,Y:0xf2c14b,K:0x3a3f4a},rows:[
 '................',
 '................']
 },
-trofeu:{pal:{W:0xfff0a0,G:0xf2b84b,g:0xc8912e},rows:[
+'trofeu':{pal:{W:0xfff0a0,G:0xf2b84b,g:0xc8912e},rows:[
 '....WWWWWWWW....',
 'GG.GGGGGGGGG.GG.',
 'GGGGGGGGGGGGGGGG',
@@ -872,7 +872,7 @@ trofeu:{pal:{W:0xfff0a0,G:0xf2b84b,g:0xc8912e},rows:[
 '................',
 '................']
 },
-ajuda:{pal:{W:0xf2ead8,g:0xb0a488},rows:[
+'ajuda':{pal:{W:0xf2ead8,g:0xb0a488},rows:[
 '....WWWWWWWW....',
 '...WWWWWWWWWW...',
 '...WW......WW...',
