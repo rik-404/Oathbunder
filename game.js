@@ -86,7 +86,7 @@ const CLASSES={
   chrono:{nome:'Vespera',role:'Orbes do tempo que lentificam os inimigos',ui:'#5fe08a',hp:95,armor:.05,speed:5.4,atkCd:.6,dmg:18,kind:'proj',proj:'time',projSpeed:15,range:15,pierce:1,
     ab:{nome:'Distorção Temporal',cd:9,desc:'Quase congela o tempo dos inimigos em volta por 3,5 s e causa dano.'},
     pal:{body:0x0c231c,trim:0xbdbd96,skin:0x22302a,legs:0x13092b,hat:0x26423b,cape:0x06150f,arm:0x2f5149,boots:0x0a0514},stats:{Vida:3,Dano:3,Veloc:4,Alcance:4}},
-  pistol:{nome:'Cassian',role:'Tiros rápidos e certeiros no mais perto',ui:'#e0a94f',hp:88,armor:0,speed:5.7,atkCd:.3,dmg:9,kind:'proj',proj:'bullet',projSpeed:30,range:15,pierce:0,critBase:.15,
+  pistol:{nome:'Cassian',role:'Tiros rápidos e certeiros no mais perto',ui:'#e0a94f',hp:88,armor:0,speed:5.7,atkCd:.4,dmg:9,kind:'proj',proj:'bullet',projSpeed:30,range:15,pierce:0,critBase:.15,
     ab:{nome:'Saque Rápido',cd:6,desc:'Num piscar, atira em até 6 inimigos próximos com crítico garantido.'},
     pal:{body:0x6e4a2e,trim:0xe0a94f,skin:0xe8b48a,legs:0x3a2a1c,hat:0x4a3222,cape:0x8a3a2a,arm:0x6e4a2e},stats:{Vida:2,Dano:3,Veloc:5,Alcance:4}},
   dracula:{nome:'Vlad',role:'Lança morcegos e drena a vida dos inimigos',ui:'#c23a55',hp:100,armor:.05,speed:5.3,atkCd:.5,dmg:16,kind:'proj',proj:'batp',projSpeed:16,range:14,pierce:1,lsBase:.12,
@@ -1481,10 +1481,10 @@ function frame(now){
     const tall=camera.aspect<1?1.15:1;shake=Math.max(0,shake-dt*1.6);const sx=(Math.random()-.5)*shake,sz=(Math.random()-.5)*shake;
     const foll=Math.min(1,dt*8);camFx+=(player.x-camFx)*foll;camFz+=(player.z-camFz)*foll;
     const bx=-Math.sin(camYaw),bz=-Math.cos(camYaw),MAXD=camZoom*tall,cp=Math.cos(camPitch),sp=Math.sin(camPitch),base=1.3+player.y*.5;let D=MAXD;
-    for(let s=.4;s<=MAXD;s+=.1){const qx=camFx+bx*s*cp,qz=camFz+bz*s*cp,qy=base+s*sp;if(wallH(qx,qz)>qy){D=Math.max(.7,s-.35);break}}
+    for(let s=.4;s<=MAXD;s+=.1){const qx=camFx+bx*s*cp,qz=camFz+bz*s*cp,qy=base+s*sp;if(wallH(qx,qz)>qy||relief(qx,qz)>qy-.25){D=Math.max(.7,s-.35);break}}
     camDist=D<camDist?D:lerp(camDist,D,Math.min(1,dt*3));
-    const cy=Math.max(.35,base+camDist*sp);
-    camera.position.set(camFx+bx*camDist*cp+sx,cy+sz*.4,camFz+bz*camDist*cp+sz);camera.lookAt(camFx-bx*2.4,.95+player.y*.4+(.32-camPitch)*2.2,camFz-bz*2.4);
+    const cx0=camFx+bx*camDist*cp,cz0=camFz+bz*camDist*cp;const cy=Math.max(.35,base+camDist*sp,relief(cx0,cz0)+.9);
+    camera.position.set(cx0+sx,cy+sz*.4,cz0+sz);camera.lookAt(camFx-bx*2.4,.95+player.y*.4+(.32-camPitch)*2.2,camFz-bz*2.4);
     const fx=player.x-bx*8,fz=player.z-bz*8;sun.position.set(fx+13,9,fz+8); // sol baixo de entardecer: sombras longas e quentessun.target.position.set(fx,0,fz);
     heroLight.position.set(player.x,1.8+player.y,player.z);
     if(state==='play'){hud();miniT-=dt;if(miniT<=0){miniT=.1;drawMini()}}
@@ -1501,6 +1501,7 @@ function renderBest(){const b=store.get('cv_bestT',{});let k=null;for(const c of
 // Para adicionar um novo: copie a linha e edite name/cls/time(seg)/kills/lvl/date
 const WORLD_RECS=[
  {name:'C4.09',cls:'mago',time:1944,kills:10008,lvl:65,date:'23/10/26'}, // 1º recorde mundial: 32:24 · 10.008 abates · NV 65
+ {name:'C4.09',cls:'guerreiro',time:915,kills:8124,lvl:59,date:'23/10/26'} // C4.09 com o guerreiro: 15:15 · 8.124 abates · NV 59
 ];
 let recTab=0;
 function renderRecs(){const st=metaStat(),w=$('#recs-list');w.innerHTML='';
