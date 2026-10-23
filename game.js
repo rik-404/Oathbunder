@@ -109,7 +109,7 @@ const ICONS={
   'Punho Fatal':'💢','Velocidade de Tiro':'🚀','Empurrão':'🫱','Reflexo Relâmpago':'💨','Pulso Congelante':'❄️',
 };
 // ícones de classe: pixel art 16×16 gerada em assets/images/icons/ (via node _genicons.js) — um rosto por herói
-const CLSICON={mago:'assets/images/icons/mago.png?v=3',arqueiro:'assets/images/icons/arqueiro.png?v=3',guerreiro:'assets/images/icons/guerreiro.png?v=3',tank:'assets/images/icons/tank.png?v=3',necro:'assets/images/icons/necro.png?v=3',chrono:'assets/images/icons/chrono.png?v=3',pistol:'assets/images/icons/pistol.png?v=3',dracula:'assets/images/icons/dracula.png?v=4',demon:'assets/images/icons/demon.png?v=4',future:'assets/images/icons/future.png?v=4',human:'assets/images/icons/human.png?v=4',king:'assets/images/icons/king.png?v=4'};
+const CLSICON={mago:'assets/images/icons/mago.png?v=3',arqueiro:'assets/images/icons/arqueiro.png?v=3',guerreiro:'assets/images/icons/guerreiro.png?v=3',tank:'assets/images/icons/tank.png?v=3',necro:'assets/images/icons/necro.png?v=4',chrono:'assets/images/icons/chrono.png?v=4',pistol:'assets/images/icons/pistol.png?v=4',dracula:'assets/images/icons/dracula.png?v=4',demon:'assets/images/icons/demon.png?v=4',future:'assets/images/icons/future.png?v=4',human:'assets/images/icons/human.png?v=4',king:'assets/images/icons/king.png?v=4'};
 let CLSIMG={};try{for(const k in CLSICON){const im=new Image();im.src=CLSICON[k];CLSIMG[k]=im}}catch(e){} // preload p/ canvas (menu 3D)
 const clsImg=k=>`<img class="cimg" src="${CLSICON[k]}" alt="" title="${CLASSES[k]?CLASSES[k].nome:k}">`; // HTML: tamanho segue o font-size do pai (em)
 const CLSTIPO={mago:'Mago',arqueiro:'Arqueiro',guerreiro:'Guerreiro',tank:'Guardião',necro:'Necromante',chrono:'Chronomante',pistol:'Pistoleiro',dracula:'Vampiro',demon:'Demônio',future:'Viajante',human:'Humano',king:'Rei'};
@@ -995,6 +995,23 @@ function buildTardis(){const g=new THREE.Group();const B=0x1542a0,BD=0x0d2f6e;
     }else{vox(f,0,1.0,.555,.5,1.3,.03,0x103684);vox(f,0,.35,.555,.5,.5,.03,0x0e2f6b);vox(f,0,1.7,.57,.07,.07,.03,0xdfe8ee)}} // laterais: painéis + roundel
   vox(g,0,2.42,0,.14,.12,.14,0xf4f6f8,1.2); // lampião do teto
   return g}
+// TRONO real do cortejo do Midas — mesma peça no menu e na galeria de modelos
+function buildRoyalThrone(){const thr=new THREE.Group();
+  const GD=0xc9a24a,GLD=0xe8c86a,RED=0x8a1220,WOOD=0x2a1a12;
+  vox(thr,0,.05,0,1.3,.1,1.06,WOOD);vox(thr,0,.11,0,1.24,.03,1,GD);            // base e friso
+  for(const x of [-.44,.44])for(const z of [-.32,.32])vox(thr,x,.24,z,.12,.24,.12,GD); // pés
+  vox(thr,0,.36,0,1,.08,.8,GD);vox(thr,0,.43,0,.9,.08,.7,RED);                  // assento + almofada
+  vox(thr,0,.86,-.33,.92,.86,.1,WOOD);                                          // encosto
+  vox(thr,0,.9,-.28,.84,.7,.05,RED);                                            // veludo do encosto
+  vox(thr,-.42,.9,-.28,.04,.7,.06,GD);vox(thr,.42,.9,-.28,.04,.7,.06,GD);        // colunas douradas
+  vox(thr,0,1.28,-.3,.86,.05,.1,GD);                                            // topo do encosto
+  vox(thr,-.28,1.36,-.3,.09,.1,.09,GD);vox(thr,0,1.42,-.3,.1,.18,.09,GD);vox(thr,.28,1.36,-.3,.09,.1,.09,GD); // coroa
+  vox(thr,0,1.42,-.245,.04,.045,.02,0xd42020,1);                                // gema da coroa
+  vox(thr,-.5,.5,.02,.1,.08,.72,GD);vox(thr,.5,.5,.02,.1,.08,.72,GD);           // braços
+  vox(thr,-.5,.56,.04,.13,.06,.68,RED);vox(thr,.5,.56,.04,.13,.06,.68,RED);     // apoios de veludo
+  vox(thr,-.5,.4,.32,.09,.2,.09,GD);vox(thr,.5,.4,.32,.09,.2,.09,GD);           // colunas da frente
+  vox(thr,-.5,.615,.34,.07,.07,.07,GLD);vox(thr,.5,.615,.34,.07,.07,.07,GLD);   // pinhas
+  return thr}
 /* ================= menu 3D ================= */
 const menuGroup=new THREE.Group();const menuHeroes={};let menuRing,fireGroup,fireLight,flames=[],fireGlow=[],fireRim=[],menuStones={},royalGrp=null,necroG=null,tGref=null,cemeG=null;let smokesM=[];
 const silMat=new THREE.MeshBasicMaterial({color:0x101116});const FIREY=[.34,.5,.66]; // silMat = sombra preta dos heróis travados
@@ -1028,10 +1045,7 @@ const silMat=new THREE.MeshBasicMaterial({color:0x101116});const FIREY=[.34,.5,.
   const cofB=buildCoffin(true);cofB.position.set(-1.4,0,-.7);cofB.rotation.y=.35;ceme.add(cofB);
   // cortejo real: trono + soldados — só existe quando o Rei é liberado
   royalGrp=new THREE.Group();menuGroup.add(royalGrp);
-  const thr=new THREE.Group();thr.position.set(6.9,0,3.9);thr.rotation.y=-2.5;royalGrp.add(thr);
-  vox(thr,0,.1,0,.9,.2,.8,0x6e6578);vox(thr,0,.35,-.1,.5,.3,.4,0x5a4a3a);vox(thr,0,.75,-.24,.5,1.1,.12,0x5a4a3a);
-  vox(thr,0,1.32,-.24,.56,.14,.14,0xd9a43a);vox(thr,-.28,.5,-.05,.1,.34,.4,0x5a4a3a);vox(thr,.28,.5,-.05,.1,.34,.4,0x5a4a3a);
-  vox(thr,-.28,.68,-.05,.12,.08,.42,0xd9a43a);vox(thr,.28,.68,-.05,.12,.08,.42,0xd9a43a);vox(thr,0,.53,-.06,.42,.1,.3,0xf2c14b); // trono
+  const thr=buildRoyalThrone();thr.position.set(6.9,0,3.9);thr.rotation.y=-2.5;royalGrp.add(thr);
   [[7.6,1.6],[8.0,3.6]].forEach(([sx,sz])=>{const sg=new THREE.Mesh(SOLDIER_GEO,soldierMat);sg.position.set(sx,0,sz);sg.scale.setScalar(.86);sg.rotation.y=Math.atan2(-sx,-sz);sg.castShadow=true;royalGrp.add(sg)}); // súditos
   // cemitério do Necromante: ele e sua horda de esqueletos (só quando liberado)
   necroG=new THREE.Group();menuGroup.add(necroG);
@@ -1716,6 +1730,8 @@ function buildGalleryItems(){const items=[];
     for(let i=0;i<3;i++){const a=Math.PI*.6+i*Math.PI*.4;const m=buildMinionMesh(false).g;m.position.set(Math.sin(a)*1.35,0,Math.cos(a)*1.35);m.rotation.y=a+Math.PI;g.add(m)}return g}});
   items.push({name:'Midas + Guarda Real · combo',make:()=>{const g=new THREE.Group();g.add(buildHero('king').root);
     for(let i=0;i<4;i++){const a=Math.PI*.5+i*Math.PI*.5;const m=buildMinionMesh(true).g;m.position.set(Math.sin(a)*1.45,0,Math.cos(a)*1.45);m.rotation.y=a+Math.PI;g.add(m)}return g}});
+  items.push({name:'TARDIS · cabine do tempo (Smith)',make:buildTardis});
+  items.push({name:'Trono Real · trono do Midas',make:buildRoyalThrone});
   items.push({name:'Golem do Campo · chefe',make:()=>buildGolem().root});
   items.push({name:'Ogro Brutamontes · chefe',make:()=>buildOgre().root});
   const TR=['Carvalho','Pinheiro','Arbusto','Árvore de Outono','Bétula','Árvore Morta'];
