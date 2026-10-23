@@ -8,6 +8,10 @@ const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
 const angDiff=(a,b)=>((b-a+Math.PI*3)%TAU)-Math.PI;
 const $=s=>document.querySelector(s);
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+// Migração única do balanceamento: remove apenas as melhorias permanentes antigas.
+// Moedas, classes, conquistas e recordes continuam intactos.
+const BALANCE_RESET='balance-reset-2026-10';
+if(!store.get(BALANCE_RESET,false)){store.set('cv_shop',{});store.set(BALANCE_RESET,true)}
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isTouch=matchMedia('(pointer: coarse)').matches;
 const shade=(c,l)=>new THREE.Color(c).offsetHSL(0,0,l).getHex();
@@ -667,7 +671,7 @@ function damageEnemy(e,amt,crit,kx=0,kz=0,quiet){
   if(!quiet){S('hit',!!crit);const chill=player.stats.chill;
     if(chill&&!e.boss){const cf=1-.2*chill;if((e.slowF||1)>cf)e.slowF=cf;e.slowT=Math.max(e.slowT||0,.5+.2*chill)}}
   if(!quiet||crit)dmgText(e.x,e.h+.2,e.z,Math.round(amt),crit?'crit':'');
-  if(player.stats.ls>0)healPlayer(amt*player.stats.ls*(quiet?.4:1),true);
+  if(player.stats.ls>0)healPlayer(amt*player.stats.ls*(quiet ? .4 : 1),true);
   if(e.hp<=0)killEnemy(e);
 }
 function killEnemy(e){
