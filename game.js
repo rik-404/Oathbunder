@@ -94,7 +94,7 @@ const CLASSES={
     pal:{body:0x141414,trim:0x0a0a0a,skin:0xe7ae82,legs:0x202020,hat:0x141414,cape:0x1c0507,arm:0x141414,boots:0x0a0a0a},stats:{Vida:3,Dano:4,Veloc:3,Alcance:3}},
   demon:{nome:'Castiel',role:'Lança fogo infernal e explode em chamas',ui:'#ff5a2a',hp:110,armor:.08,speed:5.2,atkCd:.55,dmg:22,kind:'proj',proj:'hellfire',projSpeed:15,range:14,pierce:1,
     ab:{nome:'Inferno',cd:8,desc:'Erupção de chamas ao redor que causa dano alto e arremessa os inimigos.'},
-    pal:{body:0x3a1414,trim:0xff6a2a,skin:0x8a2420,legs:0x2a0e0e,hat:0x1a0808,cape:0x6a1414,arm:0x3a1414},stats:{Vida:4,Dano:5,Veloc:3,Alcance:3}},
+    pal:{body:0x121212,trim:0x8d0000,skin:0x1a1a1a,legs:0x151515,hat:0x0c0c0c,cape:0x151515,arm:0x1a1a1a,boots:0x1b1b1b},stats:{Vida:4,Dano:5,Veloc:3,Alcance:3}},
   future:{nome:'Smith',role:'Rajadas de plasma e salto quântico',ui:'#3bf0d0',hp:92,armor:.05,speed:5.6,atkCd:.38,dmg:13,kind:'proj',proj:'plasma',projSpeed:26,range:16,pierce:2,
     ab:{nome:'Salto Quântico',cd:6,desc:'Teleporta à frente, fica invencível um instante e explode ao chegar, ferindo os inimigos em volta.'},
     pal:{body:0x1c2b3a,trim:0x3bf0d0,skin:0xd9b48a,legs:0x14202c,hat:0x24384a,cape:0x2a4a5a,arm:0x1c2b3a},stats:{Vida:3,Dano:3,Veloc:5,Alcance:5}},
@@ -319,8 +319,6 @@ const ENEMY_BOXES={
   slimeB:()=>[[0,.27,0,.72,.54,.72,0x4fb8d8],[0,.58,0,.3,.08,.3,0x7fd4ee],[-.14,.38,.362,.1,.12,.01,0x0d0b12],[.14,.38,.362,.1,.12,.01,0x0d0b12]],
   bat:()=>[[0,.95,0,.3,.26,.26,0x3a2a4a],[-.09,1.12,0,.07,.1,.07,0x3a2a4a],[.09,1.12,0,.07,.1,.07,0x3a2a4a],[-.06,.98,.131,.05,.05,.01,0xff5040],[.06,.98,.131,.05,.05,.01,0xff5040],[-.35,.97,0,.4,.04,.26,0x2a1f38],[.35,.97,0,.4,.04,.26,0x2a1f38],[-.5,.93,-.02,.14,.04,.18,0x2a1f38],[.5,.93,-.02,.14,.04,.18,0x2a1f38]],
   zombie:()=>humanoid({legs:0x3d4a6a,body:0x6b5a4a,trim:0x4a3a2a,skin:0x7fae6a,arm:0x7fae6a,eye:0xffee55},{armsFwd:true,extra:[[0,1.14,-.02,.36,.06,.36,0x2a2a1a],[.12,.6,.142,.12,.1,.02,0x7fae6a]]}),
-  skel:()=>{const bw=[];for(let i=-3;i<=3;i++)bw.push([-.32,.6+i*.1,.2-i*i*.011,.05,.11,.05,0x5a4a3a]);
-    return humanoid({legs:0xcfc7b0,body:0xd9d2bd,trim:0x8c8573,skin:0xe6dfca,arm:0xd9d2bd,eye:0xff3020},{extra:[[0,.5,.145,.32,.03,.02,0x5a5448],[0,.6,.145,.32,.03,.02,0x5a5448],[0,.7,.145,.32,.03,.02,0x5a5448]].concat(bw)})},
   brute:()=>humanoid({legs:0x4a3424,body:0x6a4a2e,trim:0x3a2a1a,skin:0x6f9a44,arm:0x6f9a44,eye:0xffd040},{extra:[[-.1,.84,.18,.04,.09,.03,0xf0ead8],[.1,.84,.18,.04,.09,.03,0xf0ead8],[0,1.15,0,.36,.05,.36,0x2a1f14],[.3,.42,.3,.09,.09,.5,0x5a3a22],[.3,.42,.6,.22,.22,.3,0x7a5a3a]]}),
   ogre:()=>humanoid({legs:0x5a4a2e,body:0x6a5a3a,trim:0x4a3a28,skin:0x7aa84a,arm:0x7aa84a,eye:0xffd24a},{extra:[
     [0,.56,.12,.5,.4,.12,0x7aa84a],                                         // barrigão
@@ -335,14 +333,17 @@ const ENEMIES={
   slimeB:{hp:30,speed:3,r:.36,dmg:8,h:.75,color:0x4fb8d8,xp:1},
   bat:{hp:12,speed:4.3,r:.28,dmg:5,h:1.2,color:0x3a2a4a,xp:1,fly:true},
   zombie:{hp:34,speed:2.3,r:.32,dmg:9,h:1.15,color:0x7fae6a,xp:2},
-  skel:{hp:24,speed:2.3,r:.3,dmg:8,h:1.15,color:0xd9d2bd,xp:2},
   brute:{hp:120,speed:1.9,r:.5,dmg:16,h:1.7,color:0x6f9a44,xp:5,scale:1.45},
   ogre:{hp:200,speed:2.0,r:.52,dmg:19,h:1.9,color:0x7aa84a,xp:8,scale:1.55}, // versão comum (bem mais fraca que o boss)
 };
 const ENEMY_GEO={};
 function enemyGeo(t){if(!ENEMY_GEO[t])ENEMY_GEO[t]=mergeBoxes(ENEMY_BOXES[t]());return ENEMY_GEO[t]}
 // Inimigos articulados: corpo (malha) + pernas/asas separadas pra animar.
-const LEGGED={zombie:1,skel:1,brute:1,ogre:1};
+const LEGGED={zombie:1,brute:1,ogre:1};
+// inimigos definidos em arquivos separados (assets/js/enimies/*.js registram em window.ENEMY_DEFS)
+const ENEMY_DEFS=(function(){const D=(window&&window.ENEMY_DEFS)||{},out={};
+  for(const k in D){const S=D[k](humanoid);if(!S)continue;out[k]=S;ENEMY_BOXES[k]=S.boxes;ENEMIES[k]=S.stats;if(S.legged)LEGGED[k]=1}
+  return out})();
 const _BODY={},_LEG={},_WING={};
 function enemyBodyGeo(t){if(_BODY[t])return _BODY[t];let bx=ENEMY_BOXES[t]();
   if(LEGGED[t])bx=bx.slice(2);else if(t==='bat')bx=bx.slice(0,5); // tira pernas / asas do corpo
@@ -1259,9 +1260,7 @@ function updEnemy(e,dt){
     case'slime':case'slimeB':sp*=.6+.6*Math.abs(Math.sin(e.t*4));if(contact&&e.cd<=0){hurtPlayer(e.dmg,e,true);e.cd=.9}break;
     case'bat':{const w=Math.sin(e.t*5)*.8;mx=ux-uz*w;mz=uz+ux*w;if(contact&&e.cd<=0){hurtPlayer(e.dmg,e,true);e.cd=.75}break}
     case'zombie':if(contact&&e.cd<=0){hurtPlayer(e.dmg,e,true);e.cd=.9}break;
-    case'skel':if(d<7){mx=-uz*e.side;mz=ux*e.side;if(d<4.5){mx-=ux;mz-=uz}if(Math.random()<dt*.3)e.side*=-1}
-      if(e.cd<=0&&d<12){spawnProj({x:e.x+ux*.4,z:e.z+uz*.4,y:.75,a:Math.atan2(ux,uz)+rand(-.06,.06),speed:8.5,dmg:e.dmg,owner:'e',kind:'bone',r:.2,life:2})
-        ;e.cd=rand(2,2.8)}if(contact&&e.atk<=0){hurtPlayer(e.dmg*.6,e,true);e.atk=.9}e.atk-=dt;break;
+    case'skel':{const c={d,ux,uz,mx,mz,contact,rnd:Math.random,rand,spawnProj,hurtPlayer};ENEMY_DEFS.skel.ai(e,dt,c);mx=c.mx;mz=c.mz;break}
     case'brute':if(e.wind>0){e.wind-=dt;mx=mz=0;e.faceT=Math.atan2(e.tx-e.x,e.tz-e.z);if(e.wind<=0){if(Math.hypot(player.x-e.tx,player.z-e.tz)<1.9*e.sc/1.45+player.r&&player.y<.8)hurtPlayer(e.dmg,e,true);ringFX(e.tx,e.tz,1.9,0xffb08a,.3);burst(e.tx,.1,e.tz,0x8b7a66,10,{speed:4});addShake(.12)}}
       else if(d<2.1&&e.cd<=0){e.wind=.8;e.cd=2.4;e.tx=e.x+ux;e.tz=e.z+uz;telegraph(e.tx,e.tz,1.9,.8)}break;
     case'golem':case'slimeking':{const r=bossAI(e,dt,ux,uz,d);mx=r[0];mz=r[1];sp=r[2];break}

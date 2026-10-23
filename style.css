@@ -12,7 +12,7 @@ body{margin:0;background:var(--void);color:var(--bone);font-family:var(--body);o
 #game canvas{display:block;width:100%;height:100%}
 button{font-family:inherit;color:inherit}
 button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
-.screen{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;overflow-y:auto;
+.screen{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;overflow-y:auto;touch-action:pan-y;
   padding-block:max(18px,env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-bottom,0px));
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
@@ -280,3 +280,52 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .tmenu .tsplit{display:flex;gap:10px}
 .tmenu .tcol{flex:1;display:flex;flex-direction:column;gap:10px}
 .tmenu .tcol .btn{font-size:15px;padding:12px 10px}
+
+/* mobile deitado (pouca altura): tudo compacto pra caber sem cortar */
+@media (orientation:landscape) and (max-height:520px){
+  .screen{padding-block:8px}
+  #title .t-top{padding-top:0}
+  #title .t-core{margin-top:6px;gap:9px}
+  #title h1{width:min(50vw,520px)}
+  #title h1 .tlogo{filter:drop-shadow(3px 3px 0 rgba(0,0,0,.85))}
+  #title .tag{font-size:12.5px;max-width:70ch}
+  .tmenu{width:min(330px,100%);gap:8px}
+  .tmenu .btn{font-size:15px;padding:9px 8px}
+  .tmenu .tcol .btn{font-size:12.5px;padding:8px 8px}
+  .tkey,.t-foot,#t-embers{display:none}
+  #title::before{top:40%;height:60%}
+  /* seleção de herói: grid + detalhe lado a lado */
+  .selwrap{justify-content:flex-start;gap:8px}
+  .selmain{flex-direction:row;align-items:center;gap:14px}
+  .chargrid{width:252px;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .ctile{padding:6px 4px 5px;gap:4px}
+  .ctile .cic{font-size:24px}
+  .ctile .cname{font-size:10.5px}
+  .ctile .lock small{display:none}
+  .chardetail{width:320px;max-width:none;padding:10px;gap:8px}
+  .chardetail .pips,.chardetail .rec{display:none}
+  .cd-top{padding-bottom:6px}
+  .cd-top .cd-ic{width:38px;height:38px;font-size:24px}
+  .cd-top h3{font-size:17px}
+  .cd-role{font-size:12px}
+  #startbtn,.chardetail .btn{padding:9px;font-size:13px}
+  .selfoot{justify-content:center}.selfoot .btn{width:auto;flex:0 0 auto}
+  .seltitle{font-size:16px}
+  /* painéis */
+  .panel{gap:10px}
+  .panel h2{font-size:22px}
+  .panel .sub{font-size:12.5px;margin-top:-5px}
+  .howto{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-width:none}
+  .howto div{padding:8px;font-size:11.5px;line-height:1.3;gap:4px}
+  .howto h3{font-size:11px}
+  .recs{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .shopit,.achit{padding:7px 10px;gap:10px}
+  .pbody{gap:10px}.pcol{padding:9px 10px;min-width:180px}
+  .stat b{font-size:18px}.stat{padding:8px}
+  .stats,.chips{gap:7px}
+  .ups{gap:8px;max-width:none}
+  .lbrow{padding:6px 12px}
+  .row .btn{padding:9px 18px;font-size:14px}
+  /* jogo em si: barra do boss sobe pra não cobrir os botões de toque */
+  #bossbar{bottom:calc(120px + env(safe-area-inset-bottom,0px));width:min(420px,58vw)}
+}

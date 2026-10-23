@@ -24,7 +24,7 @@ for(const c of Object.keys(CH))if(!ORDER.includes(c)){console.log('REGISTRO EXTR
 
 for(const cls of ORDER){
   if(!CH[cls])continue;
-  const b={root:mkG(),head:mkG(),torso:mkG(),armL:mkG(),armR:mkG(),handL:mkG(),handR:mkG(),keep:[],bubble:null};
+  const b={root:mkG(),head:mkG(),torso:mkG(),armL:mkG(),armR:mkG(),handL:mkG(),handR:mkG(),legL:mkG(),legR:mkG(),keep:[],bubble:null};
   let voxN=0,badArgs=[],badPal=[];
   const vox=(p,x,y,z,w,h,d,c)=>{voxN++;
     [x,y,z,w,h,d].forEach(v=>{if(!Number.isFinite(v))badArgs.push(String(v))});
