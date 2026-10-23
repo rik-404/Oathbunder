@@ -832,6 +832,7 @@ espadas:{pal:{W:0xd8dde6,G:0xb8912e},rows:[
 '....GGGGWWGG....',
 '....GGGGWWGG....',
 '....GGGGWWGG....',
+'....GGGGWWGG....',
 '....gggggggg....',
 '................',
 '................']
@@ -888,7 +889,7 @@ espadas:{pal:{W:0xd8dde6,G:0xb8912e},rows:[
 '.......WW.......',
 '.......gg.......',
 '................',
-'................']
+'................']} 
 };
 
 const out=path.join('assets','images','icons');fs.mkdirSync(out,{recursive:true});
