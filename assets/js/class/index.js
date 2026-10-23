@@ -33,7 +33,7 @@ window.CLSICON = {
   dracula: 'assets/images/icons/dracula.png?v=3',
   demon: 'assets/images/icons/demon.png?v=3',
   future: 'assets/images/icons/future.png?v=3',
-  human: 'assets/images/icons/human.png?v=3',
+  human: 'assets/images/icons/human.png?v=4',
   king: 'assets/images/icons/king.png?v=3'
 };
 

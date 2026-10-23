@@ -28,7 +28,7 @@ global.window=global;
 // ---------- THREE ----------
 class V3{constructor(x=0,y=0,z=0){this.x=x;this.y=y;this.z=z}set(x,y,z){this.x=x;this.y=y;this.z=z;return this}setScalar(v){this.x=this.y=this.z=v;return this}project(){this.z=0;return this}}
 class Sc{constructor(){this.x=1;this.y=1;this.z=1}set(a,b,c){this.x=a;this.y=b;this.z=c;return this}setScalar(s){this.x=this.y=this.z=s;return this}}
-class Rt{constructor(){this.x=0;this.y=0;this.z=0}}
+class Rt{constructor(){this.x=0;this.y=0;this.z=0}set(x=0,y=0,z=0){this.x=x;this.y=y;this.z=z;return this}setScalar(v){this.x=this.y=this.z=v;return this}copy(o){this.x=o.x;this.y=o.y;this.z=o.z;return this}}
 class Color{constructor(c){this.r=1;this.g=1;this.b=1;if(typeof c==='number')this.fromHex(c)}fromHex(h){this.r=((h>>16)&255)/255;this.g=((h>>8)&255)/255;this.b=(h&255)/255;return this}setHex(h){return this.fromHex(h)}setScalar(v){this.r=this.g=this.b=v;return this}copy(c){this.r=c.r;this.g=c.g;this.b=c.b;return this}lerp(c,t){this.r+=(c.r-this.r)*t;this.g+=(c.g-this.g)*t;this.b+=(c.b-this.b)*t;return this}offsetHSL(){return this}setHSL(){return this}getHex(){return(Math.round(this.r*255)<<16)|(Math.round(this.g*255)<<8)|Math.round(this.b*255)}}
 class Mesh{constructor(g,m){this.isMesh=true;this.geometry=g;this.material=m;this.position=new V3();this.rotation=new Rt();this.scale=new Sc();this.userData={};this.visible=true;this.castShadow=false;this.receiveShadow=false;this.frustumCulled=true;this.children=[]}add(c){this.children.push(c);return c}remove(c){this.children=this.children.filter(x=>x!==c)}traverse(fn){fn(this);for(const c of this.children)if(c.traverse)c.traverse(fn)}dispose(){}}
 class Grp extends Mesh{constructor(){super(undefined,undefined)}}

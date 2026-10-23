@@ -109,7 +109,7 @@ const ICONS={
   'Punho Fatal':'💢','Velocidade de Tiro':'🚀','Empurrão':'🫱','Reflexo Relâmpago':'💨','Pulso Congelante':'❄️',
 };
 // ícones de classe: pixel art 16×16 gerada em assets/images/icons/ (via node _genicons.js) — um rosto por herói
-const CLSICON={mago:'assets/images/icons/mago.png?v=3',arqueiro:'assets/images/icons/arqueiro.png?v=3',guerreiro:'assets/images/icons/guerreiro.png?v=3',tank:'assets/images/icons/tank.png?v=3',necro:'assets/images/icons/necro.png?v=3',chrono:'assets/images/icons/chrono.png?v=3',pistol:'assets/images/icons/pistol.png?v=3',dracula:'assets/images/icons/dracula.png?v=3',demon:'assets/images/icons/demon.png?v=3',future:'assets/images/icons/future.png?v=3',human:'assets/images/icons/human.png?v=3',king:'assets/images/icons/king.png?v=3'};
+const CLSICON={mago:'assets/images/icons/mago.png?v=3',arqueiro:'assets/images/icons/arqueiro.png?v=3',guerreiro:'assets/images/icons/guerreiro.png?v=3',tank:'assets/images/icons/tank.png?v=3',necro:'assets/images/icons/necro.png?v=3',chrono:'assets/images/icons/chrono.png?v=3',pistol:'assets/images/icons/pistol.png?v=3',dracula:'assets/images/icons/dracula.png?v=3',demon:'assets/images/icons/demon.png?v=3',future:'assets/images/icons/future.png?v=3',human:'assets/images/icons/human.png?v=4',king:'assets/images/icons/king.png?v=3'};
 let CLSIMG={};try{for(const k in CLSICON){const im=new Image();im.src=CLSICON[k];CLSIMG[k]=im}}catch(e){} // preload p/ canvas (menu 3D)
 const clsImg=k=>`<img class="cimg" src="${CLSICON[k]}" alt="" title="${CLASSES[k]?CLASSES[k].nome:k}">`; // HTML: tamanho segue o font-size do pai (em)
 const CLSTIPO={mago:'Mago',arqueiro:'Arqueiro',guerreiro:'Guerreiro',tank:'Guardião',necro:'Necromante',chrono:'Chronomante',pistol:'Pistoleiro',dracula:'Vampiro',demon:'Demônio',future:'Viajante',human:'Humano',king:'Rei'};
@@ -306,7 +306,7 @@ function buildBody(P){
 function makeBow(parent,col=0x7a5230){const bw=new THREE.Group();parent.add(bw);for(let i=-3;i<=3;i++)vox(bw,0,i*.1,.12-i*i*.011,.05,.11,.05,col);vox(bw,0,0,.012,.012,.64,.012,0xeeeeee);return bw}
 function buildHero(cls){
   const C=CLASSES[cls],P=C.pal,b=buildBody(P);
-  const fn=(window.CHARACTERS||{})[cls];if(fn)fn(b,P,vox,makeBow,boxGeo);
+  const fn=C.model;if(fn)fn(b,P,vox,makeBow,boxGeo);
   collect(b.root);if(b.bubble)b.root.add(b.bubble);
   return b;
 }
@@ -655,8 +655,28 @@ function flatMesh(geo,color,op){const m=new THREE.Mesh(geo,new THREE.MeshBasicMa
 function ringFX(x,z,R,color,life=.4){const g=new THREE.Group();g.position.set(x,.08,z);const m=flatMesh(ringGeo,color,.8);g.add(m);
   addFx(g,life,k=>{const s=lerp(.3,R,1-Math.pow(1-k,3));g.scale.set(s,1,s);m.material.opacity=.8*(1-k)})}
 function swingFX(range,arc,a,color){const g=new THREE.Group();g.position.set(player.x,.55+player.y,player.z);g.rotation.y=a;
-  const geo=new THREE.RingGeometry(.35,range,20,1,-Math.PI/2-arc/2,arc);const m=flatMesh(geo,color,.55);m.userData.ownGeo=true;g.add(m);
-  addFx(g,.18,k=>{m.material.opacity=.55*(1-k);g.scale.setScalar(.85+.15*k)})}
+  const inner=Math.max(.45,range*.86);
+  const geo=new THREE.RingGeometry(inner,range,28,1,-Math.PI/2-arc/2,arc);const m=flatMesh(geo,color,.7);m.userData.ownGeo=true;g.add(m);
+  const edge=new THREE.RingGeometry(range*.985,range,32,1,-Math.PI/2-arc/2,arc);const m2=flatMesh(edge,0xffffff,.55);m2.position.y=.006;m2.userData.ownGeo=true;g.add(m2);
+  addFx(g,.2,k=>{m.material.opacity=.7*(1-k);m2.material.opacity=.55*(1-k);g.scale.setScalar(.82+.18*k)})}
+// Pancada do Brom: anel duplo, clarão rasteiro e detritos de aço/azul.
+function slamFX(x,z,R){
+  ringFX(x,z,R,0x9fc4ff,.34);
+  ringFX(x,z,R*.76,0xd7e8ff,.27);
+  const g=new THREE.Group();g.position.set(x,.07,z);
+  const m=flatMesh(discGeo,0xbfd9ff,.18);g.add(m);g.scale.setScalar(.78);
+  addFx(g,.26,k=>{m.material.opacity=.18*(1-k);g.scale.setScalar(.78+.28*k)});
+  burst(x,.12,z,0x8b95a3,14,{speed:5.5,up0:.5,up1:2.7,size:.11});
+  burst(x,.12,z,0x6fa8ff,9,{emi:.65,speed:4.2,up0:.3,up1:1.5,life:.3,size:.055});
+}
+// Baluarte: três anéis de comando e faíscas subindo do escudo.
+function baluarteFX(x,z,R){
+  ringFX(x,z,R,0x7fb2ff,.5);
+  ringFX(x,z,R*.74,0xd7e8ff,.38);
+  ringFX(x,z,R*.45,0xbfe4ff,.28);
+  burst(x,.2,z,0x8b95a3,24,{speed:6,up0:1,up1:3});
+  burst(x,.7,z,0x6fa8ff,18,{emi:.7,speed:4.8,up0:.8,up1:2.8});
+}
 function telegraph(x,z,R,time){const g=new THREE.Group();g.position.set(x,.04,z);const ring=flatMesh(ringGeo,0xff3a2a,.75);ring.scale.set(R,R,1);const disc=flatMesh(discGeo,0xff3a2a,.22);g.add(ring,disc);
   addFx(g,time,k=>{const s=R*k;disc.scale.set(s,s,1);ring.material.opacity=.45+.35*Math.sin(k*20)})}
 function lineTelegraph(x,z,ux,uz,len,time){const g=new THREE.Group();g.position.set(x+ux*len/2,.05,z+uz*len/2);g.rotation.y=Math.atan2(ux,uz);
@@ -722,10 +742,12 @@ function autoAttack(){
     if(player.cls==='arqueiro')burst(player.x+Math.sin(a)*.52,.8+player.y,player.z+Math.cos(a)*.52,0x7fcf5a,3,{emi:.45,speed:1.8,up0:.1,up1:.8,life:.18,size:.055})}
   else if(C.kind==='melee'){const R=C.range*st.area,t=nearest(R+.6);if(!t)return;player.atkCd=C.atkCd/st.atkSpd;player.atkAnim=1;const a=Math.atan2(t.x-player.x,t.z-player.z);player.aimAng=a;let hit=false;
     for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d>R+e.r)continue;if(Math.abs(angDiff(a,Math.atan2(dx,dz)))>C.arc/2&&d>e.r+.45)continue;const r=roll(C.dmg);damageEnemy(e,r.d,r.crit,dx/d*C.knock*st.kb,dz/d*C.knock*st.kb);hit=true}
-    swingFX(R,C.arc,a,0xffffff);if(hit){addShake(.06);S('melee');hitStop(.03)}}
+    if(player.cls==='guerreiro')swingFX(R,C.arc,a,0xff5a42);else swingFX(R,C.arc,a,0xffffff);
+    if(hit){if(player.cls==='guerreiro')burst(player.x+Math.sin(a)*.95,.78+player.y,player.z+Math.cos(a)*.95,0xffb08a,5,{emi:.45,speed:2.8,up0:.2,up1:1.4,life:.22,size:.06});addShake(.06);S('melee');hitStop(.03)}}
   else{const R=C.radius*st.area,t=nearest(R);if(!t)return;player.atkCd=C.atkCd/st.atkSpd;player.atkAnim=1;player.aimAng=Math.atan2(t.x-player.x,t.z-player.z);
     for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(C.dmg);damageEnemy(e,r.d,r.crit,dx/d*C.knock*st.kb,dz/d*C.knock*st.kb)}}
-    ringFX(player.x,player.z,R,0x9fc4ff,.35);burst(player.x,.15,player.z,0x8b7a66,10,{speed:5,up0:.5,up1:2.5});addShake(.12);S('melee');hitStop(.03)}
+    if(player.cls==='tank')slamFX(player.x,player.z,R);else{ringFX(player.x,player.z,R,0x9fc4ff,.35);burst(player.x,.15,player.z,0x8b7a66,10,{speed:5,up0:.5,up1:2.5})}
+    addShake(.12);S('melee');hitStop(.03)}
 }
 function useAbility(){
   if(state!=='play'||player.abCd>0)return;const C=CLASSES[player.cls],st=player.stats;player.abCd=C.ab.cd*st.cdr;player.atkAnim=1;S('ability');
@@ -736,9 +758,12 @@ function useAbility(){
     ringFX(player.x,player.z,1.55,0x7fcf5a,.24);
     burst(player.x,.8,player.z,0x7fcf5a,18,{emi:.65,speed:5.2,up0:.5,up1:2.1});
     burst(player.x,.8,player.z,0xd23b2f,6,{emi:.25,speed:3.4,up0:.4,up1:1.6});addShake(.16)}
-  else if(player.cls==='guerreiro'){player.spinT=1.5;player.spinTick=0}
+  else if(player.cls==='guerreiro'){player.spinT=1.5;player.spinTick=0;
+    ringFX(player.x,player.z,2.4*st.area,0xff6a55,.3);
+    burst(player.x,.72,player.z,0xffb08a,16,{emi:.55,speed:4.5,up0:.4,up1:2});
+    burst(player.x,.72,player.z,0xd23b2f,5,{emi:.25,speed:3.2,up0:.3,up1:1.5});addShake(.18)}
   else if(player.cls==='tank'){player.shieldT=4;const R=3.6*st.area;for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(30);damageEnemy(e,r.d,r.crit,dx/d*16*st.kb,dz/d*16*st.kb)}}
-    ringFX(player.x,player.z,R,0x7fb2ff,.5);burst(player.x,.2,player.z,0x8b95a3,24,{speed:6,up0:1,up1:3});addShake(.35)}
+    baluarteFX(player.x,player.z,R);addShake(.35)}
   else if(player.cls==='necro'){for(let i=0;i<3;i++)summonMinion();for(const m of minions)m.hp=m.maxHp;
     ringFX(player.x,player.z,3*st.area,0x7ee0a8,.45);burst(player.x,.6,player.z,0x7ee0a8,24,{emi:1,speed:6,up0:.5,up1:3});addShake(.2)}
   else if(player.cls==='chrono'){const R=7*st.area;for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){e.slowT=Math.max(e.slowT||0,3.5);e.slowF=.1;const r=roll(C.dmg*1.5);damageEnemy(e,r.d,r.crit,0,0,true)}}
@@ -1074,15 +1099,19 @@ function updateMenu(dt){
     h.root.rotation.y=lerp(h.root.rotation.y,ty,Math.min(1,dt*5));
     h.torso.position.y=.34+(sel?Math.abs(Math.sin(menuT*3))*.05:0);
     const ax=Math.sin(menuT*2+i)*.08;h.armR.rotation.x=ax;h.armL.rotation.x=-ax;h.torso.rotation.y=0;
+    if(k==='guerreiro'&&h.sword){h.sword.rotation.x=0;h.sword.rotation.z=0}
     if(sel&&menuAtk>0){const t=1-menuAtk,e=1-Math.pow(1-t,3);
-      if(k==='guerreiro'){h.armR.rotation.x=lerp(-2.6,-.9,e);h.torso.rotation.y=lerp(.9,-.9,e)}
+      if(k==='guerreiro'){h.armR.rotation.x=lerp(-1.15,-.35,e);h.torso.rotation.y=lerp(.9,-.9,e);
+        if(h.sword){h.sword.rotation.x=Math.PI/2*Math.min(1,menuAtk*4);h.sword.rotation.z=-.65*Math.min(1,menuAtk*3)}}
       else if(k==='tank'){h.armR.rotation.x=lerp(-3,-.8,e);h.armL.rotation.x=-1.4}
       else if(k==='mago'||k==='chrono'||k==='pistol'||k==='dracula'||k==='demon'||k==='future'||k==='human'||k==='king'){h.armR.rotation.x=-1.3}else{h.armL.rotation.x=-1.5;h.armR.rotation.x=-1.3}}
     applyKeep(h.keep);
+    if(k==='tank'&&h.hammer){const hk=sel&&menuAtk>0?1-menuAtk:0,he=1-Math.pow(1-hk,3);h.hammer.rotation.x=-h.armR.rotation.x+(hk>0?lerp(-1.2,2.15,he):.07)}
     if(h.cape)h.cape.rotation.x=.02+Math.sin(menuT*1.4+i)*.015;
     if(k==='mago'&&h.mageOrb){h.mageOrb.position.y=1.02+Math.sin(menuT*2.2)*.03;h.mageMotes.rotation.y=menuT*1.8}
     if(k==='arqueiro'&&h.quiver)h.quiver.rotation.z=Math.sin(menuT*1.8+i)*.025;
     if(k==='arqueiro'&&h.bowArrow)h.bowArrow.visible=sel&&menuAtk>0;
+    if(k==='guerreiro'&&h.plume){h.plume.rotation.z=Math.sin(menuT*2+i)*.045;h.plume.rotation.x=Math.sin(menuT*1.7+i)*.03}
   });
   for(const k in menuStones)menuStones[k].visible=!isUnlocked(k); // placa no lugar dos que ainda descansam no caixão
   if(royalGrp)royalGrp.visible=isUnlocked('king');
@@ -1113,7 +1142,7 @@ function updateMenu(dt){
   let cpx,cpy,cpz,cly,cwx=0,cwz=0;
   if(inMenu){ // seletor: câmera parada e firme, enquadrando o herói exatamente onde ele vive (trono, caixão, cemitério...)
     const hp=menuHeroes[selCls]?menuHeroes[selCls].root.position:null;
-    if(hp){const d=Math.max(.001,Math.hypot(hp.x,hp.z)),fx=-hp.x/d,fz=-hp.z/d,DD=narrow?5:3.4;
+    if(hp){const d=Math.max(.001,Math.hypot(hp.x,hp.z)),fx=-hp.x/d,fz=-hp.z/d,DD=narrow?5:(selCls==='tank'?4.05:3.4);
       cpx=hp.x+fx*DD;cpy=1.5;cpz=hp.z+fz*DD;cly=1.05;cwx=hp.x;cwz=hp.z}}
   else if(state==='title'){ // título: imagem fixa lá da colina, todo mundo visível mesmo de longe
     if(narrow){cpx=0;cpy=10.5;cpz=21;cly=.4;cwz=-2.5}else{cpx=0;cpy=8.3;cpz=16.2;cly=.5;cwz=-2.5}}
@@ -1258,7 +1287,8 @@ function update(dt){
   autoAttack();
   if(player.spinT>0){player.spinT-=dt;player.spinTick-=dt;if(player.spinTick<=0){player.spinTick=.16;const R=2.4*st.area;
     for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(C.dmg*.55);damageEnemy(e,r.d,r.crit,dx/d*3*st.kb,dz/d*3*st.kb,true)}}
-    swingFX(R,TAU*.6,player.spinAng,0xffd0c8)}}
+    swingFX(R,TAU*.42,player.spinAng,0xff3a24);
+    if(Math.random()<.38)burst(player.x+Math.sin(player.spinAng)*1.25,.72+player.y,player.z+Math.cos(player.spinAng)*1.25,Math.random()<.72?0xff6a55:0xf2b84b,1,{emi:.5,speed:1.2,up0:.1,up1:.8,grav:0,life:.18,size:.05})}}
   updWeapons(dt);
   updateMinions(dt);
   director(dt);
@@ -1408,11 +1438,20 @@ function animHero(dt,moving){
   if(moving)player.walk+=dt*11;const sw=moving&&player.y<.05?Math.sin(player.walk):0;
   b.legL.rotation.x=player.y>.05?-.5:sw*.7;b.legR.rotation.x=player.y>.05?.3:-sw*.7;b.torso.position.y=.34+(moving?Math.abs(Math.cos(player.walk))*.03:0);
   b.armL.rotation.x=-sw*.6;b.armR.rotation.x=sw*.6;b.torso.rotation.y=0;
+  if(cls==='guerreiro'&&b.sword){b.sword.rotation.x=0;b.sword.rotation.z=0}
   player.atkAnim=Math.max(0,player.atkAnim-dt*(cls==='tank'?3.5:5));const k=player.atkAnim,t=1-k,ez=1-Math.pow(1-t,3);
   const rel=clamp(angDiff(player.facing,player.aimAng),-1.3,1.3);
-  if(cls==='guerreiro'){if(player.spinT>0){player.spinAng+=dt*24;b.torso.rotation.y=player.spinAng-player.facing;b.armR.rotation.x=-1.5;b.armL.rotation.x=-1.2}
-    else if(k>0){b.armR.rotation.x=lerp(-2.6,-.9,ez);b.torso.rotation.y=rel+lerp(.9,-.9,ez)}}
-  else if(cls==='tank'){if(k>0)b.armR.rotation.x=lerp(-3,-.7,ez);if(player.shieldT>0)b.armL.rotation.x=-1.45;b.bubble.visible=player.shieldT>0;if(b.bubble.visible)b.bubble.material.opacity=.14+Math.sin(runTime*10)*.05}
+  if(cls==='guerreiro'){if(player.spinT>0){player.spinAng+=dt*24;b.torso.rotation.y=player.spinAng-player.facing;b.armR.rotation.x=-1.5;b.armL.rotation.x=-1.2;if(b.sword)b.sword.rotation.x=Math.PI/2}
+    else if(k>0){b.armR.rotation.x=lerp(-1.15,-.35,ez);b.torso.rotation.y=rel+lerp(.9,-.9,ez);
+      if(b.sword){b.sword.rotation.x=Math.PI/2*Math.min(1,k*3);b.sword.rotation.z=lerp(0,-.65,ez)}}}
+  else if(cls==='tank'){
+    if(k>0)b.armR.rotation.x=lerp(-3,-.7,ez);
+    if(b.hammer)b.hammer.rotation.x=-b.armR.rotation.x+(k>0?lerp(-1.2,2.15,ez):.07); // o martelo mantém a cabeça legível no idle e desce no golpe
+    if(player.shieldT>0)b.armL.rotation.x=-1.45;
+    b.bubble.visible=player.shieldT>0;
+    if(b.bubble.visible){b.bubble.material.opacity=.14+Math.sin(runTime*10)*.05;
+      if(b.bubbleFacets){b.bubbleFacets.rotation.y+=dt*.55;b.bubbleFacets.material.opacity=.12+Math.sin(runTime*6)*.05}
+      if(b.bubbleCore)b.bubbleCore.material.opacity=.08+Math.sin(runTime*4)*.03}}
   else if(cls==='mago'||cls==='necro'||cls==='chrono'||cls==='pistol'||cls==='dracula'||cls==='demon'||cls==='future'||cls==='human'||cls==='king'){if(k>0){b.armR.rotation.x=-1.3;b.torso.rotation.y=rel*k}}
   else if(cls==='arqueiro'){if(k>0){b.armL.rotation.x=-1.5;b.armR.rotation.x=-1.35;b.torso.rotation.y=rel*Math.min(1,k*2)}}
   applyKeep(b.keep);
@@ -1420,6 +1459,7 @@ function animHero(dt,moving){
   if(cls==='mago'&&b.mageOrb){b.mageOrb.position.y=1.02+Math.sin(runTime*2.4)*.028;b.mageMotes.rotation.y+=dt*1.8}
   if(cls==='arqueiro'&&b.quiver)b.quiver.rotation.z=(moving?Math.sin(player.walk)*.03:Math.sin(runTime*1.7)*.012);
   if(cls==='arqueiro'&&b.bowArrow)b.bowArrow.visible=k>.12;
+  if(cls==='guerreiro'&&b.plume){b.plume.rotation.z=Math.sin(runTime*2.2)*.04;b.plume.rotation.x=Math.sin(runTime*1.8)*.025}
   setFlash(b.root,player.flash>0);
   b.root.visible=!(player.invuln>0&&player.dashT<=0&&runTime>1&&Math.floor(runTime*20)%2===0);
 }
