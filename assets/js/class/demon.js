@@ -36,48 +36,91 @@ window.CLASSES.demon = {
  * Mesmo arquivo da classe: stats em window.CLASSES + modelo voxel do herói.
  * game.js buildHero(cls) chama CLASSES[cls].model(b, P, vox, makeBow, boxGeo).
  * =================================================================== */
-// Herói: demon (Castiel) — modelo voxel adaptado da skin mine (assets/images/characters/demon.png).
-// Paleta da skin: armadura preta, gemas de brasa vermelha (peito/pernas), olhos ardentes,
-// ombreiras e caneleiras ossos (tan), capa escura com forro vermelho, botas com solola incandescente.
+// Herói: demon (Castiel) — senhor das brasas: chifres de obsidiana, pele queimada,
+// fenda de magma no peito, ombreiras com esporões, garras de osso e capa rasgada.
 window.CLASSES.demon.model=function(b,P,vox,makeBow,boxGeo){
-    // — cores da skin —
-    const K2=0x121212,K5=0x0f0f0f,K7=0x171717,K9=0x090909;            // armadura preta
-    const R1=0x8d0000,R2=0xb20000,R3=0xc80000,R4=0xda0000,R5=0xe60a00;// brasa escura→viva
-    const RO=0xec1a00,RF=0xf22500,Rf=0xf62b06;                        // núcleo incandescente
-    const T1=0xb5a690,T2=0xc6bdac,TB2=0x5f533f;                       // osso/couro (ombros, garras)
-    const TEETH=0xfafafa;                                             // dentes
-    // — cabeça: chifres com pontas ósseas, sobrancelhas cerradas, olhos ardentes, boca de dentes —
-    vox(b.head,0,.17,0,.36,.06,.36,K2);
-    vox(b.head,-.13,.17,-.02,.07,.16,.07,K5);vox(b.head,.13,.17,-.02,.07,.16,.07,K5);      // base dos chifres
-    vox(b.head,-.16,.27,-.05,.05,.12,.05,T2);vox(b.head,.16,.27,-.05,.05,.12,.05,T2);      // pontas dos chifres
-    vox(b.head,-.08,.085,.172,.08,.025,.012,K7);vox(b.head,.08,.085,.172,.08,.025,.012,K7);// sobrocelhas
-    vox(b.head,-.08,.02,.173,.06,.05,.012,RO,1.6);vox(b.head,.08,.02,.173,.06,.05,.012,RO,1.6); // olhos
-    vox(b.head,0,-.1,.17,.18,.035,.012,R1);                              // boca
-    vox(b.head,0,-.085,.176,.14,.016,.012,TEETH,.25);                    // dentes
-    // — tronco: placa escura + gema de brasa no peito, gola com prego, cinto (trim) fivela incandescente —
-    vox(b.torso,0,0,.155,.26,.3,.04,K9);
-    vox(b.torso,0,.12,.18,.10,.08,.02,R3,.6);                            // gema: topo
-    vox(b.torso,0,.02,.18,.18,.12,.02,R4,1.0);                           // gema: meio
-    vox(b.torso,0,-.09,.185,.09,.09,.02,Rf,1.6);                         // gema: núcleo
-    vox(b.torso,-.14,-.02,.175,.05,.05,.02,R3,.5);vox(b.torso,.14,-.02,.175,.05,.05,.02,R3,.5); // brasas laterais
-    vox(b.torso,0,.40,0,.46,.07,.30,K9);                                 // gola
-    vox(b.torso,0,.40,.16,.06,.06,.02,R4,.9);                            // prego da gola
-    vox(b.torso,0,.03,.16,.07,.07,.02,R5,1.1);                           // fivela do cinto
-    // — capa escura com forro vermelho na barra —
-    vox(b.torso,0,.14,-.185,.46,.52,.05,P.cape);
-    vox(b.torso,0,-.09,-.19,.48,.07,.055,R2,.4);
-    // — ombreiras de osso —
-    vox(b.torso,-.245,.34,0,.13,.12,.19,T1);vox(b.torso,.245,.34,0,.13,.12,.19,T1);
-    // — braços: guarda-antebraco de osso, faixa de couro, pulso em brasa —
-    vox(b.armL,0,-.19,0,.15,.12,.16,T1);vox(b.armR,0,-.19,0,.15,.12,.16,T1);
-    vox(b.armL,0,-.11,0,.155,.04,.165,TB2);vox(b.armR,0,-.11,0,.155,.04,.165,TB2);
-    vox(b.armL,0,-.30,0,.135,.04,.145,R4,1.0);vox(b.armR,0,-.30,0,.135,.04,.145,R4,1.0);
-    // — garras escuras —
-    vox(b.handR,0,-.06,.08,.1,.05,.1,K2);vox(b.handL,0,-.06,.08,.1,.05,.1,K2);
-    // — pernas: grevas brilhantes, joelho em brasa, bota com ponta incandescente —
-    vox(b.legL,0,-.14,0,.175,.10,.20,R4,.85);vox(b.legR,0,-.14,0,.175,.10,.20,R4,.85);
-    vox(b.legL,0,-.06,0,.17,.05,.19,R5,1.1);vox(b.legR,0,-.06,0,.17,.05,.19,R5,1.1);
-    vox(b.legL,0,-.30,.09,.16,.06,.07,RF,1.2);vox(b.legR,0,-.30,.09,.16,.06,.07,RF,1.2);
-    // — asas pequenas de morcego —
-    vox(b.torso,-.3,.3,-.2,.18,.26,.04,K5);vox(b.torso,.3,.3,-.2,.18,.26,.04,K5);
+
+    const OBS=0x1d1512,OBS2=0x2c201b,OBS3=0x0b0807;             // obsidiana / couro queimado
+    const EMB=0xff6a1a,MOLT=0xff8a2a,CORE=0xffc14a;             // brasa → magma → núcleo
+    const BONE=0xc2ae8c,BONE_D=0x8a7a62;                        // osso
+    const RED=P.trim,RED2=0xb01400;                             // vermelho da paleta
+    const CLOAK=0x120d0d,EYE=0xff5a1a;                          // capa / olhos
+
+    // ---------- cabeça: chifres grandes curvos, olhos em brasa, presas ----------
+    vox(b.head,0,.14,.152,.3,.06,.035,OBS);                     // testa blindada
+    for(const s of [-1,1]){                                     // sobrancelhas inclinadas (fronte carregada)
+      const br=new THREE.Group();br.position.set(s*.085,.09,.171);br.rotation.z=s*.24;b.head.add(br);
+      vox(br,0,0,0,.12,.03,.022,OBS2);
+      vox(br,0,.0,.012,.12,.008,.006,EMB,.35);
+    }
+    // chifres: três seções encaixadas (grupos rotacionados) formando a curva
+    const horn=(s)=>{
+      const g1=new THREE.Group();g1.position.set(s*.15,.115,-.02);g1.rotation.set(-.22,0,-s*.2);b.head.add(g1);
+      vox(g1,0,.05,0,.085,.12,.09,OBS);
+      vox(g1,0,.02,.045,.03,.035,.012,EMB,.9);                  // brasa na base do chifre
+      const g2=new THREE.Group();g2.position.set(0,.11,0);g2.rotation.set(-.5,0,-s*.16);g1.add(g2);
+      vox(g2,0,.045,0,.065,.11,.07,OBS);
+      vox(g2,0,.02,.04,.026,.012,.012,EMB,.8);
+      const g3=new THREE.Group();g3.position.set(0,.1,0);g3.rotation.set(-.55,0,-s*.1);g2.add(g3);
+      vox(g3,0,.04,0,.048,.09,.052,OBS);
+      vox(g3,0,.09,0,.032,.05,.036,BONE);                       // ponta óssea
+    };
+    horn(-1);horn(1);
+    vox(b.head,-.158,.145,-.02,.09,.022,.092,BONE_D);vox(b.head,.158,.145,-.02,.09,.022,.092,BONE_D); // anéis
+    vox(b.head,-.145,.115,.035,.028,.028,.012,EMB,1.2);vox(b.head,.145,.115,.035,.028,.028,.012,EMB,1.2); // brasa na base
+    vox(b.head,0,.02,.171,.28,.085,.012,0x0a0705);              // sombra das órbitas
+    vox(b.head,-.075,.025,.178,.052,.032,.012,EYE,1.25);vox(b.head,.075,.025,.178,.052,.032,.012,EYE,1.25);
+    vox(b.head,-.075,.025,.184,.024,.016,.008,CORE,1.7);vox(b.head,.075,.025,.184,.024,.016,.008,CORE,1.7); // núcleo do olhar
+    vox(b.head,-.128,-.045,.173,.014,.085,.008,EMB,1.3);        // cicatriz de brasa no rosto
+    vox(b.head,0,-.1,.172,.15,.028,.012,0x1a0a08);              // boca
+    vox(b.head,-.045,-.118,.174,.018,.038,.012,BONE);vox(b.head,.045,-.118,.174,.018,.038,.012,BONE); // presas
+    vox(b.head,0,-.15,.171,.15,.04,.02,OBS3);                   // queixo blindado
+
+    // ---------- tronco: placas de obsidiana, fenda de magma e núcleo ----------
+    vox(b.torso,-.115,.3,.15,.16,.2,.05,OBS);vox(b.torso,.115,.3,.15,.16,.2,.05,OBS);   // peitorais
+    vox(b.torso,0,.26,.166,.018,.18,.02,EMB,.8);                // fenda de magma no esterno
+    vox(b.torso,.016,.235,.171,.011,.045,.012,MOLT,1.0);       // ramo curto
+    vox(b.torso,0,.24,.176,.022,.04,.012,CORE,1.5);             // núcleo
+    vox(b.torso,0,.05,.148,.3,.18,.04,OBS2);                    // abdômen queimado
+    vox(b.torso,-.09,.13,.168,.13,.018,.012,RED2,.3);vox(b.torso,.09,.13,.168,.13,.018,.012,RED2,.3); // veias
+    vox(b.torso,0,.03,0,.47,.08,.31,OBS3);                      // cinto
+    vox(b.torso,0,.075,.152,.44,.012,.02,RED2,.3);              // friso vermelho do cinto
+    vox(b.torso,0,.03,.157,.06,.045,.02,EMB,1.2);               // fivela incandescente
+    vox(b.torso,0,.41,0,.44,.05,.29,OBS3);                      // gola
+    vox(b.torso,0,.4,.148,.06,.06,.02,RED,.5);                   // gema da gola
+    // ombreiras com esporões ósseos
+    vox(b.torso,-.245,.35,0,.14,.12,.21,OBS);vox(b.torso,.245,.35,0,.14,.12,.21,OBS);
+    vox(b.torso,-.25,.405,0,.12,.05,.18,OBS2);vox(b.torso,.25,.405,0,.12,.05,.18,OBS2);
+    const sp=(x,s)=>{const g=new THREE.Group();g.position.set(x,.395,0);g.rotation.z=-s*.35;b.torso.add(g);
+      vox(g,0,.055,0,.062,.12,.072,OBS);vox(g,0,.115,0,.034,.05,.042,BONE);
+      vox(g,0,.0,.05,.04,.05,.02,EMB,1.0)};
+    sp(-.27,-1);sp(.27,1);
+
+    // ---------- capa rasgada com forro de brasa (grupo animado) ----------
+    const cape=new THREE.Group();cape.position.set(0,.42,-.15);b.torso.add(cape);b.cape=cape;
+    vox(cape,-.2,-.22,-.01,.12,.54,.04,CLOAK);
+    vox(cape,-.06,-.3,0,.14,.7,.045,CLOAK);
+    vox(cape,.09,-.25,-.005,.13,.6,.04,CLOAK);
+    vox(cape,.22,-.18,-.015,.1,.46,.035,CLOAK);
+    vox(cape,-.2,-.5,.002,.12,.03,.045,EMB,.45);
+    vox(cape,-.06,-.66,.004,.14,.035,.05,EMB,.55);
+    vox(cape,.09,-.56,.0,.13,.03,.045,EMB,.5);
+    vox(cape,.22,-.42,-.01,.1,.025,.04,EMB,.45);
+    vox(cape,-.06,-.36,-.028,.022,.42,.015,RED2,.3);             // veia de brasa na capa
+    // selo infernal nas costas (anel de brasa + núcleo) — foco na câmera do jogo
+    for(let i=0;i<8;i++){const a=i/8*Math.PI*2;vox(cape,Math.cos(a)*.075,-.22+Math.sin(a)*.075,-.04,.018,.018,.006,EMB,1.1)}
+    vox(cape,0,-.22,-.041,.03,.03,.007,CORE,1.5);
+    vox(cape,-.11,-.1,-.036,.012,.05,.006,EMB,.8);vox(cape,.1,-.34,-.036,.012,.06,.006,EMB,.8);
+
+    // ---------- braços: braceletes de obsidiana e garras de osso ----------
+    vox(b.armL,0,-.18,0,.15,.13,.16,OBS);vox(b.armR,0,-.18,0,.15,.13,.16,OBS);
+    vox(b.armL,0,-.115,0,.155,.03,.165,RED2,.35);vox(b.armR,0,-.115,0,.155,.03,.165,RED2,.35);
+    vox(b.armL,0,-.255,.078,.03,.02,.012,EMB,1.1);vox(b.armR,0,-.255,.078,.03,.02,.012,EMB,1.1);
+    for(const h of [b.handL,b.handR])for(const x of [-.035,0,.035])vox(h,x,-.035,.075,.022,.07,.022,BONE_D);
+
+    // ---------- pernas: grevas, joelho em brasa e casco ----------
+    vox(b.legL,0,-.15,0,.175,.14,.2,OBS);vox(b.legR,0,-.15,0,.175,.14,.2,OBS);
+    vox(b.legL,0,-.2,.09,.055,.04,.02,EMB,1.1);vox(b.legR,0,-.2,.09,.055,.04,.02,EMB,1.1);
+    vox(b.legL,0,-.3,.03,.19,.1,.245,OBS3);vox(b.legR,0,-.3,.03,.19,.1,.245,OBS3);
+    vox(b.legL,0,-.325,.152,.05,.014,.012,EMB,.9);vox(b.legR,0,-.325,.152,.05,.014,.012,EMB,.9);
 };
