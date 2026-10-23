@@ -134,6 +134,9 @@ const EMICON={'❤️':'coracao','💪':'forca','⚡':'maos-rapidas','👟':'bot
 const emIc=e=>{const s=EMICON[e];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=3" alt="">`:''};
 const icon=n=>upgImg(n)||ICONS[n]||'';
 const WEAPONS_NAMES=new Set(Object.values(WEAPONS).map(w=>w.nome));
+const BUILD_LIMITS={weapons:5,upgrades:5};
+const weaponSlots=p=>Object.values(p.weap||{}).filter(l=>l>0).length;
+const upgradeSlots=p=>Object.keys(p.upgIds||{}).length;
 const UNLOCK={guerreiro:150}; // compra com ouro (Mago começa liberado)
 // Classes liberadas por missão (não por ouro). prog(): progresso atual rumo a goal.
 // há uma corrida em andamento? (soma o progresso atual no total mostrado)
@@ -883,7 +886,7 @@ function newRun(cls){
   const C=CLASSES[cls];selCls=cls;store.set('cv_cls',cls);
   Object.assign(player,{cls,x:W/2,z:H/2,y:0,vy:0,r:.32,maxHp:C.hp,hp:C.hp,facing:Math.PI,atkCd:.5,abCd:0,dashCd:0,dashT:0,dvx:0,dvz:0,invuln:1,shieldT:0,spinT:0,spinTick:0,spinAng:0,walk:0,atkAnim:0,flash:0,aimAng:Math.PI,minCap:cls==='necro'?3:0,minDmg:1,
     lvl:1,xp:0,xpNeed:xpNeed(1),weap:Object.fromEntries(Object.keys(WEAPONS).map(k=>[k,0])),
-    stats:{dmg:1,atkSpd:1,move:1,cdr:1,ls:C.lsBase||0,crit:C.critBase||.05,armor:C.armor,multi:0,pierce:0,area:1,thorns:0,regen:0,magnet:1,xpMul:1,critDmg:2,pspd:1,kb:1,dashCd:1,chill:0},picks:[]});
+    stats:{dmg:1,atkSpd:1,move:1,cdr:1,ls:C.lsBase||0,crit:C.critBase||.05,armor:C.armor,multi:0,pierce:0,area:1,thorns:0,regen:0,magnet:1,xpMul:1,critDmg:2,pspd:1,kb:1,dashCd:1,chill:0},picks:[],upgIds:{}});
   applyShop(player);
   if(player.model)scene.remove(player.model.root);
   player.model=buildHero(cls);scene.add(player.model.root);
@@ -901,9 +904,10 @@ function newRun(cls){
 function openUpgrade(){
   setScreen('upgrade');
   $('#up-title').textContent=upSource==='chest'?'Baú aberto!':'Nível '+player.lvl+'!';
-  $('#up-sub').textContent='Escolha uma melhoria — toque numa opção '+(upSource==='chest'?'(grátis) ':'')+'ou teclas 1/2/3.';
-  let pool=STAT_UPS.filter(u=>(!u.cls||u.cls.includes(player.cls))&&(!u.ok||u.ok(player))).map(u=>Object.assign({kind:u.cls?'cls':'stat'},u));
-  for(const k in WEAPONS){const l=player.weap[k];if(l<5){const up={id:'w_'+k,kind:'weapon',nome:WEAPONS[k].nome+(l?' nv '+(l+1):''),desc:(l?'':'Nova arma. ')+WEAPONS[k].desc(l+1),apply:p=>p.weap[k]++,wk:k};pool.push(up)}}
+  const wSlots=weaponSlots(player),uSlots=upgradeSlots(player);
+  $('#up-sub').textContent=`Build: ${wSlots}/${BUILD_LIMITS.weapons} armas · ${uSlots}/${BUILD_LIMITS.upgrades} melhorias — escolha uma opção ${upSource==='chest'?'(grátis) ':''}ou teclas 1/2/3.`;
+  let pool=STAT_UPS.filter(u=>(!u.cls||u.cls.includes(player.cls))&&(!u.ok||u.ok(player))&&(player.upgIds[u.id]||uSlots<BUILD_LIMITS.upgrades)).map(u=>Object.assign({kind:u.cls?'cls':'stat'},u));
+  for(const k in WEAPONS){const l=player.weap[k];if(l<5&&(l>0||wSlots<BUILD_LIMITS.weapons)){const up={id:'w_'+k,kind:'weapon',nome:WEAPONS[k].nome+(l?' nv '+(l+1):''),desc:(l?'':'Nova arma. ')+WEAPONS[k].desc(l+1),apply:p=>p.weap[k]++,wk:k};pool.push(up)}}
   const choice=[];while(choice.length<3&&pool.length){const u=pick(pool);choice.push(u);pool=pool.filter(x=>x.id!==u.id)}
   if(!choice.length){ // tudo no teto: recompensa de consolação encerra a cadeia de sorteios
     pendingUps=0;player.hp=Math.min(player.maxHp,player.hp+player.maxHp*.2);addCoins(10);
@@ -922,7 +926,7 @@ function openUpgrade(){
     b.onclick=()=>chooseUpgrade(u);wrap.appendChild(b)});
   wrap._choice=choice;setTimeout(()=>{const f=$('#up-0');f&&f.focus({preventScroll:true})},50);
 }
-function chooseUpgrade(u){if(state!=='upgrade')return;u.apply(player);player.picks.push(u.wk?WEAPONS[u.wk].nome:u.nome);
+function chooseUpgrade(u){if(state!=='upgrade')return;if(!u.wk)player.upgIds[u.id]=true;u.apply(player);player.picks.push(u.wk?WEAPONS[u.wk].nome:u.nome);
   if(upSource==='lvl')pendingUps=Math.max(0,pendingUps-1);upSource='lvl';
   if(pendingUps>0)openUpgrade();else{setScreen('play');lockMouse()}renderWeap()}
 function renderWeap(){const el=$('#h-weap');el.innerHTML='';for(const k in WEAPONS)if(player.weap[k]){const s=document.createElement('span');const ic=icon(WEAPONS[k].nome);s.innerHTML=(ic?'<i class="ic">'+ic+'</i>':'')+WEAPONS[k].nome+' '+player.weap[k];el.appendChild(s)}}
@@ -961,8 +965,8 @@ function renderPause(){
   const w=[];for(const k in WEAPONS)if(player.weap[k])w.push(`<div class="invslot" title="${WEAPONS[k].nome}">${icon(WEAPONS[k].nome)}<span class="q">${player.weap[k]}</span></div>`);
   const c={};player.picks.forEach(n=>{if(!WEAPONS_NAMES.has(n))c[n]=(c[n]||0)+1});
   const up=Object.keys(c).map(n=>`<div class="invslot" title="${n}">${icon(n)||'●'}<span class="q">${c[n]}</span></div>`);
-  $('#pause-inv').innerHTML=`<div class="invlabel">Armas</div><div class="invgrid">${w.length?w.join(''):'<span class="pnum">nenhuma ainda</span>'}</div>`+
-    `<div class="invlabel">Melhorias</div><div class="invgrid">${up.length?up.join(''):'<span class="pnum">nenhuma ainda</span>'}</div>`;
+  $('#pause-inv').innerHTML=`<div class="invlabel">Armas ${weaponSlots(player)} / ${BUILD_LIMITS.weapons}</div><div class="invgrid">${w.length?w.join(''):'<span class="pnum">nenhuma ainda</span>'}</div>`+
+    `<div class="invlabel">Melhorias ${upgradeSlots(player)} / ${BUILD_LIMITS.upgrades}</div><div class="invgrid">${up.length?up.join(''):'<span class="pnum">nenhuma ainda</span>'}</div>`;
   const st=player.stats,pct=v=>Math.round(v*100)+'%',mul=v=>'×'+(Math.round(v*100)/100);
   const S=[[emIc('❤️')+' Vida',Math.round(player.maxHp)],[emIc('💪')+' Dano',mul(st.dmg)],[emIc('⚡')+' Vel. ataque',mul(st.atkSpd)],[emIc('👟')+' Vel. movimento',mul(st.move)],[emIc('🎯')+' Crítico',pct(st.crit)],[emIc('💥')+' Área',mul(st.area)],[emIc('⏳')+' Recarga hab.',mul(st.cdr)],[emIc('🧱')+' Armadura',pct(st.armor)]];
   if(st.regen)S.push([emIc('💚')+' Regeneração','+'+(Math.round(st.regen*10)/10)+'/s']);
