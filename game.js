@@ -54,7 +54,7 @@ function S(n,arg){const gap=SFX_GAP[n],now=performance.now();if(gap&&now-(sfxLas
     case'bossin':tone(90,45,.5,'sawtooth',.3);noiseFx(.4,.2,150,.6,'lowpass');break;
     case'bossdie':tone(200,40,.6,'sawtooth',.3);noiseFx(.5,.3,300,.7);break;
   }}
-function setMuted(m){muted=m;store.set('cv_muted',m);const b=$('#sndbtn');if(b)b.textContent=m?'🔇':'🔊'}
+function setMuted(m){muted=m;store.set('cv_muted',m);const b=$('#sndbtn');if(b)b.textContent=m?'🔇 Mudo':'🔊 Som'}
 ['pointerdown','keydown'].forEach(ev=>addEventListener(ev,()=>audioCtx(),{passive:true})); // desbloqueia o áudio no primeiro gesto
 let titleAmb=null,ambT=0; // crepitar da fogueira na tela de título
 function updTitleAmb(){if(typeof Audio!=='function')return;const want=state==='title';
@@ -117,16 +117,16 @@ const ICONS={
   'Punho Fatal':'💢','Velocidade de Tiro':'🚀','Empurrão':'🫱','Reflexo Relâmpago':'💨','Pulso Congelante':'❄️',
 };
 // ícones de classe: pixel art 16×16 gerada em assets/images/icons/ (via node _genicons.js) — um rosto por herói
-const CLSICON={mago:'assets/images/icons/mago.png?v=1',arqueiro:'assets/images/icons/arqueiro.png?v=1',guerreiro:'assets/images/icons/guerreiro.png?v=1',tank:'assets/images/icons/tank.png?v=1',necro:'assets/images/icons/necro.png?v=1',chrono:'assets/images/icons/chrono.png?v=1',pistol:'assets/images/icons/pistol.png?v=1',dracula:'assets/images/icons/dracula.png?v=1',demon:'assets/images/icons/demon.png?v=1',future:'assets/images/icons/future.png?v=1',human:'assets/images/icons/human.png?v=1',king:'assets/images/icons/king.png?v=1'};
+const CLSICON={mago:'assets/images/icons/mago.png?v=2',arqueiro:'assets/images/icons/arqueiro.png?v=2',guerreiro:'assets/images/icons/guerreiro.png?v=2',tank:'assets/images/icons/tank.png?v=2',necro:'assets/images/icons/necro.png?v=2',chrono:'assets/images/icons/chrono.png?v=2',pistol:'assets/images/icons/pistol.png?v=2',dracula:'assets/images/icons/dracula.png?v=2',demon:'assets/images/icons/demon.png?v=2',future:'assets/images/icons/future.png?v=2',human:'assets/images/icons/human.png?v=2',king:'assets/images/icons/king.png?v=2'};
 let CLSIMG={};try{for(const k in CLSICON){const im=new Image();im.src=CLSICON[k];CLSIMG[k]=im}}catch(e){} // preload p/ canvas (menu 3D)
 const clsImg=k=>`<img class="cimg" src="${CLSICON[k]}" alt="" title="${CLASSES[k]?CLASSES[k].nome:k}">`; // HTML: tamanho segue o font-size do pai (em)
 const CLSTIPO={mago:'Mago',arqueiro:'Arqueiro',guerreiro:'Guerreiro',tank:'Guardião',necro:'Necromante',chrono:'Chronomante',pistol:'Pistoleiro',dracula:'Vampiro',demon:'Demônio',future:'Viajante',human:'Humano',king:'Rei'};
 // ícones de poder/melhoria/interface: pixel art 16×16 em assets/images/icons/upg/ (via node _genicons.js)
 const UPGSLUG={'Orbes Giratórios':'orbes-giratorios','Raio Celeste':'raio-celeste','Aura de Brasa':'aura-brasa','Força':'forca','Mãos Rápidas':'maos-rapidas','Botas Leves':'botas-leves','Coração de Pedra':'coracao-pedra','Olho Certeiro':'olho-certeiro','Sede de Sangue':'sede-sangue','Placas de Ferro':'placas-ferro','Regeneração':'regeneracao','Ímã':'ima','Sabedoria':'sabedoria','Alcance Maior':'alcance-maior','Foco':'foco','Poção Grande':'picao-grande','Projétil Extra':'projetil-extra','Perfuração':'perfuracao','Espinhos':'espinhos','Horda Óssea':'horda-ossea','Ossos Afiados':'ossos-afiados','Punho Fatal':'punho-fatal','Velocidade de Tiro':'vel-tiro','Empurrão':'empurrao','Reflexo Relâmpago':'reflexo-relampago','Pulso Congelante':'pulso-congelante'};
-const upgImg=n=>{const s=UPGSLUG[n];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=1" alt="">`:''};
+const upgImg=n=>{const s=UPGSLUG[n];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=2" alt="">`:''};
 // emojis antigos → PNG (shop/ conquistas/ HUD continuam usando o char no fonte)
-const EMICON={'❤️':'coracao','💪':'forca','⚡':'maos-rapidas','👟':'botas-leves','🎯':'olho-certeiro','💥':'alcance-maior','⏳':'foco','⌛':'foco','⏱️':'foco','🧱':'placas-ferro','💚':'regeneracao','🩸':'sede-sangue','✨':'projetil-extra','➡️':'perfuracao','🌵':'espinhos','💢':'punho-fatal','🚀':'vel-tiro','🫱':'empurrao','💨':'reflexo-relampago','❄️':'pulso-congelante','📖':'sabedoria','🧲':'ima','🪙':'ouro','🔒':'trancado','🔓':'desbloquear','💀':'craneo','☠️':'craneo','⭐':'estrela','🎖️':'estrela','👹':'golem','⚔️':'espadas','🗡️':'ossos-afiados','🦴':'horda-ossea'};
-const emIc=e=>{const s=EMICON[e];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=1" alt="">`:''};
+const EMICON={'❤️':'coracao','💪':'forca','⚡':'maos-rapidas','👟':'botas-leves','🎯':'olho-certeiro','💥':'alcance-maior','⏳':'foco','⌛':'foco','⏱️':'foco','🧱':'placas-ferro','💚':'regeneracao','🩸':'sede-sangue','✨':'projetil-extra','➡️':'perfuracao','🌵':'espinhos','💢':'punho-fatal','🚀':'vel-tiro','🫱':'empurrao','💨':'reflexo-relampago','❄️':'pulso-congelante','📖':'sabedoria','🧲':'ima','🪙':'ouro','🔒':'trancado','🔓':'desbloquear','💀':'craneo','☠️':'craneo','⭐':'estrela','🎖️':'estrela','👹':'golem','⚔️':'espadas','🗡️':'ossos-afiados','🦴':'horda-ossea','🧠':'ia'};
+const emIc=e=>{const s=EMICON[e];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=2" alt="">`:''};
 const icon=n=>upgImg(n)||ICONS[n]||'';
 const WEAPONS_NAMES=new Set(Object.values(WEAPONS).map(w=>w.nome));
 const UNLOCK={guerreiro:150}; // compra com ouro (Mago começa liberado)
@@ -533,7 +533,18 @@ function buildField(){
 /* ================= entidades ================= */
 // Escala degrau a degrau POR HORDA: a cada horda completada a arena fica um patamar mais difícil
 // (os inimigos que nascerem depois nascem já mais fortes; a curva continua mesmo com as melhorias no teto)
-function scaleT(){const H=hordeN;return{hp:1+H*.3+H*H*.05,dmg:1+H*.08}}
+// ===== IA ADAPTATIVA — lê como você joga em tempo real e ajusta o campo: dominando → inimigos mais fortes, rápidos e numerosos; sofrendo → alivia um pouco =====
+let aiSkill=.5,aiHpAvg=1,runDealt=0,aiT=0,aiTier=0,aiMercy=false;
+function updAI(dt){if(!player||cheatGod)return;aiT-=dt;if(aiT>0)return;aiT=.5;
+ const kF=clamp(kills/Math.max(runTime/60,.4)/8,0,1); // ritmo de abates (~8 por minuto = dominando)
+ const eF=clamp(runDealt/Math.max(1,runDmg*4),0,1); // dano causado vs 4x o recebido
+ const hF=clamp(player.hp/player.maxHp,0,1);aiHpAvg+=(hF-aiHpAvg)*.2; // vida mantida
+ aiSkill+=(.45*kF+.3*eF+.25*aiHpAvg-aiSkill)*.06; // adaptação lenta, sem efeito ioiô
+ const nt=aiSkill>.8?2:aiSkill>.62?1:0;
+ if(nt>aiTier&&runTime>45){toast(nt===2?'🧠 IA · MODO LENDA':'🧠 A IA percebeu que você domina',nt===2?'Você joga demais — o campo inteiro foi mobilizado':'Inimigos mais fortes, rápidos e numerosos');aiMercy=false}
+ if(aiTier===2&&nt<1&&!aiMercy){toast('🧠 A IA respirou','Você tá sofrendo — o campo alivia um pouco');aiMercy=true}
+ aiTier=nt}
+function scaleT(){const H=hordeN,b=Math.max(0,aiSkill-.5)*2,r=Math.max(0,.5-aiSkill)*2;return{hp:(1+H*.3+H*H*.05)*(1+b*.75-r*.12),dmg:(1+H*.08)*(1+b*.85-r*.15),spd:1+b*.3,extra:b}}
 function spawnEnemy(type,x,z,elite,opts){
   const D=ENEMIES[type],S=scaleT(),ms=(opts&&opts.ms)||1;const sc=(D.scale||1)*(elite?1.35:1)*ms;const emat=elite?eliteMat:vcMat;
   let mesh,legL,legR,wingL,wingR,parts;
@@ -546,7 +557,7 @@ function spawnEnemy(type,x,z,elite,opts){
   }else{mesh=new THREE.Mesh(enemyGeo(type),emat);mesh.castShadow=true;parts=[mesh]}
   mesh.scale.setScalar(sc);mesh.position.set(x,0,z);level.add(mesh);
   const hp=D.hp*S.hp*(elite?5:1)*(ms<1?ms*1.1:1);
-  const e={type,x,z,r:D.r*(elite?1.25:1)*ms,hp,maxHp:hp,speed:D.speed*rand(.9,1.1)*(elite?.9:1)*(ms<1?1.25:1),dmg:D.dmg*S.dmg*(elite?1.5:1)*(ms<1?.6:1),h:D.h*sc,sc,color:D.color,mesh,mat:emat,parts,legL,legR,wingL,wingR,mini:!!(opts&&opts.mini),miniPh:(opts&&opts.mini)?rand(0,TAU):0,walk:rand(0,TAU),
+  const e={type,x,z,r:D.r*(elite?1.25:1)*ms,hp,maxHp:hp,speed:D.speed*rand(.9,1.1)*(elite?.9:1)*(ms<1?1.25:1)*(S.spd||1),dmg:D.dmg*S.dmg*(elite?1.5:1)*(ms<1?.6:1),h:D.h*sc,sc,color:D.color,mesh,mat:emat,parts,legL,legR,wingL,wingR,mini:!!(opts&&opts.mini),miniPh:(opts&&opts.mini)?rand(0,TAU):0,walk:rand(0,TAU),
     kx:0,kz:0,cd:rand(.4,1.2),t:rand(0,10),face:0,flash:0,side:Math.random()<.5?-1:1,wind:0,elite:!!elite,xp:D.xp*(elite?8:1),fly:!!D.fly,orbCd:0,dead:false,atk:0};
   enemies.push(e);return e;
 }
@@ -570,7 +581,7 @@ function spawnPos(dmin,dmax){for(let i=0;i<12;i++){const a=rand(0,TAU),d=rand(dm
 function director(dt){
   const t=runTime,rate=Math.min(11,1.1+t/20),maxAlive=Math.min(isTouch?120:170,35+t/2);
   spawnAcc+=rate*dt;while(spawnAcc>=1){spawnAcc--;if(enemies.length<maxAlive){const p=spawnPos(18,25);if(p){const el=t>150&&Math.random()<Math.min(.07,(t-150)/2500);spawnEnemy(pickType(),p[0],p[1],el)}}}
-  if(t>=nextHorde){hordeN++;nextHorde+=60;const n=16+hordeN*7,tp=pickType();toast('Horda '+hordeN,'Estão te cercando');addShake(.15);
+  if(t>=nextHorde){hordeN++;const SA=scaleT();nextHorde+=60/(1+SA.extra*.5);const n0=16+hordeN*7,n=n0+(SA.extra>.3?Math.round(n0*SA.extra*.35):0),tp=pickType();toast(SA.extra>.5?'⚡ Horda '+hordeN:'Horda '+hordeN,(SA.extra>.5?'A IA aumentou o cerco — ':'Estão te cercando — ')+n+' inimigos');addShake(.15);
     for(let i=0;i<n;i++){const a=i/n*TAU,d=15+rand(0,2.5),x=player.x+Math.sin(a)*d,z=player.z+Math.cos(a)*d;if(!collide(x,z,.4))spawnEnemy(i%5===0?pickType():tp,x,z,hordeN>=4&&i%17===0)}}
   if(t>=nextBoss){nextBoss+=240;if(!boss)spawnBoss()}
 }
@@ -636,7 +647,7 @@ function addShake(v){if(!reduceMotion)shake=Math.max(shake,v)}
 /* ================= combate ================= */
 function roll(base){let d=base*player.stats.dmg*rand(.9,1.1);const crit=Math.random()<player.stats.crit;if(crit)d*=player.stats.critDmg;return{d,crit}}
 function damageEnemy(e,amt,crit,kx=0,kz=0,quiet){
-  if(e.dead)return;e.hp-=amt;e.flash=.08;const kb=e.boss?.08:e.type==='brute'||e.elite?.4:1;e.kx+=kx*kb;e.kz+=kz*kb;
+  if(e.dead)return;e.hp-=amt;runDealt+=amt;e.flash=.08;const kb=e.boss?.08:e.type==='brute'||e.elite?.4:1;e.kx+=kx*kb;e.kz+=kz*kb;
   if(!quiet){S('hit',!!crit);const chill=player.stats.chill;
     if(chill&&!e.boss){const cf=1-.2*chill;if((e.slowF||1)>cf)e.slowF=cf;e.slowT=Math.max(e.slowT||0,.5+.2*chill)}}
   if(!quiet||crit)dmgText(e.x,e.h+.2,e.z,Math.round(amt),crit?'crit':'');
@@ -823,7 +834,7 @@ function newRun(cls){
   applyShop(player);
   if(player.model)scene.remove(player.model.root);
   player.model=buildHero(cls);scene.add(player.model.root);
-  kills=0;runTime=0;hordeN=0;nextHorde=60;nextBoss=240;bossCount=0;spawnAcc=0;pendingUps=0;boss=null;bossKills=0;runDmg=0;runSkel=0;runBat=0;cheatGod=false;ogreLoose=false;
+  kills=0;runTime=0;hordeN=0;nextHorde=60;nextBoss=240;bossCount=0;spawnAcc=0;pendingUps=0;boss=null;bossKills=0;runDmg=0;runSkel=0;runBat=0;cheatGod=false;ogreLoose=false;aiSkill=.5;aiHpAvg=1;runDealt=0;aiT=0;aiTier=0;aiMercy=false;
   scene.remove(menuGroup);
   if(level)scene.remove(level);if(fxGroup)scene.remove(fxGroup);if(wGroup)scene.remove(wGroup);
   enemies=[];projs=[];pickups=[];fxs=[];parts=[];gems=[];texts.forEach(t=>t.el.remove());texts=[];orbMeshes=[];auraMesh=null;auraFx=null;auraFlares.length=0;auraStains.length=0;boltT=1;minions=[];minSummonT=1;
@@ -837,7 +848,7 @@ function newRun(cls){
 function openUpgrade(){
   setScreen('upgrade');
   $('#up-title').textContent=upSource==='chest'?'Baú aberto!':'Nível '+player.lvl+'!';
-  $('#up-sub').textContent=(upSource==='chest'?'Uma melhoria grátis. ':'Escolha uma melhoria. ')+'Teclas 1, 2 e 3.';
+  $('#up-sub').textContent='Escolha uma melhoria — toque numa opção '+(upSource==='chest'?'(grátis) ':'')+'ou teclas 1/2/3.';
   let pool=STAT_UPS.filter(u=>(!u.cls||u.cls.includes(player.cls))&&(!u.ok||u.ok(player))).map(u=>Object.assign({kind:u.cls?'cls':'stat'},u));
   for(const k in WEAPONS){const l=player.weap[k];if(l<5){const up={id:'w_'+k,kind:'weapon',nome:WEAPONS[k].nome+(l?' nv '+(l+1):''),desc:(l?'':'Nova arma. ')+WEAPONS[k].desc(l+1),apply:p=>p.weap[k]++,wk:k};pool.push(up,up)}}
   const choice=[];while(choice.length<3&&pool.length){const u=pick(pool);choice.push(u);pool=pool.filter(x=>x.id!==u.id)}
@@ -1205,7 +1216,7 @@ $('#menubtn').onclick=()=>goMenu();
 
 /* ================= atualização ================= */
 function update(dt){
-  runTime+=dt;const C=CLASSES[player.cls],st=player.stats;
+  runTime+=dt;updAI(dt);const C=CLASSES[player.cls],st=player.stats;
   if(!store.get('cv_unlocked',{}).chrono&&runTime>=MISSION.chrono.goal){doUnlock('chrono');toast('⏳ '+CLASSES.chrono.nome+' liberado!','Missão cumprida: 30 minutos sobrevividos')}
   // controle estilo Megabonk: direção relativa à câmera; o herói olha pra onde anda
   let ix=0,iz=0;if(keys.KeyW||keys.ArrowUp)iz+=1;if(keys.KeyS||keys.ArrowDown)iz-=1;if(keys.KeyD||keys.ArrowRight)ix+=1;if(keys.KeyA||keys.ArrowLeft)ix-=1;
@@ -1439,7 +1450,7 @@ function hud(){
   const ds=$('#sk-dash');ds.style.setProperty('--p',String(player.dashCd/(1.1*player.stats.dashCd)));ds.classList.toggle('ready',player.dashCd<=0);
   $('#t-ab').classList.toggle('cool',player.abCd>0);$('#t-dash').classList.toggle('cool',player.dashCd>0);
   $('#h-time').textContent=fmtT(runTime);$('#h-kills').textContent=kills;$('#h-lvlc').textContent=player.lvl;
-  $('#h-wave').textContent=hordeN?'Horda '+hordeN:'Próxima horda em '+Math.ceil(nextHorde-runTime)+'s';
+  $('#h-wave').innerHTML=(hordeN?'Horda '+hordeN:'Próxima horda em '+Math.ceil(nextHorde-runTime)+'s')+(aiTier>0?' <span class="aitag">'+emIc('🧠')+'IA NÍVEL '+aiTier+'</span>':'');
   $('#h-boss').textContent=boss?'':'Chefe em '+fmtT(Math.max(0,nextBoss-runTime));
 }
 // céu: dia → pôr do sol → noite ao longo de 12 minutos
@@ -1721,7 +1732,7 @@ function buildMediaUI(){
   g2.append(cell(im,nm))});
  sec('EMOTICONS DO JOGO · ícones de poderes e melhorias (pixel art 16×16 · assets/images/icons/upg/)');
  const icView=(slug,fb)=>{const v=document.createElement('div');v.style.cssText='height:64px;display:flex;align-items:center;justify-content:center';
-   if(slug){const im=new Image();im.src='assets/images/icons/upg/'+slug+'.png?v=1';im.width=56;im.height=56;im.style.imageRendering='pixelated';v.append(im)}
+   if(slug){const im=new Image();im.src='assets/images/icons/upg/'+slug+'.png?v=2';im.width=56;im.height=56;im.style.imageRendering='pixelated';v.append(im)}
    else{v.textContent=fb||'';v.style.fontSize='34px'}return v};
  const g3=grid(130);
  Object.entries(ICONS).forEach(([n,e])=>{const em=icView(UPGSLUG[n],e);em.title=n;

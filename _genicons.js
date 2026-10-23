@@ -889,7 +889,25 @@ espadas:{pal:{W:0xd8dde6,G:0xb8912e},rows:[
 '.......WW.......',
 '.......gg.......',
 '................',
-'................']} 
+'................']},
+'ia':{pal:{K:0x3a3f4a,G:0xf2b84b,W:0xfff0a0,e:0x1d1406},rows:[
+'....G......G....',
+'....G......G....',
+'..KKKKKKKKKKKK..',
+'.KWWWWWWWWWWWWK.',
+'.KWGGGGGGGGGGWK.',
+'.KWGGGGGGGGGGWK.',
+'.KGGeeGGGGeeGGK.',
+'.KGGeeGGGGeeGGK.',
+'.KWGGGGGGGGGGWK.',
+'.KWGGGGGGGGGGWK.',
+'.KGGGGeeeeGGGGK.',
+'.KWGGGGGGGGGGWK.',
+'.KGGGGGGGGGGGGK.',
+'..KKKKKKKKKKKK..',
+'....G......G....',
+'................'
+]},
 };
 
 const out=path.join('assets','images','icons');fs.mkdirSync(out,{recursive:true});
