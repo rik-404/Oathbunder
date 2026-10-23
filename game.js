@@ -533,17 +533,13 @@ function buildField(){
 /* ================= entidades ================= */
 // Escala degrau a degrau POR HORDA: a cada horda completada a arena fica um patamar mais difícil
 // (os inimigos que nascerem depois nascem já mais fortes; a curva continua mesmo com as melhorias no teto)
-// ===== IA ADAPTATIVA — lê como você joga em tempo real e ajusta o campo: dominando → inimigos mais fortes, rápidos e numerosos; sofrendo → alivia um pouco =====
-let aiSkill=.5,aiHpAvg=1,runDealt=0,aiT=0,aiTier=0,aiMercy=false;
+// ===== IA ADAPTATIVA — lê como você joga e ajusta o campo EM SILÊNCIO (o jogador só sente o campo ficar mais pesado ou mais leve) =====
+let aiSkill=.5,aiHpAvg=1,runDealt=0,aiT=0;
 function updAI(dt){if(!player||cheatGod)return;aiT-=dt;if(aiT>0)return;aiT=.5;
  const kF=clamp(kills/Math.max(runTime/60,.4)/8,0,1); // ritmo de abates (~8 por minuto = dominando)
  const eF=clamp(runDealt/Math.max(1,runDmg*4),0,1); // dano causado vs 4x o recebido
  const hF=clamp(player.hp/player.maxHp,0,1);aiHpAvg+=(hF-aiHpAvg)*.2; // vida mantida
- aiSkill+=(.45*kF+.3*eF+.25*aiHpAvg-aiSkill)*.06; // adaptação lenta, sem efeito ioiô
- const nt=aiSkill>.8?2:aiSkill>.62?1:0;
- if(nt>aiTier&&runTime>45){toast(nt===2?'🧠 IA · MODO LENDA':'🧠 A IA percebeu que você domina',nt===2?'Você joga demais — o campo inteiro foi mobilizado':'Inimigos mais fortes, rápidos e numerosos');aiMercy=false}
- if(aiTier===2&&nt<1&&!aiMercy){toast('🧠 A IA respirou','Você tá sofrendo — o campo alivia um pouco');aiMercy=true}
- aiTier=nt}
+ aiSkill+=(.45*kF+.3*eF+.25*aiHpAvg-aiSkill)*.06;} // adaptação lenta, sem efeito ioiô
 function scaleT(){const H=hordeN,b=Math.max(0,aiSkill-.5)*2,r=Math.max(0,.5-aiSkill)*2;return{hp:(1+H*.3+H*H*.05)*(1+b*.75-r*.12),dmg:(1+H*.08)*(1+b*.85-r*.15),spd:1+b*.3,extra:b}}
 function spawnEnemy(type,x,z,elite,opts){
   const D=ENEMIES[type],S=scaleT(),ms=(opts&&opts.ms)||1;const sc=(D.scale||1)*(elite?1.35:1)*ms;const emat=elite?eliteMat:vcMat;
@@ -581,7 +577,7 @@ function spawnPos(dmin,dmax){for(let i=0;i<12;i++){const a=rand(0,TAU),d=rand(dm
 function director(dt){
   const t=runTime,rate=Math.min(11,1.1+t/20),maxAlive=Math.min(isTouch?120:170,35+t/2);
   spawnAcc+=rate*dt;while(spawnAcc>=1){spawnAcc--;if(enemies.length<maxAlive){const p=spawnPos(18,25);if(p){const el=t>150&&Math.random()<Math.min(.07,(t-150)/2500);spawnEnemy(pickType(),p[0],p[1],el)}}}
-  if(t>=nextHorde){hordeN++;const SA=scaleT();nextHorde+=60/(1+SA.extra*.5);const n0=16+hordeN*7,n=n0+(SA.extra>.3?Math.round(n0*SA.extra*.35):0),tp=pickType();toast(SA.extra>.5?'⚡ Horda '+hordeN:'Horda '+hordeN,(SA.extra>.5?'A IA aumentou o cerco — ':'Estão te cercando — ')+n+' inimigos');addShake(.15);
+  if(t>=nextHorde){hordeN++;const SA=scaleT();nextHorde+=60/(1+SA.extra*.5);const n0=16+hordeN*7,n=n0+(SA.extra>.3?Math.round(n0*SA.extra*.35):0),tp=pickType();toast('Horda '+hordeN,'Estão te cercando');addShake(.15);
     for(let i=0;i<n;i++){const a=i/n*TAU,d=15+rand(0,2.5),x=player.x+Math.sin(a)*d,z=player.z+Math.cos(a)*d;if(!collide(x,z,.4))spawnEnemy(i%5===0?pickType():tp,x,z,hordeN>=4&&i%17===0)}}
   if(t>=nextBoss){nextBoss+=240;if(!boss)spawnBoss()}
 }
@@ -834,7 +830,7 @@ function newRun(cls){
   applyShop(player);
   if(player.model)scene.remove(player.model.root);
   player.model=buildHero(cls);scene.add(player.model.root);
-  kills=0;runTime=0;hordeN=0;nextHorde=60;nextBoss=240;bossCount=0;spawnAcc=0;pendingUps=0;boss=null;bossKills=0;runDmg=0;runSkel=0;runBat=0;cheatGod=false;ogreLoose=false;aiSkill=.5;aiHpAvg=1;runDealt=0;aiT=0;aiTier=0;aiMercy=false;
+  kills=0;runTime=0;hordeN=0;nextHorde=60;nextBoss=240;bossCount=0;spawnAcc=0;pendingUps=0;boss=null;bossKills=0;runDmg=0;runSkel=0;runBat=0;cheatGod=false;ogreLoose=false;aiSkill=.5;aiHpAvg=1;runDealt=0;aiT=0;
   scene.remove(menuGroup);
   if(level)scene.remove(level);if(fxGroup)scene.remove(fxGroup);if(wGroup)scene.remove(wGroup);
   enemies=[];projs=[];pickups=[];fxs=[];parts=[];gems=[];texts.forEach(t=>t.el.remove());texts=[];orbMeshes=[];auraMesh=null;auraFx=null;auraFlares.length=0;auraStains.length=0;boltT=1;minions=[];minSummonT=1;
@@ -1450,7 +1446,7 @@ function hud(){
   const ds=$('#sk-dash');ds.style.setProperty('--p',String(player.dashCd/(1.1*player.stats.dashCd)));ds.classList.toggle('ready',player.dashCd<=0);
   $('#t-ab').classList.toggle('cool',player.abCd>0);$('#t-dash').classList.toggle('cool',player.dashCd>0);
   $('#h-time').textContent=fmtT(runTime);$('#h-kills').textContent=kills;$('#h-lvlc').textContent=player.lvl;
-  $('#h-wave').innerHTML=(hordeN?'Horda '+hordeN:'Próxima horda em '+Math.ceil(nextHorde-runTime)+'s')+(aiTier>0?' <span class="aitag">'+emIc('🧠')+'IA NÍVEL '+aiTier+'</span>':'');
+  $('#h-wave').textContent=hordeN?'Horda '+hordeN:'Próxima horda em '+Math.ceil(nextHorde-runTime)+'s';
   $('#h-boss').textContent=boss?'':'Chefe em '+fmtT(Math.max(0,nextBoss-runTime));
 }
 // céu: dia → pôr do sol → noite ao longo de 12 minutos
