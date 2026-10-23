@@ -378,7 +378,7 @@ function buildOgre(){const b=buildBody({body:0x6a5a3a,trim:0x4a3a28,skin:0x7aa84
 
 const PROJ_GEO={
   fire:mergeBoxes([[0,0,0,.26,.26,.26,0x8fe1ff],[0,0,-.13,.14,.14,.3,0xd6f3ff]]),
-  arrow:mergeBoxes([[0,0,0,.05,.05,.58,0x8a6a42],[0,0,.31,.09,.09,.1,0xcfd6dd],[0,0,-.26,.13,.02,.12,0xeeeeee]]),
+  arrow:mergeBoxes([[0,0,0,.045,.045,.52,0x8a6a42],[0,0,.28,.075,.075,.1,0xcfd6dd],[0,0,.345,.035,.035,.05,0xe8eef2],[0,0,-.20,.11,.018,.13,0x7fcf5a],[0,0,-.20,.018,.11,.13,0xeee7da],[0,0,-.28,.05,.05,.02,0x2a4a3a]]),
   bone:mergeBoxes([[0,0,0,.3,.07,.07,0xe6dfca],[.15,0,0,.09,.12,.12,0xe6dfca],[-.15,0,0,.09,.12,.12,0xe6dfca]]),
   orb:mergeBoxes([[0,0,0,.36,.36,.36,0xff6a2a],[0,0,0,.2,.44,.2,0xffb070]]),
   skull:mergeBoxes([[0,0,0,.24,.24,.22,0x9ff0bf],[0,0,-.1,.14,.14,.22,0xdcffe8],[-.06,.02,.11,.04,.05,.02,0x133a22],[.06,.02,.11,.04,.05,.02,0x133a22]]),
@@ -718,7 +718,8 @@ function autoAttack(){
     const sp=C.projSpeed*st.pspd;
     const lead=Math.hypot(t.x-player.x,t.z-player.z)/sp;const tx=t.x+(t.mvx||0)*lead,tz=t.z+(t.mvz||0)*lead;const a=Math.atan2(tx-player.x,tz-player.z);player.aimAng=a;
     let big=false;if(player.cls==='mago'){player.orbN=(player.orbN||0)+1;big=player.orbN%4===0}const n=1+st.multi;for(let i=0;i<n;i++){const aa=a+(i-(n-1)/2)*.15;const borb=big&&i===0;const r=roll(C.dmg*(borb?1.7:1));
-      spawnProj({x:player.x+Math.sin(aa)*.45,z:player.z+Math.cos(aa)*.45,y:.7+player.y,a:aa,speed:sp,dmg:r.d,crit:r.crit,owner:'p',kind:C.proj,pierce:C.pierce+st.pierce,r:C.proj==='fire'?(borb?.4:.26):.22,mScale:borb?1.55:1,big:borb,life:C.range/sp+.15})}}
+      spawnProj({x:player.x+Math.sin(aa)*.45,z:player.z+Math.cos(aa)*.45,y:.7+player.y,a:aa,speed:sp,dmg:r.d,crit:r.crit,owner:'p',kind:C.proj,pierce:C.pierce+st.pierce,r:C.proj==='fire'?(borb?.4:.26):.22,mScale:borb?1.55:1,big:borb,life:C.range/sp+.15})}
+    if(player.cls==='arqueiro')burst(player.x+Math.sin(a)*.52,.8+player.y,player.z+Math.cos(a)*.52,0x7fcf5a,3,{emi:.45,speed:1.8,up0:.1,up1:.8,life:.18,size:.055})}
   else if(C.kind==='melee'){const R=C.range*st.area,t=nearest(R+.6);if(!t)return;player.atkCd=C.atkCd/st.atkSpd;player.atkAnim=1;const a=Math.atan2(t.x-player.x,t.z-player.z);player.aimAng=a;let hit=false;
     for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d>R+e.r)continue;if(Math.abs(angDiff(a,Math.atan2(dx,dz)))>C.arc/2&&d>e.r+.45)continue;const r=roll(C.dmg);damageEnemy(e,r.d,r.crit,dx/d*C.knock*st.kb,dz/d*C.knock*st.kb);hit=true}
     swingFX(R,C.arc,a,0xffffff);if(hit){addShake(.06);S('melee');hitStop(.03)}}
@@ -732,7 +733,9 @@ function useAbility(){
     ringFX(player.x,player.z,R,0x8fe1ff,.5);ringFX(player.x,player.z,R*.7,0xd6f3ff,.4);ringFX(player.x,player.z,R*.4,0xbfa8ff,.3);burst(player.x,.6,player.z,0x8fe1ff,36,{emi:1,speed:7.5,up0:.5,up1:3});burst(player.x,.6,player.z,0xd6f3ff,14,{emi:1,speed:4,up0:1,up1:3});addShake(.3)}
   else if(player.cls==='arqueiro'){const t=nearest(18);const a0=t?Math.atan2(t.x-player.x,t.z-player.z):player.facing;player.aimAng=a0;
     for(let i=0;i<9;i++){const aa=a0+(i-4)*.12;const r=roll(C.dmg*1.2);spawnProj({x:player.x+Math.sin(aa)*.45,z:player.z+Math.cos(aa)*.45,y:.7+player.y,a:aa,speed:C.projSpeed*st.pspd,dmg:r.d,crit:r.crit,owner:'p',kind:'arrow',pierce:3+st.pierce,life:.8})}
-    burst(player.x,.8,player.z,0x7fcf5a,12,{emi:.6,speed:4})}
+    ringFX(player.x,player.z,1.55,0x7fcf5a,.24);
+    burst(player.x,.8,player.z,0x7fcf5a,18,{emi:.65,speed:5.2,up0:.5,up1:2.1});
+    burst(player.x,.8,player.z,0xd23b2f,6,{emi:.25,speed:3.4,up0:.4,up1:1.6});addShake(.16)}
   else if(player.cls==='guerreiro'){player.spinT=1.5;player.spinTick=0}
   else if(player.cls==='tank'){player.shieldT=4;const R=3.6*st.area;for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(30);damageEnemy(e,r.d,r.crit,dx/d*16*st.kb,dz/d*16*st.kb)}}
     ringFX(player.x,player.z,R,0x7fb2ff,.5);burst(player.x,.2,player.z,0x8b95a3,24,{speed:6,up0:1,up1:3});addShake(.35)}
@@ -1078,6 +1081,8 @@ function updateMenu(dt){
     applyKeep(h.keep);
     if(h.cape)h.cape.rotation.x=.02+Math.sin(menuT*1.4+i)*.015;
     if(k==='mago'&&h.mageOrb){h.mageOrb.position.y=1.02+Math.sin(menuT*2.2)*.03;h.mageMotes.rotation.y=menuT*1.8}
+    if(k==='arqueiro'&&h.quiver)h.quiver.rotation.z=Math.sin(menuT*1.8+i)*.025;
+    if(k==='arqueiro'&&h.bowArrow)h.bowArrow.visible=sel&&menuAtk>0;
   });
   for(const k in menuStones)menuStones[k].visible=!isUnlocked(k); // placa no lugar dos que ainda descansam no caixão
   if(royalGrp)royalGrp.visible=isUnlocked('king');
@@ -1265,10 +1270,12 @@ function update(dt){
     const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz),m=e.r+player.r;if(d<m&&d>.001&&player.y<.6)moveEnt(e,dx/d*(m-d),dz/d*(m-d))}
   // projéteis
   for(let i=projs.length-1;i>=0;i--){const p=projs[i];p.x+=p.vx*dt;p.z+=p.vz*dt;p.life-=dt;p.g.position.set(p.x,p.y,p.z);
+    if(p.kind==='arrow'&&p.owner==='p'&&Math.random()<.16)burst(p.x,p.y,p.z,0x7fcf5a,1,{emi:.4,speed:.25,up0:0,up1:.25,grav:0,life:.16,size:.045});
     if(p.kind==='bone'||p.kind==='orb')p.g.rotation.y+=dt*12;if(p.kind==='fire'&&Math.random()<.35)burst(p.x,p.y,p.z,p.big?0xc9b4ff:0x8fe1ff,1,{emi:1,speed:.4,up0:0,up1:.6,grav:0,life:.25,size:p.big?.14:.1});
     let dead=p.life<=0;
     if(!dead&&wallH(p.x,p.z)>p.y){dead=true;burst(p.x,p.y,p.z,p.kind==='fire'?(p.big?0xc9b4ff:0x8fe1ff):0xcfc7b0,p.kind==='fire'?(p.big?14:6):3,{emi:p.kind==='fire'?1:0,speed:2.5})}
     if(!dead&&p.owner==='p'){for(const e of enemies){if(e.dead||p.hit.has(e))continue;if(Math.hypot(e.x-p.x,e.z-p.z)<e.r+p.r){p.hit.add(e);const kx=p.vx/p.speed,kz=p.vz/p.speed;damageEnemy(e,p.dmg,p.crit,kx*(p.kind==='fire'?(p.big?4.5:3):2)*st.kb,kz*(p.kind==='fire'?(p.big?4.5:3):2)*st.kb);
+          if(p.kind==='arrow')burst(p.x,p.y,p.z,0x7fcf5a,3,{emi:.45,speed:2.4,up0:.2,up1:1.4,life:.22,size:.065});
           if(p.kind==='fire'){e.slowT=Math.max(e.slowT||0,p.big?1.8:.9);e.slowF=.55;const R=(p.big?2.3:1.5)*st.area;for(const o of enemies.slice()){if(o===e||o.dead)continue;if(Math.hypot(o.x-p.x,o.z-p.z)<R+o.r){damageEnemy(o,p.dmg*(p.big?.7:.5),false,0,0,true);o.slowT=Math.max(o.slowT||0,p.big?1.8:.9);o.slowF=.55}}ringFX(p.x,p.z,R,p.big?0xbfa8ff:0x8fe1ff,p.big?.35:.25);burst(p.x,p.y,p.z,p.big?0xc9b4ff:0x8fe1ff,p.big?14:6,{emi:1,speed:p.big?4:3,size:p.big?.14:.12});if(p.big)addShake(.08)}
           if(p.kind==='time'){e.slowT=Math.max(e.slowT||0,2.5);e.slowF=.5;const R=1.6*st.area; // lentifica o alvo e os próximos
             for(const o of enemies.slice()){if(o===e||o.dead)continue;if(Math.hypot(o.x-p.x,o.z-p.z)<R+o.r){o.slowT=Math.max(o.slowT||0,2.2);o.slowF=.5;damageEnemy(o,p.dmg*.4,false,0,0,true)}}
@@ -1411,6 +1418,8 @@ function animHero(dt,moving){
   applyKeep(b.keep);
   if(b.cape)b.cape.rotation.x=(moving?.07+Math.sin(player.walk)*.04:.015+Math.sin(runTime*1.6)*.012);
   if(cls==='mago'&&b.mageOrb){b.mageOrb.position.y=1.02+Math.sin(runTime*2.4)*.028;b.mageMotes.rotation.y+=dt*1.8}
+  if(cls==='arqueiro'&&b.quiver)b.quiver.rotation.z=(moving?Math.sin(player.walk)*.03:Math.sin(runTime*1.7)*.012);
+  if(cls==='arqueiro'&&b.bowArrow)b.bowArrow.visible=k>.12;
   setFlash(b.root,player.flash>0);
   b.root.visible=!(player.invuln>0&&player.dashT<=0&&runTime>1&&Math.floor(runTime*20)%2===0);
 }
