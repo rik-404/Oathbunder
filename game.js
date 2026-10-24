@@ -374,6 +374,106 @@ function buildOgre(){const b=buildBody({body:0x6a5a3a,trim:0x4a3a28,skin:0x7aa84
   vox(club,0,1.32,0,.12,.14,.12,0x493521);vox(club,0,.78,0,.12,.14,.12,0x493521); // espinhos
 b.root.scale.setScalar(2.4);collect(b.root);return b}
 
+const NECRO_SKULL_BOXES=[
+  [0,.045,-.025,.25,.20,.20,0xcac1a8],                 // caixa craniana
+  [0,.13,-.005,.19,.075,.17,0xd9d2bd],                 // testa alta
+  [0,.15,.035,.12,.045,.12,0xe4ddca],                  // topo claro
+  [-.105,.045,-.005,.06,.13,.16,0xb0a68f],             // têmporas
+  [.105,.045,-.005,.06,.13,.16,0xb0a68f],
+  [-.06,.082,.078,.078,.028,.035,0xe0d8c4],            // sobrancelhas ósseas
+  [.06,.082,.078,.078,.028,.035,0xe0d8c4],
+  [-.06,.035,.096,.058,.064,.025,0x211f1a],            // órbitas fundas
+  [.06,.035,.096,.058,.064,.025,0x211f1a],
+  [-.06,.036,.113,.027,.033,.012,0x46f28e],            // fogo-fátuo verde
+  [.06,.036,.113,.027,.033,.012,0x46f28e],
+  [-.065,.045,.121,.009,.01,.007,0xe0ffe9],            // brilho dos olhos
+  [.055,.045,.121,.009,.01,.007,0xe0ffe9],
+  [0,-.02,.105,.032,.045,.025,0x24231e],               // cavidade nasal
+  [-.012,-.022,.12,.014,.018,.008,0x111510],
+  [.012,-.022,.12,.014,.018,.008,0x111510],
+  [-.10,-.035,.055,.07,.065,.085,0xbdb49e],            // maçãs do rosto
+  [.10,-.035,.055,.07,.065,.085,0xbdb49e],
+  [0,-.087,.045,.17,.07,.15,0xcac1a8],                 // maxilar
+  [0,-.13,.06,.12,.035,.105,0xb0a68f],                // queixo
+  [-.054,-.087,.127,.018,.03,.014,0xf0e9d8],           // dentes quadrados
+  [-.018,-.087,.127,.018,.03,.014,0xf0e9d8],
+  [.018,-.087,.127,.018,.03,.014,0xf0e9d8],
+  [.054,-.087,.127,.018,.03,.014,0xf0e9d8],
+  [-.075,-.128,.112,.025,.018,.014,0xd9d2bd],          // placas laterais da mandíbula
+  [.075,-.128,.112,.025,.018,.014,0xd9d2bd],
+  [0,.145,.103,.025,.02,.012,0x55ef9a],               // runa na testa
+  [-.13,.13,-.075,.03,.045,.035,0x36b979],             // faíscas atrás da caveira
+  [.13,.085,-.09,.03,.04,.035,0x62e994],
+  [0,-.16,-.07,.035,.035,.035,0x2f925e]
+];
+const NECRO_SKULL_GEO=mergeBoxes(NECRO_SKULL_BOXES,.035);
+NECRO_SKULL_GEO.userData=NECRO_SKULL_GEO.userData||{};
+Object.assign(NECRO_SKULL_GEO.userData,{voxelKind:'necro-skull-projectile',voxelParts:NECRO_SKULL_BOXES.length});
+
+const VESPERA_TIME_BOXES=[
+  [0,0,-.035,.21,.21,.18,0x24483c],                 // núcleo do orbe
+  [0,.015,.035,.16,.16,.09,0x347c61],               // vidro esmeralda
+  [0,0,.083,.145,.145,.035,0x183a30],               // face do relógio
+  [0,.087,.105,.19,.024,.022,0xe9d58a],             // moldura dourada
+  [0,-.087,.105,.19,.024,.022,0xe9d58a],
+  [-.087,0,.105,.024,.15,.022,0xd8d6b0],
+  [.087,0,.105,.024,.15,.022,0xd8d6b0],
+  [0,.063,.124,.016,.025,.012,0xe9f4df],             // marcas do mostrador
+  [0,-.063,.124,.016,.025,.012,0xe9f4df],
+  [-.063,0,.124,.025,.016,.012,0xe9f4df],
+  [.063,0,.124,.025,.016,.012,0xe9f4df],
+  [0,.018,.132,.014,.06,.012,0x5fe08a],              // ponteiro dos minutos
+  [.022,-.012,.133,.055,.014,.012,0xe9d58a],         // ponteiro das horas
+  [0,.006,.143,.022,.022,.014,0xf5f1d8],             // eixo central
+  [-.04,.035,.132,.018,.018,.012,0x9fe8ff],
+  [.04,-.035,.132,.018,.018,.012,0x9fe8ff],
+  [-.115,.08,-.075,.035,.045,.04,0x5fe08a],          // lascas arcanas
+  [.12,.065,-.08,.035,.045,.04,0x9fe8ff],
+  [0,-.13,-.055,.04,.035,.045,0xe9d58a]
+];
+for(let i=0;i<12;i++){const a=i/12*TAU;VESPERA_TIME_BOXES.push([Math.cos(a)*.17,Math.sin(a)*.17,-.025,.043,.043,.045,i%3===0?0xe9d58a:i%3===1?0x9fe8ff:0x5fe08a])}
+const VESPERA_TIME_GEO=mergeBoxes(VESPERA_TIME_BOXES,.03);
+VESPERA_TIME_GEO.userData=VESPERA_TIME_GEO.userData||{};
+Object.assign(VESPERA_TIME_GEO.userData,{voxelKind:'vespera-chronosphere',voxelParts:VESPERA_TIME_BOXES.length});
+
+const VLAD_BAT_PROJECTILE_BOXES=[
+  [0,0,0,.14,.15,.18,0x141014],                         // corpo escuro
+  [0,.02,.065,.13,.12,.10,0x241016],                    // cabeça
+  [0,-.045,.08,.11,.08,.10,0x6b0008],                   // peito vinho
+  [0,-.075,.145,.085,.035,.025,0x36090b],               // boca
+  [0,.015,-.095,.07,.07,.08,0x241016],                  // nuca
+  [-.045,.105,.025,.04,.09,.045,0x141014],              // orelhas pontudas
+  [.045,.105,.025,.04,.09,.045,0x141014],
+  [-.045,.112,.05,.02,.052,.014,0xb2000a],              // interior das orelhas
+  [.045,.112,.05,.02,.052,.014,0xb2000a],
+  [-.043,.04,.142,.05,.042,.02,0x36090b],               // órbitas
+  [.043,.04,.142,.05,.042,.02,0x36090b],
+  [-.043,.04,.158,.031,.03,.014,0xff2f2f],               // olhos rubros
+  [.043,.04,.158,.031,.03,.014,0xff2f2f],
+  [-.043,.045,.169,.012,.012,.009,0xffc2a8],             // brilho dos olhos
+  [.043,.045,.169,.012,.012,.009,0xffc2a8],
+  [-.026,-.078,.155,.018,.035,.018,0xf0ead8],            // presas
+  [.026,-.078,.155,.018,.035,.018,0xf0ead8],
+  [-.13,.015,-.025,.23,.055,.12,0x241016],               // membranas das asas
+  [.13,.015,-.025,.23,.055,.12,0x241016],
+  [-.235,.052,-.025,.11,.052,.095,0x6b0008],
+  [.235,.052,-.025,.11,.052,.095,0x6b0008],
+  [-.205,-.043,-.025,.15,.04,.105,0xb2000a],
+  [.205,-.043,-.025,.15,.04,.105,0xb2000a],
+  [-.28,.032,-.02,.045,.065,.08,0x141014],               // pontas quadradas
+  [.28,.032,-.02,.045,.065,.08,0x141014],
+  [-.17,.012,.04,.19,.016,.018,0x96111a],                // nervuras pixeladas
+  [.17,.012,.04,.19,.016,.018,0x96111a],
+  [-.22,.028,.015,.10,.016,.018,0x96111a],
+  [.22,.028,.015,.10,.016,.018,0x96111a],
+  [0,-.13,-.07,.035,.045,.09,0x6b0008],                 // cauda
+  [-.065,-.10,-.015,.04,.045,.055,0x141014],
+  [.065,-.10,-.015,.04,.045,.055,0x141014]
+];
+const VLAD_BAT_PROJECTILE_GEO=mergeBoxes(VLAD_BAT_PROJECTILE_BOXES,.025);
+VLAD_BAT_PROJECTILE_GEO.userData=VLAD_BAT_PROJECTILE_GEO.userData||{};
+Object.assign(VLAD_BAT_PROJECTILE_GEO.userData,{voxelKind:'vlad-bat-projectile',voxelParts:VLAD_BAT_PROJECTILE_BOXES.length});
+
 const PROJ_GEO={
   fire:mergeBoxes([
     [0,0,0,.2,.2,.2,0x5539a8],[0,0,.015,.145,.145,.145,0x54bfe9],[0,0,.035,.085,.085,.085,0xeafaff],
@@ -385,14 +485,14 @@ const PROJ_GEO={
   arrow:mergeBoxes([[0,0,0,.045,.045,.52,0x8a6a42],[0,0,.28,.075,.075,.1,0xcfd6dd],[0,0,.345,.035,.035,.05,0xe8eef2],[0,0,-.20,.11,.018,.13,0x7fcf5a],[0,0,-.20,.018,.11,.13,0xeee7da],[0,0,-.28,.05,.05,.02,0x2a4a3a]]),
   bone:mergeBoxes([[0,0,0,.3,.07,.07,0xe6dfca],[.15,0,0,.09,.12,.12,0xe6dfca],[-.15,0,0,.09,.12,.12,0xe6dfca]]),
   orb:mergeBoxes([[0,0,0,.36,.36,.36,0xff6a2a],[0,0,0,.2,.44,.2,0xffb070]]),
-  skull:mergeBoxes([[0,0,0,.24,.24,.22,0x9ff0bf],[0,0,-.1,.14,.14,.22,0xdcffe8],[-.06,.02,.11,.04,.05,.02,0x133a22],[.06,.02,.11,.04,.05,.02,0x133a22]]),
+  skull:NECRO_SKULL_GEO,
   bullet:mergeBoxes([[0,0,0,.08,.08,.22,0xffe08a],[0,0,-.13,.045,.045,.14,0xffb84a],[0,0,.12,.05,.05,.05,0xfff4c8]]),
-  batp:mergeBoxes([[0,0,0,.16,.12,.14,0x2a1f38],[-.18,.02,0,.22,.03,.16,0x1a1226],[.18,.02,0,.22,.03,.16,0x1a1226],[-.05,.02,.08,.03,.03,.02,0xff3030],[.05,.02,.08,.03,.03,.02,0xff3030]]),
+  batp:VLAD_BAT_PROJECTILE_GEO,
   hellfire:mergeBoxes([[0,0,0,.28,.28,.28,0xff6a2a],[0,0,-.14,.16,.16,.3,0xffb04a],[0,0,.12,.14,.14,.1,0x7a1a0a]]),
   plasma:mergeBoxes([[0,0,0,.14,.14,.34,0x3bf0d0],[0,0,-.18,.08,.08,.18,0xbffff4],[0,0,.14,.1,.1,.1,0x1affd8]]),
   rock:mergeBoxes([[0,0,0,.2,.17,.2,0x8a8a86],[0,.06,.05,.12,.08,.12,0x9a9a94],[-.06,-.05,-.04,.09,.09,.09,0x74746f],[.07,.03,.02,.06,.06,.06,0x9a9a94]]),
   gcoin:mergeBoxes([[0,0,0,.22,.22,.06,0xf2c14b],[0,0,.04,.11,.11,.02,0xffe9a0],[0,0,-.04,.11,.11,.02,0xcf9a2a]]),
-  time:mergeBoxes([[0,0,0,.26,.26,.26,0x9fe8ff],[0,0,0,.36,.07,.07,0xe9d58a],[0,0,0,.07,.36,.07,0xe9d58a],[0,.02,.14,.025,.11,.02,0xffffff],[.06,-.02,.14,.09,.025,.02,0xffffff]]),
+  time:VESPERA_TIME_GEO,
 };
 
 /* ================= estado ================= */
@@ -525,7 +625,7 @@ function director(dt){
 
 /* ================= projéteis, cristais, coletáveis ================= */
 function spawnProj(o){
-  const m=new THREE.Mesh(PROJ_GEO[o.kind],projMat);m.position.set(o.x,o.y!=null?o.y:.62,o.z);m.rotation.y=o.a;if(o.mScale)m.scale.setScalar(o.mScale);fxGroup.add(m);
+  const m=new THREE.Mesh(PROJ_GEO[o.kind],projMat);if(o.kind==='skull')m.name='necroSkullProjectile';m.position.set(o.x,o.y!=null?o.y:.62,o.z);m.rotation.y=o.a;if(o.mScale)m.scale.setScalar(o.mScale);fxGroup.add(m);
   projs.push(Object.assign({r:.2,life:1.6,pierce:0,y:.62},o,{vx:Math.sin(o.a)*o.speed,vz:Math.cos(o.a)*o.speed,g:m,hit:new Set()}));
   if(o.owner==='e')S('bone');else S('shot',o.kind);
 }
@@ -578,6 +678,27 @@ function arcaneNovaFX(x,z,R){
   burst(x,.55,z,0x8fe1ff,24,{emi:1,speed:7.5,up0:.4,up1:2.8,life:.55,size:.075});
   burst(x,.65,z,0xbfa8ff,16,{emi:.9,speed:5.5,up0:.7,up1:3,life:.65,size:.065});
   burst(x,.7,z,0xf4f1ff,8,{emi:1,speed:3.2,up0:1,up1:3.2,life:.38,size:.055})
+}
+function chronoRiftFX(x,z,R){
+  ringFX(x,z,R,0x9fe8ff,.68);ringFX(x,z,R*.76,0xe9d58a,.56);ringFX(x,z,R*.48,0x5fe08a,.44);
+  const seal=new THREE.Group(),marks=[];seal.position.set(x,.1,z);
+  for(let i=0;i<24;i++){const a=i/24*TAU,major=i%2===0,color=i%4===0?0xe9d58a:0x9fe8ff;
+    const mark=new THREE.Mesh(boxGeo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:.92,depthWrite:false}));mark.userData.own=true;
+    mark.position.set(Math.sin(a)*R*.61,.025,Math.cos(a)*R*.61);mark.rotation.y=a+Math.PI/2;mark.scale.set(major?.075:.04,.025,major?.2:.11);seal.add(mark);marks.push(mark)}
+  const hands=[];for(const [angle,color,length] of [[-.48,0x5fe08a,R*.19],[.92,0xe9d58a,R*.12]]){
+    const hand=new THREE.Mesh(boxGeo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:.95,depthWrite:false}));hand.userData.own=true;
+    hand.position.set(0,.035,0);hand.rotation.y=angle;hand.scale.set(.045,.022,length);seal.add(hand);hands.push(hand)}
+  addFx(seal,.82,k=>{const s=1+.22*k;seal.scale.set(s,1,s);seal.rotation.y=-.72*k;marks.forEach((m,i)=>{m.material.opacity=.92*(1-k);m.position.y=.025+Math.sin(k*TAU+i)*.018});hands.forEach(m=>m.material.opacity=.95*(1-k))});
+  const hour=new THREE.Group(),pieces=[];hour.position.set(x,1.38,z);
+  const block=(px,py,pz,sx,sy,sz,color)=>{const m=new THREE.Mesh(boxGeo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:.98,depthWrite:false}));m.userData.own=true;m.position.set(px,py,pz);m.scale.set(sx,sy,sz);hour.add(m);pieces.push(m)};
+  block(0,.13,0,.19,.025,.045,0xe9d58a);block(0,-.13,0,.19,.025,.045,0xe9d58a);
+  block(-.075,0,0,.025,.25,.04,0xd8d6b0);block(.075,0,0,.025,.25,.04,0xd8d6b0);
+  block(0,.065,.01,.10,.055,.04,0x5fe08a);block(0,.025,.01,.055,.04,.04,0x9fe8ff);
+  block(0,-.035,.01,.055,.04,.04,0x9fe8ff);block(0,-.085,.01,.12,.05,.04,0x5fe08a);
+  block(0,0,.025,.018,.08,.018,0xf4f0d7);
+  addFx(hour,.76,k=>{hour.rotation.y=k*TAU*.45;hour.position.y=1.38+Math.sin(k*Math.PI)*.24;hour.scale.setScalar(.82+.28*(1-k));pieces.forEach(m=>m.material.opacity=.98*(1-k))});
+  burst(x,.55,z,0x9fe8ff,28,{emi:1,speed:6,up0:.5,up1:3,life:.65});
+  burst(x,.58,z,0xe9d58a,12,{emi:.8,speed:4.2,up0:.4,up1:2.6,life:.58})
 }
 function swingFX(range,arc,a,color){const g=new THREE.Group();g.position.set(player.x,.55+player.y,player.z);g.rotation.y=a;
   const inner=Math.max(.45,range*.86);
@@ -701,7 +822,7 @@ function useAbility(){
   else if(player.cls==='necro'){for(let i=0;i<3;i++)summonMinion();for(const m of minions)m.hp=m.maxHp;
     ringFX(player.x,player.z,3*st.area,0x7ee0a8,.45);burst(player.x,.6,player.z,0x7ee0a8,24,{emi:1,speed:6,up0:.5,up1:3});addShake(.2)}
   else if(player.cls==='chrono'){const R=7*st.area;for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){e.slowT=Math.max(e.slowT||0,3.5);e.slowF=.1;const r=roll(C.dmg*1.5);damageEnemy(e,r.d,r.crit,0,0,true)}}
-    ringFX(player.x,player.z,R,0x9fe8ff,.5);ringFX(player.x,player.z,R*.65,0xe9d58a,.4);burst(player.x,.5,player.z,0x9fe8ff,28,{emi:1,speed:6,up0:.5,up1:3});addShake(.2)}
+    chronoRiftFX(player.x,player.z,R);addShake(.2)}
   else if(player.cls==='demon'){const R=5.5*st.area;for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(C.dmg*2);damageEnemy(e,r.d,r.crit,dx/d*13*st.kb,dz/d*13*st.kb)}}
     ringFX(player.x,player.z,R,0xff6a2a,.55);ringFX(player.x,player.z,R*.6,0xffb04a,.45);burst(player.x,.5,player.z,0xff6a2a,32,{emi:1,speed:7,up0:.5,up1:3.5});
     for(let i=0;i<10;i++)burst(player.x+rand(-1.5,1.5),.3,player.z+rand(-1.5,1.5),0x7a1a0a,2,{emi:.6,speed:3,up0:1,up1:3});addShake(.3)}
@@ -730,7 +851,8 @@ function useAbility(){
 function dash(){
   if(player.dashCd>0||player.dashT>0)return;let dx=moveVec.x,dz=moveVec.z;if(Math.hypot(dx,dz)<.1){dx=Math.sin(player.facing);dz=Math.cos(player.facing)}
   const l=Math.hypot(dx,dz);player.dvx=dx/l*18;player.dvz=dz/l*18;player.dashT=.17;player.dashCd=1.1*player.stats.dashCd;player.invuln=Math.max(player.invuln,.3);
-  burst(player.x,.3,player.z,0xcfc7b0,8,{speed:2,up0:.2,up1:1.5});S('dash');
+  if(player.cls==='dracula'){burst(player.x,.65+player.y,player.z,0xb2000a,14,{emi:.7,speed:4.8,up0:.15,up1:1.5,life:.28,size:.085});burst(player.x,.55+player.y,player.z,0x1c0507,8,{speed:3.4,up0:.1,up1:1.1,life:.24,size:.095})}
+  else burst(player.x,.3,player.z,0xcfc7b0,8,{speed:2,up0:.2,up1:1.5});S('dash');
 }
 function jump(){if(player.y<=.001&&state==='play'){player.vy=8;burst(player.x,.1,player.z,0xb59a6a,5,{speed:2,up0:.3,up1:1.2});S('jump')}}
 // armas: cada arma vive em assets/js/weapons/ e recebe o contexto C do motor
@@ -1001,10 +1123,10 @@ function updateMenu(dt){
     if(sel&&menuAtk>0){const t=1-menuAtk,e=1-Math.pow(1-t,3);
       if(k==='guerreiro'){h.armR.rotation.x=lerp(-1.15,-.35,e);h.torso.rotation.y=lerp(.9,-.9,e);
         if(h.sword){if(h.swordHold)h.swordHold.rotation.z=0;h.sword.rotation.x=Math.PI/2*Math.min(1,menuAtk*4);h.sword.rotation.z=-.65*Math.min(1,menuAtk*3)}}
-      else if(k==='tank'){h.armR.rotation.x=lerp(-3,-.8,e);h.armL.rotation.x=-1.4}
+      else if(k==='tank'){h.armR.rotation.x=lerp(-3,-.8,e);h.armL.rotation.x=-1.0}
       else if(k==='mago'||k==='chrono'||k==='pistol'||k==='dracula'||k==='demon'||k==='future'||k==='human'||k==='king'){h.armR.rotation.x=-1.3}else{h.armL.rotation.x=-1.5;h.armR.rotation.x=-1.3}}
     applyKeep(h.keep);
-    if(k==='tank'&&h.hammer){const hk=sel&&menuAtk>0?1-menuAtk:0,he=1-Math.pow(1-hk,3);h.hammer.rotation.x=-h.armR.rotation.x+(hk>0?lerp(-1.2,2.15,he):.07)}
+    if(k==='tank'&&h.hammer){const hk=sel&&menuAtk>0?1-menuAtk:0,he=1-Math.pow(1-hk,3);h.hammer.rotation.x=-h.armR.rotation.x+(hk>0?lerp(-1.2,2.15,he)+.15:.34+Math.PI/9)}
     if(h.cape)h.cape.rotation.x=.02+Math.sin(menuT*1.4+i)*.015;
     if(k==='mago'&&h.mageOrb){h.mageOrb.position.y=1.02+Math.sin(menuT*2.2)*.03;h.mageMotes.rotation.y=menuT*1.8}
     if(k==='arqueiro'&&h.quiver)h.quiver.rotation.z=Math.sin(menuT*1.8+i)*.025;
@@ -1207,7 +1329,7 @@ function update(dt){
   // projéteis
   for(let i=projs.length-1;i>=0;i--){const p=projs[i];p.x+=p.vx*dt;p.z+=p.vz*dt;p.life-=dt;p.g.position.set(p.x,p.y,p.z);
     if(p.kind==='arrow'&&p.owner==='p'&&Math.random()<.16)burst(p.x,p.y,p.z,0x7fcf5a,1,{emi:.4,speed:.25,up0:0,up1:.25,grav:0,life:.16,size:.045});
-    if(p.kind==='bone'||p.kind==='orb')p.g.rotation.y+=dt*12;if(p.kind==='fire'){p.g.rotation.x+=dt*(p.big?5:7);p.g.rotation.z+=dt*(p.big?-4:5);
+    if(p.kind==='bone'||p.kind==='orb')p.g.rotation.y+=dt*12;if(p.kind==='time')p.g.rotation.z+=dt*5.2;if(p.kind==='fire'){p.g.rotation.x+=dt*(p.big?5:7);p.g.rotation.z+=dt*(p.big?-4:5);
       if(p.big)p.g.scale.setScalar(p.mScale*(1+Math.sin(runTime*12+p.a)*.05));if(Math.random()<.35)burst(p.x,p.y,p.z,p.big?0xc9b4ff:0x8fe1ff,1,{emi:1,speed:.4,up0:0,up1:.6,grav:0,life:.25,size:p.big?.14:.1})}
     let dead=p.life<=0;
     if(!dead&&wallH(p.x,p.z)>p.y){dead=true;burst(p.x,p.y,p.z,p.kind==='fire'?(p.big?0xc9b4ff:0x8fe1ff):0xcfc7b0,p.kind==='fire'?(p.big?14:6):3,{emi:p.kind==='fire'?1:0,speed:2.5})}
@@ -1375,8 +1497,8 @@ function animHero(dt,moving){
       if(b.sword){if(b.swordHold)b.swordHold.rotation.z=0;b.sword.rotation.x=Math.PI/2*Math.min(1,k*3);b.sword.rotation.z=lerp(0,-.65,ez)}}}
   else if(cls==='tank'){
     if(k>0)b.armR.rotation.x=lerp(-3,-.7,ez);
-    if(b.hammer)b.hammer.rotation.x=-b.armR.rotation.x+(k>0?lerp(-1.2,2.15,ez):.07); // o martelo mantém a cabeça legível no idle e desce no golpe
-    if(player.shieldT>0)b.armL.rotation.x=-1.45;
+    if(b.hammer)b.hammer.rotation.x=-b.armR.rotation.x+(k>0?lerp(-1.2,2.15,ez)+.15:.34+Math.PI/9); // mais inclinado para a frente no repouso; o golpe mantém a face larga descendente
+    if(player.shieldT>0)b.armL.rotation.x=-1.0;
     b.bubble.visible=player.shieldT>0;
     if(b.bubble.visible){b.bubble.material.opacity=.14+Math.sin(runTime*10)*.05;
       if(b.bubbleFacets){b.bubbleFacets.rotation.y+=dt*.55;b.bubbleFacets.material.opacity=.12+Math.sin(runTime*6)*.05}
@@ -1386,6 +1508,10 @@ function animHero(dt,moving){
     b.torso.rotation.y=angDiff(player.facing,player.aimAng); // arco acompanha o eixo real das flechas
     if(k>0){b.armL.rotation.x=-1.5;b.armR.rotation.x=-1.35}
   }
+  if(cls==='dracula'&&b.dashBat){const transforming=player.dashT>0;b.dashBat.visible=transforming;b.torso.visible=!transforming;b.legL.visible=!transforming;b.legR.visible=!transforming;
+    if(transforming){const flap=Math.sin(runTime*42)*.82;b.dashBatWings[0].rotation.z=-flap;b.dashBatWings[1].rotation.z=flap;
+      b.dashBat.rotation.y=angDiff(player.facing,Math.atan2(player.dvx,player.dvz));b.dashBat.rotation.x=-.12;b.dashBat.rotation.z=Math.sin(runTime*32)*.06;b.dashBat.position.y=.025+Math.sin(runTime*42)*.025}
+    else{b.dashBat.rotation.set(0,0,0);b.dashBat.position.y=0;b.dashBatWings[0].rotation.z=0;b.dashBatWings[1].rotation.z=0}}
   applyKeep(b.keep);
   if(b.cape)b.cape.rotation.x=(moving?.07+Math.sin(player.walk)*.04:.015+Math.sin(runTime*1.6)*.012);
   if(cls==='mago'&&b.mageOrb){b.mageOrb.position.y=1.02+Math.sin(runTime*2.4)*.028;b.mageMotes.rotation.y+=dt*1.8}

@@ -88,8 +88,12 @@ ok(G.zombieDef(),'zumbi registrado via assets/js/enimies/zombie.js');
 {const zombie=window.ENEMY_DEFS.zombie((P,o)=>o.extra||[]),parts=zombie.boxes();
  ok(parts.length>=35&&zombie.stats.hp===34&&zombie.stats.speed===2.3&&zombie.stats.dmg===9&&zombie.legged&&zombie.leg.length===3,'Zumbi redesenhado e atributos/animação preservados')}
 {const ks=Object.keys(CLASSES);ok(ks.length===12&&ks.every(k=>typeof CLASSES[k].model==='function'),'12 classes com o próprio modelo voxel (CLASSES[k].model)')}
+{const name=G.galNames().find(n=>n==='Brom · Guardião'),guard=name&&G.galMake(name);let head=null,shield=null;if(guard)guard.traverse(o=>{if(o.name==='guardianHammerHead')head=o;if(o.name==='guardianShield')shield=o});
+ ok(!!head&&Math.abs(head.rotation.y+Math.PI/2)<1e-6&&head.children.length>=20&&!!shield&&shield.position.y===0,'Guardião tem face larga de impacto alinhada ao golpe e escudo centrado na mão')}
 {const name=G.galNames().find(n=>n.startsWith('Darian ·')),hero=name&&G.galMake(name);let hold=null,sword=null;if(hero)hero.traverse(o=>{if(o.name==='swordHold')hold=o;if(o.name==='sword')sword=o});
  ok(!!hold&&Math.abs(hold.rotation.z+.75)<1e-6&&!!sword&&sword.children.length>=15,'Guerreiro segura a espada pela empunhadura na pose de repouso')}
+{const name=G.galNames().find(n=>n.startsWith('Oliver ·')),hero=name&&G.galMake(name);let bow=null,arrow=null;if(hero)hero.traverse(o=>{if(o.name==='oliverBow')bow=o;if(o.name==='nockedArrow')arrow=o});
+ ok(!!bow&&bow.position.x===0&&bow.position.z===.10&&bow.scale.x===-1&&!!arrow&&arrow.position.z===.25,'arco do Oliver fica centrado na mão e mantém a flecha apontada para a frente')}
 {const gn=G.galNames();ok(gn.some(n=>n.includes('TARDIS'))&&gn.some(n=>n.includes('Trono')),'galeria de modelos inclui TARDIS e trono ('+gn.length+' itens)');
  const a=G.galMake(gn.find(n=>n.includes('TARDIS'))),b=G.galMake(gn.find(n=>n.includes('Trono')));
  ok(!!a&&!!b&&a.children.length>=20&&b.children.length>=55,'cabine do tempo detalhada e trono real com mais de 55 peças voxel constroem na galeria')}
@@ -119,6 +123,11 @@ ok(G.getState()==='play','partida iniciada');
 ok(G.enemies().length===8,'8 slimes iniciais');
 {G.enemies().length=0;G.player.weap.orbit=2;G.update(1/60);const orbs=G.weaponGroup().children.filter(m=>m.name==='orbitOrb'),first=orbs[0],core=first&&first.userData.orbitCore;
  ok(orbs.length===3&&!!core&&first.children.length>=20&&first.scale.x===.78,'Orbes Giratórios constroem três relicários voxel detalhados sem alterar o nível da arma')}
+{G.newRun('tank');G.enemies().length=0;G.player.shieldT=1;G.update(1/60);const t=G.player.model,idleTilt=t.armR.rotation.x+t.hammer.rotation.x,shieldPose=Math.abs(t.armL.rotation.x+1)<1e-6&&Math.abs(t.shield.rotation.x-1)<1e-6;
+ G.player.shieldT=0;G.player.atkAnim=.01;G.update(.001);const impactAngle=t.armR.rotation.x+t.hammer.rotation.x;
+ ok(idleTilt>.66&&idleTilt<.72,'martelo recebe mais 10 graus de inclinação para a frente no repouso');
+ ok(shieldPose,'escudo do Guardião acompanha a mão numa elevação de defesa coerente');
+ ok(!!t.hammerHead&&Math.abs(t.hammerHead.rotation.y+Math.PI/2)<1e-6&&Math.sin(impactAngle)>.7,'face larga do martelo aponta para o chão no impacto');}
 G.newRun('guerreiro');
 {G.runCheat('time 179.8');G.update(.1);const before=G.getBoss();G.runCheat('time 180');G.update(1/60);const first=G.getBoss();
  ok(!before&&!!first,'primeiro chefe invocado ao atingir 3 minutos, não antes')}
@@ -178,8 +187,35 @@ if(pr.length)ok(Math.abs(pr[0].speed-28)<0.01,'velocidade do orbe = projSpeed*ps
 for(let k=0;k<3;k++){G.player.atkCd=0;G.update(1/60)}
 const bigOrb=G.projs().find(q=>q.big);
 ok(!!bigOrb&&bigOrb.kind==='fire'&&bigOrb.r===.4&&bigOrb.mScale===1.55&&!!bigOrb.g.geometry,'quarto disparo do Mago cria o orbe arcano maior com o modelo facetado');
+G.newRun('necro');G.enemies().length=0;G.player.atkCd=0;G.spawnEnemy('slime',G.player.x,G.player.z+8,false);G.update(1/60);
+const skullShot=G.projs().find(q=>q.owner==='p'&&q.kind==='skull');
+ok(!!skullShot&&skullShot.g.name==='necroSkullProjectile'&&skullShot.g.geometry.userData.voxelKind==='necro-skull-projectile'&&skullShot.g.geometry.userData.voxelParts>=25,'Necromante dispara uma caveira voxel com órbitas verdes, maxilar e dentes');
+const expectedSkullDamage=skullShot&&CLASSES.necro.dmg*G.player.stats.dmg*(skullShot.crit?G.player.stats.critDmg:1),skullDamageFactor=skullShot?skullShot.dmg/expectedSkullDamage:0;
+ok(!!skullShot&&CLASSES.necro.projSpeed===13&&CLASSES.necro.dmg===16&&Math.abs(skullShot.speed-CLASSES.necro.projSpeed*G.player.stats.pspd)<.01&&skullDamageFactor>.899&&skullDamageFactor<1.101&&skullShot.r===.22,'caveira do Necromante mantém velocidade, dano base, crítico e raio de colisão');
 G.newRun('mago');const mage=G.player;G.spawnEnemy('brute',mage.x+1,mage.z,false);const target=G.enemies().find(e=>e.type==='brute'),hpBefore=target.hp;G.useAbility();
 ok(target.hp<hpBefore&&target.slowT>=2&&target.slowF===.55&&(Math.abs(target.kx)+Math.abs(target.kz))>0&&mage.abCd>0,'Nova Arcana conserva dano, empurrão, lentidão e recarga');
+console.log('[8b] poderes da Véspera');
+G.newRun('chrono');G.enemies().length=0;G.player.atkCd=0;G.spawnEnemy('slime',G.player.x,G.player.z+8,false);G.update(1/60);
+const timeShot=G.projs().find(q=>q.owner==='p'&&q.kind==='time');
+ok(!!timeShot&&timeShot.g.geometry.userData.voxelKind==='vespera-chronosphere'&&timeShot.g.geometry.userData.voxelParts>=25,'Orbe do Tempo cria uma cronosfera voxel com mostrador, ponteiros e lascas arcanas');
+const expectedTimeDamage=timeShot&&CLASSES.chrono.dmg*G.player.stats.dmg*(timeShot.crit?G.player.stats.critDmg:1),timeDamageFactor=timeShot?timeShot.dmg/expectedTimeDamage:0;
+ok(!!timeShot&&CLASSES.chrono.projSpeed===15&&CLASSES.chrono.dmg===18&&Math.abs(timeShot.speed-CLASSES.chrono.projSpeed*G.player.stats.pspd)<.01&&timeDamageFactor>.899&&timeDamageFactor<1.101&&timeShot.r===.22,'Orbe do Tempo mantém velocidade, dano base, crítico e colisão');
+G.newRun('chrono');G.enemies().length=0;G.spawnEnemy('brute',G.player.x+2,G.player.z,false);const timeTarget=G.enemies().find(e=>e.type==='brute'),timeHp=timeTarget.hp;G.useAbility();
+ok(timeTarget.hp<timeHp&&timeTarget.slowT>=3.5&&timeTarget.slowF===.1&&G.player.abCd>0,'Distorção Temporal mantém dano, quase congelamento por 3,5 s e recarga');
+console.log('[8c] dash-morcego do Vlad');
+G.newRun('dracula');G.enemies().length=0;const vlad=G.player,batForm=vlad.model.dashBat;G.dash();
+const vladDashSpeed=Math.hypot(vlad.dvx,vlad.dvz),vladDashCd=vlad.dashCd,vladDashT=vlad.dashT,vladDashInvuln=vlad.invuln;
+ok(vladDashSpeed===18&&Math.abs(vladDashCd-1.1*vlad.stats.dashCd)<.001&&Math.abs(vladDashT-.17)<.001&&vladDashInvuln>=.3,'dash do Vlad mantém velocidade, duração, recarga e invulnerabilidade');
+G.update(1/60);
+ok(!!batForm&&batForm.visible&&vlad.model.dashBatWings.length===2&&!vlad.model.torso.visible&&!vlad.model.legL.visible&&!vlad.model.legR.visible,'Vlad assume forma de morcego com asas animáveis durante o dash');
+for(let i=0;i<15;i++)G.update(1/60);
+ok(!batForm.visible&&vlad.model.torso.visible&&vlad.model.legL.visible&&vlad.model.legR.visible,'Vlad retorna à forma normal quando o dash termina');
+console.log('[8d] projétil vampírico');
+G.newRun('dracula');G.enemies().length=0;G.player.atkCd=0;G.spawnEnemy('slime',G.player.x,G.player.z+8,false);G.update(1/60);
+const vladShot=G.projs().find(q=>q.owner==='p'&&q.kind==='batp');
+ok(!!vladShot&&vladShot.g.geometry.userData.voxelKind==='vlad-bat-projectile'&&vladShot.g.geometry.userData.voxelParts>=28,'Vlad dispara um morcego voxel com asas carmesim, olhos rubros e presas');
+const expectedVladDamage=vladShot&&CLASSES.dracula.dmg*G.player.stats.dmg*(vladShot.crit?G.player.stats.critDmg:1),vladDamageFactor=vladShot?vladShot.dmg/expectedVladDamage:0;
+ok(!!vladShot&&CLASSES.dracula.projSpeed===16&&CLASSES.dracula.dmg===16&&Math.abs(vladShot.speed-CLASSES.dracula.projSpeed*G.player.stats.pspd)<.01&&vladDamageFactor>.899&&vladDamageFactor<1.101&&vladShot.r===.22,'projétil do Vlad mantém velocidade, dano, crítico e colisão');
 console.log('[9] upgrade por XP em lote');
 G.gainXP(9999);
 let guard=0;

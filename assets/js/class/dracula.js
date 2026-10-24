@@ -110,6 +110,33 @@ window.CLASSES.dracula.model=function(b,P,vox,makeBow,boxGeo){
     vox(cape,-.112,-.24,-.04,.038,.02,.008,CRIM);vox(cape,.112,-.24,-.04,.038,.02,.008,CRIM);     // pontas
     vox(cape,0,-.325,-.04,.018,.04,.008,CRIM);                  // cauda
 
+    // ---------- forma de morcego para o dash do Vlad ----------
+    const batForm=new THREE.Group();b.root.add(batForm);batForm.visible=false;b.dashBat=batForm;
+    const BAT_DARK=0x100c12,BAT_WINE=0x241016,BAT_MEMBRANE=0x6b0008;
+    vox(batForm,0,.91,0,.2,.3,.2,BAT_DARK);                     // corpo compacto
+    vox(batForm,0,1.105,.025,.19,.16,.18,BAT_WINE);             // cabeça
+    vox(batForm,0,1.065,.13,.13,.07,.055,CRIM_D);               // focinho carmesim
+    vox(batForm,0,1.035,.16,.09,.025,.012,MOUTH);
+    for(const s of [-1,1]){
+      vox(batForm,s*.055,1.2,.015,.05,.13,.055,BAT_DARK);       // orelhas pontudas
+      vox(batForm,s*.055,1.205,.047,.025,.07,.018,CRIM_D);
+      vox(batForm,s*.06,1.12,.126,.045,.04,.018,EYE,1.3);
+      vox(batForm,s*.06,1.12,.138,.02,.022,.009,EYE_C,1.5);
+      vox(batForm,s*.035,1.005,.16,.018,.045,.018,SHIRT);       // presas
+      vox(batForm,s*.09,.79,.025,.055,.09,.07,BAT_DARK);        // garras dobradas
+      vox(batForm,s*.09,.745,.065,.025,.025,.035,SILVER_D);
+    }
+    vox(batForm,0,.79,-.11,.045,.1,.15,BAT_MEMBRANE);           // cauda curta
+    const makeDashWing=s=>{const w=new THREE.Group();w.position.set(s*.1,1.02,0);batForm.add(w);
+      vox(w,s*.12,0,0,.25,.06,.12,BAT_WINE);
+      vox(w,s*.25,.04,0,.17,.05,.10,BAT_MEMBRANE);
+      vox(w,s*.22,-.05,.015,.20,.045,.075,CRIM_D);
+      vox(w,s*.35,.055,0,.12,.045,.09,BAT_DARK);
+      vox(w,s*.30,-.06,.01,.14,.04,.07,BAT_MEMBRANE);
+      vox(w,s*.17,.012,.065,.25,.014,.016,CRIM);               // nervuras pixeladas
+      return w};
+    b.dashBatWings=[makeDashWing(-1),makeDashWing(1)];
+
     // ---------- punhos de camisa e anel de sinete ----------
     vox(b.handL,0,.065,0,.155,.022,.155,SHIRT);vox(b.handR,0,.065,0,.155,.022,.155,SHIRT);
     vox(b.handR,.035,.0,.07,.028,.018,.02,GEM,.8);

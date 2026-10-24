@@ -233,8 +233,8 @@ window.CLASSES.arqueiro.model=function(b,P,vox,makeBow,boxGeo){
 
     /* ---------------- arco recurvo ---------------- */
     // Espelho no eixo X para corrigir a curvatura; a flecha continua apontada para +Z.
-    const bow=new THREE.Group();b.handL.add(bow);
-    bow.position.set(-.085,0,.065);
+    const bow=new THREE.Group();bow.name='oliverBow';b.handL.add(bow);b.bow=bow;
+    bow.position.set(0,0,.10);
     bow.scale.x=-1;
     for(let i=-4;i<=4;i++){
       const y=i*.085,x=-i*i*.0075;
@@ -258,7 +258,7 @@ window.CLASSES.arqueiro.model=function(b,P,vox,makeBow,boxGeo){
     // corda entre as pontas
     vox(bow,-.12,0,.035,.012,.69,.012,0xe6e0d0,.1);
     // flecha encaixada (aparece durante o ataque)
-    const nocked=new THREE.Group();nocked.position.set(-.12,.02,.25);bow.add(nocked);b.bowArrow=nocked;
+    const nocked=new THREE.Group();nocked.name='nockedArrow';nocked.position.set(-.12,.02,.25);bow.add(nocked);b.bowArrow=nocked;
     vox(nocked,0,0,0,.028,.028,.46,0x8a6a42);
     vox(nocked,0,0,.25,.06,.06,.10,0xcfd6dd);
     vox(nocked,0,0,.31,.02,.02,.04,0xe8eef2);
