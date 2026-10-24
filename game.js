@@ -519,6 +519,7 @@ const PROJ_GEO={
 let state='menu',selCls=store.get('cv_cls','guerreiro');if(!CLASSES[selCls])selCls='guerreiro';
 let grid=null,hgt=null,level=null,fxGroup=null,wGroup=null,enemies=[],projs=[],pickups=[],fxs=[],parts=[],texts=[],chests=[],totems=[],landPos=null,crystalMeshes=[],flameMat=null,fireFx=null;
 let characterSelect=null;
+let mainMenu=null;
 let kills=0,runTime=0,shake=0,boss=null,hurtA=0,deadT=0,hordeN=0,nextHorde=60,nextBoss=180,bossCount=0,spawnAcc=0,pendingUps=0,upSource='lvl',bossKills=0,lastReward=null,runDmg=0,runSkel=0,runBat=0,cheatGod=false,ogreLoose=false;
 // Map state (must be declared before setScreen uses it)
 let mapOpen=false,mapScreen=null,mapCanvas=null;
@@ -1233,7 +1234,7 @@ addEventListener('keydown',e=>{
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)&&state==='play')e.preventDefault();
   if(e.repeat)return;
   if(e.code==='KeyT'){e.preventDefault();setMuted(!muted);return} // T: som liga/desliga
-  if(state==='title'){if(e.code==='Enter'||e.code==='Space'){e.preventDefault();renderCards();setScreen('menu')}return}
+  if(state==='title'){mainMenu.handleKey(e);return}
   if(state==='howto'||state==='recs'||state==='shop'||state==='ach'){if(e.code==='Escape')setScreen('title');return}
   if(state==='menu'){characterSelect.handleKey(e,!!(document.activeElement&&document.activeElement.classList.contains('ctile')))}
   else if(state==='play'){
@@ -1256,10 +1257,20 @@ cvs.addEventListener('wheel',e=>{if(state!=='play')return;e.preventDefault();cam
 document.addEventListener('pointerlockchange',()=>{const on=document.pointerLockElement===cvs;$('#lockhint').hidden=on||state!=='play'||isTouch;if(!on&&state==='play'&&!mapOpen)setScreen('pause')});
 $('#resumebtn').onclick=()=>{setScreen('play');lockMouse()};
 $('#quitbtn').onclick=()=>{if(state==='pause'&&player)die('desistiu')}; // desistir = suicídio: morre na arena e registra os recordes
-$('#t-play').onclick=()=>{renderCards();setScreen('menu')};$('#t-how').onclick=()=>setScreen('howto');$('#t-recs').onclick=()=>{renderRecs();setScreen('recs')};
-$('#t-shop').onclick=()=>{renderShop();setScreen('shop')};$('#t-ach').onclick=()=>{renderAch();setScreen('ach')};
-$('#shop-back').onclick=()=>setScreen('title');$('#ach-back').onclick=()=>setScreen('title');
-$('#how-back').onclick=()=>setScreen('title');$('#recs-back').onclick=()=>setScreen('title');$('#backbtn').onclick=()=>setScreen('title');
+mainMenu=window.MAIN_MENU.create({
+  document,
+  onPlay:()=>{renderCards();setScreen('menu')},
+  onHow:()=>setScreen('howto'),
+  onRecords:()=>{renderRecs();setScreen('recs')},
+  onShop:()=>{renderShop();setScreen('shop')},
+  onAchievements:()=>{renderAch();setScreen('ach')},
+  onBack:()=>setScreen('title'),
+  getBestTimes:()=>store.get('cv_bestT',{}),getOrder:()=>ORDER,
+  getClassName:cls=>CLASSES[cls].nome,formatTime:fmtT,getWorldRecords:()=>WORLD_RECS,
+  reduceMotion,random:rand,pick
+});
+mainMenu.bind();
+$('#backbtn').onclick=()=>setScreen('title');
 $('#pausebtn').onclick=()=>{if(state==='play')setScreen('pause')};
 const sndBtn=$('#sndbtn');if(sndBtn)sndBtn.onclick=()=>setMuted(!muted);
 document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('button'))S('click')}); // clique em qualquer botão
@@ -1671,10 +1682,7 @@ function frame(now){
   if(toastT>0){toastT-=dt;if(toastT<=0)$('#toast').classList.remove('show')}
   renderer.render(scene,camera);
 }
-function renderBest(){const b=store.get('cv_bestT',{});let k=null;for(const c of ORDER)if(b[c]&&(!k||b[c]>b[k]))k=c;
- const local=k?'★ SEU MELHOR '+fmtT(b[k])+' · '+CLASSES[k].nome:'';
- const wr=WORLD_RECS.length?'🌍 RECORDE MUNDIAL '+WORLD_RECS[0].name+' · '+fmtT(WORLD_RECS[0].time):'';
- $('#t-best').textContent=[local,wr].filter(Boolean).join('   ')}
+function renderBest(){if(mainMenu)mainMenu.renderBest()}
 // ============ RECORDES MUNDIAIS (placar da comunidade — os primeiros da história do Oathbound) ============
 // Para adicionar um novo: copie a linha e edite name/cls/time(seg)/kills/lvl/date
 const WORLD_RECS=[
@@ -1957,10 +1965,7 @@ case'arte':case'midia':case'midias':case'media':case'imagens':case'emojis':toggl
   }
 }
 
-(function(){const box=$('#t-embers');if(!box||reduceMotion)return;const cols=['#f2b84b','#ff8a4a','#62b8ff','#7ee05a'];
-for(let i=0;i<16;i++){const e=document.createElement('i'),s=rand(3,6);
-e.style.cssText='left:'+rand(2,97).toFixed(1)+'%;width:'+s.toFixed(1)+'px;height:'+s.toFixed(1)+'px;--c:'+pick(cols)+';--sw:'+rand(-70,70).toFixed(0)+'px;--dur:'+rand(7,14).toFixed(1)+'s;--del:'+(-rand(0,14)).toFixed(1)+'s';
-box.appendChild(e)}})(); // brasas sobem pela tela de título
+mainMenu.createEmbers();
 setScreen('title');
 requestAnimationFrame(frame);
 if(typeof location!=='undefined'&&location.href.indexOf('shot=menu')>=0){var _hm=location.search.match(/hero=(\w+)/);setTimeout(function(){renderCards();setScreen('menu');selectClass(_hm?_hm[1]:'king')},2500)} // debug: abre o seletor (padrão Rei) pra screenshot
