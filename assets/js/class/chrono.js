@@ -7,18 +7,7 @@ window.CLASSES.chrono = {
   hp: 95,
   armor: .05,
   speed: 5.4,
-  atkCd: .6,
-  dmg: 18,
-  kind: 'proj',
-  proj: 'time',
-  projSpeed: 15,
-  range: 15,
-  pierce: 1,
-  ab: {
-    nome: 'Distorção Temporal',
-    cd: 9,
-    desc: 'Quase congela o tempo dos inimigos em volta por 3,5 s e causa dano.'
-  },
+  weaponId: 'chrono_orb',
   pal: {
     body: 0x0c231c,
     trim: 0xbdbd96,

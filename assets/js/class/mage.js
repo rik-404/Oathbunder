@@ -7,18 +7,7 @@ window.CLASSES.mago = {
   hp: 75,
   armor: 0,
   speed: 5,
-  atkCd: .75,
-  dmg: 20,
-  kind: 'proj',
-  proj: 'fire',
-  projSpeed: 14,
-  range: 14,
-  pierce: 0,
-  ab: {
-    nome: 'Nova Arcana',
-    cd: 6,
-    desc: 'Nova arcana que empurra, causa dano alto e retarda os inimigos.'
-  },
+  weaponId: 'mage_orbs',
   pal: {
     body: 0x5b3fa8,
     trim: 0xf2b84b,

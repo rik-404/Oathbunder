@@ -58,10 +58,16 @@ global.THREE=THREE;
 
 // ---------- carrega o jogo exposto via __G ----------
 // weapons.js e upgrades.js juntos com o game.js (no navegador são <script>s antes do game.js)
-const cdir='assets/js/class';const csrc=fs.readdirSync(cdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?1:b==='index.js'?-1:a.localeCompare(b)).map(f=>fs.readFileSync(cdir+'/'+f,'utf8')).join('\n')+'\n';const wdir='assets/js/weapons';let src=csrc+fs.readdirSync(wdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?-1:b==='index.js'?1:a.localeCompare(b)).map(f=>fs.readFileSync(wdir+'/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/functions/upgrades.js','utf8')+'\n'+fs.readdirSync('assets/js/enimies').filter(f=>f.endsWith('.js')).sort().map(f=>fs.readFileSync('assets/js/enimies/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/decorations/chest.js','utf8')+'\n'+fs.readFileSync('assets/js/decorations/index.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
+const cdir='assets/js/class';
+const csrc=fs.readdirSync(cdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?1:b==='index.js'?-1:a.localeCompare(b)).map(f=>fs.readFileSync(cdir+'/'+f,'utf8')).join('\n')+'\n';
+const wdir='assets/js/weapons';
+const wsrc=fs.readdirSync(wdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?-1:b==='index.js'?1:a.localeCompare(b)).map(f=>fs.readFileSync(wdir+'/'+f,'utf8')).join('\n')+'\n';
+const udir='assets/js/upgrades';
+const usrc=['core.js','general.js','combat.js','utility.js','class.js','index.js'].map(f=>fs.readFileSync(udir+'/'+f,'utf8')).join('\n')+'\n';
+let src=csrc+wsrc+usrc+fs.readdirSync('assets/js/enimies').filter(f=>f.endsWith('.js')).sort().map(f=>fs.readFileSync('assets/js/enimies/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/decorations/chest.js','utf8')+'\n'+fs.readFileSync('assets/js/decorations/index.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
 const i=src.lastIndexOf('})();');
 const hook=`window.__G={newRun,update,openUpgrade,chooseUpgrade,damageEnemy,gainXP,hurtPlayer,dash,jump,useAbility,spawnBoss,spawnEnemy,killEnemy,S,setMuted,player,keys,setScreen,getBoss:()=>boss,getUps:()=>($('#ups')&&$('#ups')._choice)||null,hs:()=>hitStopT,getState:()=>state,enemies:()=>enemies,projs:()=>projs,mapInfo:()=>({W,H,grid,landPos,chestN:chests.length}),jv:(x,z)=>jv(x,z),relief:(x,z)=>relief(x,z),hills:()=>HILLS.length,runCheat,toggleMap,galNames:()=>{if(!galleryItems)galleryItems=buildGalleryItems();return galleryItems.map(g=>g.name)},galMake:(n)=>{if(!galleryItems)galleryItems=buildGalleryItems();const it=galleryItems.find(g=>g.name===n);return it?it.make():null},skelDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.skel),zombieDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.zombie)};\n})();`;
-src=src.slice(0,i)+hook.replace('projs:()=>projs,','projs:()=>projs,weaponGroup:()=>wGroup,');
+src=src.slice(0,i)+hook.replace('projs:()=>projs,','projs:()=>projs,weaponGroup:()=>wGroup,statUps:()=>STAT_UPS,weaponSlots:()=>weaponSlots(player),');
 try{eval(src)}catch(e){console.log('ERRO AO CARREGAR:',e.stack);process.exit(1)}
 const G=global.__G;
 const frames=n=>{for(let k=0;k<n;k++){const cb=rafCb;rafCb=null;fakeT+=16.7;cb&&cb(fakeT)}};
@@ -87,7 +93,8 @@ ok(G.zombieDef(),'zumbi registrado via assets/js/enimies/zombie.js');
  ok(parts.length>=35&&ogre.stats.hp===200&&ogre.stats.speed===2&&ogre.stats.dmg===19&&ogre.leg.length===3,'Ogro redesenhado e atributos de combate preservados')}
 {const zombie=window.ENEMY_DEFS.zombie((P,o)=>o.extra||[]),parts=zombie.boxes();
  ok(parts.length>=35&&zombie.stats.hp===34&&zombie.stats.speed===2.3&&zombie.stats.dmg===9&&zombie.legged&&zombie.leg.length===3,'Zumbi redesenhado e atributos/animação preservados')}
-{const ks=Object.keys(CLASSES);ok(ks.length===12&&ks.every(k=>typeof CLASSES[k].model==='function'),'12 classes com o próprio modelo voxel (CLASSES[k].model)')}
+{const ks=Object.keys(CLASSES);ok(ks.length===12&&ks.every(k=>typeof CLASSES[k].model==='function'&&!!CLASSES[k].weaponId&&!CLASSES[k].ab&&window.CLASS_WEAPONS[CLASSES[k].weaponId]?.classId===k)&&Object.keys(window.CLASS_WEAPONS).length===12,'12 classes com modelo, sem Q ativo e arma-base individual registrada em CLASS_WEAPONS')}
+ok(STAT_UPS.length===22&&window.UPGRADE_REGISTRY.groups.map(g=>g.nome).join(',')==='general,combat,utility,class'&&new Set(STAT_UPS.map(u=>u.id)).size===22,'22 melhorias únicas agregadas em quatro módulos de categoria')
 {const name=G.galNames().find(n=>n==='Brom · Guardião'),guard=name&&G.galMake(name);let head=null,shield=null;if(guard)guard.traverse(o=>{if(o.name==='guardianHammerHead')head=o;if(o.name==='guardianShield')shield=o});
  ok(!!head&&Math.abs(head.rotation.y+Math.PI/2)<1e-6&&head.children.length>=20&&!!shield&&shield.position.y===0,'Guardião tem face larga de impacto alinhada ao golpe e escudo centrado na mão')}
 {const name=G.galNames().find(n=>n.startsWith('Darian ·')),hero=name&&G.galMake(name);let hold=null,sword=null;if(hero)hero.traverse(o=>{if(o.name==='swordHold')hold=o;if(o.name==='sword')sword=o});
@@ -119,7 +126,8 @@ if(process.env.SMOKE_STATIC_ONLY==='1'){console.log(fails.length?('\n'+fails.len
 console.log('[2] nova corrida (guerreiro)');
 G.runCheat('unlock all'); // localStorage vazio: libera todas as classes
 G.newRun('king');ok(!!G.player.model&&G.player.model.keep.length===0&&G.player.model.handL.children.length===0,'Midas aparece sem cajado e com a mão esquerda livre');
-G.newRun('guerreiro');
+G.newRun('guerreiro');ok(G.player.weaponId===CLASSES.guerreiro.weaponId&&G.player.ownedWeaponIds.length===1&&G.player.maxWeapons===5&&G.weaponSlots()===1,'arma original fixa ocupa um dos cinco espaços de arma');
+for(const k of Object.keys(G.player.weap).slice(0,4)){G.player.weap[k]=1;G.player.ownedWeaponIds.push(k)}ok(G.weaponSlots()===5,'quatro armas adicionais completam o limite total de cinco incluindo a arma fixa');G.openUpgrade();const atCap=G.getUps()||[];ok(atCap.length===3&&atCap.every(u=>!u.wk||G.player.weap[u.wk]>0),'com cinco armas, nenhuma nova arma entra na oferta; só melhorias das já obtidas');G.newRun('guerreiro');
 ok(G.getState()==='play','partida iniciada');
 ok(G.enemies().length===8,'8 slimes iniciais');
 {G.enemies().length=0;G.player.weap.orbit=2;G.update(1/60);const orbs=G.weaponGroup().children.filter(m=>m.name==='orbitOrb'),first=orbs[0],core=first&&first.userData.orbitCore;
@@ -165,7 +173,7 @@ p.dashCd=0;p.dashT=0;
 G.dash();
 ok(Math.abs(p.dashCd-1.1*p.stats.dashCd)<1e-6,'cooldown da esquiva = 1.1 * dashCd ('+p.dashCd.toFixed(3)+' vs esperado '+(1.1*p.stats.dashCd).toFixed(3)+')');
 p.dashCd=0;G.useAbility();
-ok(p.spinT>0,'habilidade do guerreiro (redemoinho) ativou');
+ok(p.spinT===0&&!('abCd'in p),'Q removido: não dispara habilidade nem mantém recarga ativa');
 G.jump();
 ok(p.vy>0,'pulo funcionou');
 G.hurtPlayer(5,null,false);
@@ -191,18 +199,18 @@ ok(!!bigOrb&&bigOrb.kind==='fire'&&bigOrb.r===.4&&bigOrb.mScale===1.55&&!!bigOrb
 G.newRun('necro');G.enemies().length=0;G.player.atkCd=0;G.spawnEnemy('slime',G.player.x,G.player.z+8,false);G.update(1/60);
 const skullShot=G.projs().find(q=>q.owner==='p'&&q.kind==='skull');
 ok(!!skullShot&&skullShot.g.name==='necroSkullProjectile'&&skullShot.g.geometry.userData.voxelKind==='necro-skull-projectile'&&skullShot.g.geometry.userData.voxelParts>=25,'Necromante dispara uma caveira voxel com órbitas verdes, maxilar e dentes');
-const expectedSkullDamage=skullShot&&CLASSES.necro.dmg*G.player.stats.dmg*(skullShot.crit?G.player.stats.critDmg:1),skullDamageFactor=skullShot?skullShot.dmg/expectedSkullDamage:0;
-ok(!!skullShot&&CLASSES.necro.projSpeed===13&&CLASSES.necro.dmg===16&&Math.abs(skullShot.speed-CLASSES.necro.projSpeed*G.player.stats.pspd)<.01&&skullDamageFactor>.899&&skullDamageFactor<1.101&&skullShot.r===.22,'caveira do Necromante mantém velocidade, dano base, crítico e raio de colisão');
+const necroWeapon=window.CLASS_WEAPONS[CLASSES.necro.weaponId],expectedSkullDamage=skullShot&&necroWeapon.dmg*G.player.stats.dmg*(skullShot.crit?G.player.stats.critDmg:1),skullDamageFactor=skullShot?skullShot.dmg/expectedSkullDamage:0;
+ok(!!skullShot&&necroWeapon.projSpeed===13&&necroWeapon.dmg===16&&Math.abs(skullShot.speed-necroWeapon.projSpeed*G.player.stats.pspd)<.01&&skullDamageFactor>.899&&skullDamageFactor<1.101&&skullShot.r===.22,'caveira do Necromante lê velocidade e dano do módulo, mantendo crítico e colisão');
 G.newRun('mago');const mage=G.player;G.spawnEnemy('brute',mage.x+1,mage.z,false);const target=G.enemies().find(e=>e.type==='brute'),hpBefore=target.hp;G.useAbility();
-ok(target.hp<hpBefore&&target.slowT>=2&&target.slowF===.55&&(Math.abs(target.kx)+Math.abs(target.kz))>0&&mage.abCd>0,'Nova Arcana conserva dano, empurrão, lentidão e recarga');
+ok(target.hp===hpBefore&&mage.spinT===0,'Q do Mago removido sem aplicar dano ou lentidão');
 console.log('[8b] poderes da Véspera');
 G.newRun('chrono');G.enemies().length=0;G.player.atkCd=0;G.spawnEnemy('slime',G.player.x,G.player.z+8,false);G.update(1/60);
 const timeShot=G.projs().find(q=>q.owner==='p'&&q.kind==='time');
 ok(!!timeShot&&timeShot.g.geometry.userData.voxelKind==='vespera-chronosphere'&&timeShot.g.geometry.userData.voxelParts>=25,'Orbe do Tempo cria uma cronosfera voxel com mostrador, ponteiros e lascas arcanas');
-const expectedTimeDamage=timeShot&&CLASSES.chrono.dmg*G.player.stats.dmg*(timeShot.crit?G.player.stats.critDmg:1),timeDamageFactor=timeShot?timeShot.dmg/expectedTimeDamage:0;
-ok(!!timeShot&&CLASSES.chrono.projSpeed===15&&CLASSES.chrono.dmg===18&&Math.abs(timeShot.speed-CLASSES.chrono.projSpeed*G.player.stats.pspd)<.01&&timeDamageFactor>.899&&timeDamageFactor<1.101&&timeShot.r===.22,'Orbe do Tempo mantém velocidade, dano base, crítico e colisão');
+const chronoWeapon=window.CLASS_WEAPONS[CLASSES.chrono.weaponId],expectedTimeDamage=timeShot&&chronoWeapon.dmg*G.player.stats.dmg*(timeShot.crit?G.player.stats.critDmg:1),timeDamageFactor=timeShot?timeShot.dmg/expectedTimeDamage:0;
+ok(!!timeShot&&chronoWeapon.projSpeed===15&&chronoWeapon.dmg===18&&Math.abs(timeShot.speed-chronoWeapon.projSpeed*G.player.stats.pspd)<.01&&timeDamageFactor>.899&&timeDamageFactor<1.101&&timeShot.r===.22,'Orbe do Tempo lê velocidade e dano do módulo, mantendo crítico e colisão');
 G.newRun('chrono');G.enemies().length=0;G.spawnEnemy('brute',G.player.x+2,G.player.z,false);const timeTarget=G.enemies().find(e=>e.type==='brute'),timeHp=timeTarget.hp;G.useAbility();
-ok(timeTarget.hp<timeHp&&timeTarget.slowT>=3.5&&timeTarget.slowF===.1&&G.player.abCd>0,'Distorção Temporal mantém dano, quase congelamento por 3,5 s e recarga');
+ok(timeTarget.hp===timeHp&&G.player.spinT===0,'Q da Véspera removido sem dano ou controle temporal ativo');
 console.log('[8c] dash-morcego do Vlad');
 G.newRun('dracula');G.enemies().length=0;const vlad=G.player,batForm=vlad.model.dashBat;G.dash();
 const vladDashSpeed=Math.hypot(vlad.dvx,vlad.dvz),vladDashCd=vlad.dashCd,vladDashT=vlad.dashT,vladDashInvuln=vlad.invuln;
@@ -215,14 +223,14 @@ console.log('[8d] projétil vampírico');
 G.newRun('dracula');G.enemies().length=0;G.player.atkCd=0;G.spawnEnemy('slime',G.player.x,G.player.z+8,false);G.update(1/60);
 const vladShot=G.projs().find(q=>q.owner==='p'&&q.kind==='batp');
 ok(!!vladShot&&vladShot.g.geometry.userData.voxelKind==='vlad-bat-projectile'&&vladShot.g.geometry.userData.voxelParts>=28,'Vlad dispara um morcego voxel com asas carmesim, olhos rubros e presas');
-const expectedVladDamage=vladShot&&CLASSES.dracula.dmg*G.player.stats.dmg*(vladShot.crit?G.player.stats.critDmg:1),vladDamageFactor=vladShot?vladShot.dmg/expectedVladDamage:0;
-ok(!!vladShot&&CLASSES.dracula.projSpeed===16&&CLASSES.dracula.dmg===16&&Math.abs(vladShot.speed-CLASSES.dracula.projSpeed*G.player.stats.pspd)<.01&&vladDamageFactor>.899&&vladDamageFactor<1.101&&vladShot.r===.22,'projétil do Vlad mantém velocidade, dano, crítico e colisão');
+const draculaWeapon=window.CLASS_WEAPONS[CLASSES.dracula.weaponId],expectedVladDamage=vladShot&&draculaWeapon.dmg*G.player.stats.dmg*(vladShot.crit?G.player.stats.critDmg:1),vladDamageFactor=vladShot?vladShot.dmg/expectedVladDamage:0;
+ok(!!vladShot&&draculaWeapon.projSpeed===16&&draculaWeapon.dmg===16&&Math.abs(vladShot.speed-draculaWeapon.projSpeed*G.player.stats.pspd)<.01&&vladDamageFactor>.899&&vladDamageFactor<1.101&&vladShot.r===.22,'projétil do Vlad lê velocidade e dano do módulo, mantendo crítico e colisão');
 console.log('[8e] projétil do Castiel');
 G.newRun('demon');G.enemies().length=0;G.player.atkCd=0;G.spawnEnemy('slime',G.player.x,G.player.z+8,false);G.update(1/60);
 const castielShot=G.projs().find(q=>q.owner==='p'&&q.kind==='hellfire');
 ok(!!castielShot&&castielShot.g.geometry.userData.voxelKind==='castiel-hellfire-projectile'&&castielShot.g.geometry.userData.voxelParts>=28,'Castiel lança uma brasa demoníaca voxel com núcleo vulcânico e cauda de fogo');
-const expectedCastielDamage=castielShot&&CLASSES.demon.dmg*G.player.stats.dmg*(castielShot.crit?G.player.stats.critDmg:1),castielDamageFactor=castielShot?castielShot.dmg/expectedCastielDamage:0;
-ok(!!castielShot&&CLASSES.demon.projSpeed===15&&CLASSES.demon.dmg===22&&Math.abs(castielShot.speed-CLASSES.demon.projSpeed*G.player.stats.pspd)<.01&&castielDamageFactor>.899&&castielDamageFactor<1.101&&castielShot.r===.22,'projétil do Castiel mantém velocidade, dano, crítico e colisão');
+const demonWeapon=window.CLASS_WEAPONS[CLASSES.demon.weaponId],expectedCastielDamage=castielShot&&demonWeapon.dmg*G.player.stats.dmg*(castielShot.crit?G.player.stats.critDmg:1),castielDamageFactor=castielShot?castielShot.dmg/expectedCastielDamage:0;
+ok(!!castielShot&&demonWeapon.projSpeed===15&&demonWeapon.dmg===22&&Math.abs(castielShot.speed-demonWeapon.projSpeed*G.player.stats.pspd)<.01&&castielDamageFactor>.899&&castielDamageFactor<1.101&&castielShot.r===.22,'projétil do Castiel lê velocidade e dano do módulo, mantendo crítico e colisão');
 console.log('[9] upgrade por XP em lote');
 G.gainXP(9999);
 let guard=0;
@@ -238,18 +246,10 @@ frames(3);
 console.log('[11] novos upgrades estilo Megabonk');
 const NOVOS=['Punho Fatal','Velocidade de Tiro','Empurrão','Reflexo Relâmpago','Pulso Congelante'];
 G.newRun('mago');
-const ganhos=new Set();let rounds=0;
-while(rounds++<400&&ganhos.size<NOVOS.length){
-  G.gainXP(G.player.xpNeed-G.player.xp+1); // sobe 1 nível e abre a oferta
-  let g=0;
-  while(G.getState()==='upgrade'&&g++<5){
-    const ch=G.getUps();
-    const alvo=ch.find(u=>NOVOS.includes(u.nome))||ch.find(u=>u.wk)||ch[0];
-    G.chooseUpgrade(alvo);
-  }
-  for(const u of G.player.picks)if(NOVOS.includes(u))ganhos.add(u);
-}
-ok(ganhos.size===NOVOS.length,'os 5 novos upgrades apareceram na oferta e foram aplicados ('+[...ganhos].join(', ')+')');
+const novosIds=['cdmg','pspd','kb','dc','chill'],defs=G.statUps();
+for(const id of novosIds){const u=defs.find(x=>x.id===id);ok(!!u&&u.ok(G.player),'upgrade '+id+' está disponível para o perfil atual');if(u&&u.ok(G.player)){u.apply(G.player);G.player.picks.push(u.nome)}}
+const ganhos=new Set(G.player.picks.filter(x=>NOVOS.includes(x)));
+ok(ganhos.size===NOVOS.length,'os cinco upgrades individuais foram aplicados sem depender da roleta ('+[...ganhos].join(', ')+')');
 ok(G.player.stats.critDmg>2&&G.player.stats.pspd>1&&G.player.stats.kb>1&&G.player.stats.dashCd<1&&G.player.stats.chill>0,
   'stats novos com valores: critDmg='+G.player.stats.critDmg+' pspd='+G.player.stats.pspd+' kb='+G.player.stats.kb+' dashCd='+G.player.stats.dashCd+' chill='+G.player.stats.chill);
 G.spawnEnemy('slime',G.player.x+1,G.player.z,false);

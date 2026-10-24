@@ -7,18 +7,7 @@ window.CLASSES.necro = {
   hp: 85,
   armor: 0,
   speed: 5.2,
-  atkCd: .8,
-  dmg: 16,
-  kind: 'proj',
-  proj: 'skull',
-  projSpeed: 13,
-  range: 13,
-  pierce: 0,
-  ab: {
-    nome: 'Legião dos Mortos',
-    cd: 9,
-    desc: 'Ergue 3 esqueletos na hora e cura os seus.'
-  },
+  weaponId: 'necro_skull',
   pal: {
     body: 0x1f1b18,
     trim: 0x666561,

@@ -7,18 +7,7 @@ window.CLASSES.human = {
   hp: 50,
   armor: 0,
   speed: 2.6,
-  atkCd: .6,
-  dmg: 6,
-  kind: 'proj',
-  proj: 'rock',
-  projSpeed: 13,
-  range: 9,
-  pierce: 0,
-  ab: {
-    nome: 'Pedrada Caprichada',
-    cd: 5,
-    desc: 'Joga 3 pedras de uma vez, com bastante vontade. Pronto, esse é o poder especial.'
-  },
+  weaponId: 'human_stone',
   pal: {
     body: 0x12b5b5,
     trim: 0x3838c8,

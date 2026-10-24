@@ -7,16 +7,7 @@ window.CLASSES.tank = {
   hp: 220,
   armor: .25,
   speed: 4.6,
-  atkCd: 1,
-  dmg: 22,
-  kind: 'slam',
-  radius: 2.7,
-  knock: 10,
-  ab: {
-    nome: 'Baluarte',
-    cd: 8,
-    desc: 'Escudo de 4 s que bloqueia 85% do dano e solta uma onda de choque.'
-  },
+  weaponId: 'guardian_hammer',
   pal: {
     body: 0x5d6672,
     trim: 0x2f5fa8,

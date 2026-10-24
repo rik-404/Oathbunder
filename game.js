@@ -100,11 +100,11 @@ const ORDER=['mago','arqueiro','guerreiro','tank','necro','chrono','pistol','dra
 
 // armas: dados e lógica em assets/js/weapons/ (carregados antes deste arquivo)
 const WEAPONS=window.WEAPONS||{},WEAPON_UPDATERS=window.WEAPON_UPDATERS||{},WEAPON_RESETS=window.WEAPON_RESETS||[];
-// melhorias de nível em assets/js/upgrades.js (const STAT_UPS — carregada antes deste arquivo)
+// melhorias de nível em assets/js/upgrades/ (STAT_UPS agregado pelo index.js antes deste arquivo)
 // símbolos pra reconhecer cada poder e classe de relance
 const ICONS={
   'Orbes Giratórios':'🔮','Raio Celeste':'🌩️','Aura de Brasa':'🔥','Canhão de Estilhaços':'💥',
-  'Força':'💪','Mãos Rápidas':'⚡','Botas Leves':'👟','Coração de Pedra':'❤️','Olho Certeiro':'🎯','Sede de Sangue':'🩸','Placas de Ferro':'🧱','Regeneração':'💚','Ímã':'🧲','Sabedoria':'📖','Alcance Maior':'💥','Foco':'⏳','Poção Grande':'🧪',
+  'Força':'💪','Mãos Rápidas':'⚡','Botas Leves':'👟','Coração de Pedra':'❤️','Olho Certeiro':'🎯','Vampirismo':'🦷','Placas de Ferro':'🧱','Regeneração':'💚','Ímã':'🧲','Sabedoria':'📖','Alcance Maior':'💥','Foco':'⏳','Poção Grande':'🧪',
   'Projétil Extra':'✨','Perfuração':'➡️','Espinhos':'🌵','Horda Óssea':'🦴','Ossos Afiados':'⚰️',
   'Punho Fatal':'💢','Velocidade de Tiro':'🚀','Empurrão':'🫱','Reflexo Relâmpago':'💨','Pulso Congelante':'❄️',
 };
@@ -114,15 +114,15 @@ let CLSIMG={};try{for(const k in CLSICON){const im=new Image();im.src=CLSICON[k]
 const clsImg=k=>`<img class="cimg" src="${CLSICON[k]}" alt="" title="${CLASSES[k]?CLASSES[k].nome:k}">`; // HTML: tamanho segue o font-size do pai (em)
 const CLSTIPO={mago:'Mago',arqueiro:'Arqueiro',guerreiro:'Guerreiro',tank:'Guardião',necro:'Necromante',chrono:'Chronomante',pistol:'Pistoleiro',dracula:'Vampiro',demon:'Demônio',future:'Viajante',human:'Humano',king:'Rei'};
 // ícones de poder/melhoria/interface: pixel art 16×16 em assets/images/icons/upg/ (via node _genicons.js)
-const UPGSLUG={'Orbes Giratórios':'orbes-giratorios','Raio Celeste':'raio-celeste','Aura de Brasa':'aura-brasa','Canhão de Estilhaços':'canhao',};
+const UPGSLUG={'Orbes Giratórios':'orbes-giratorios','Raio Celeste':'raio-celeste','Aura de Brasa':'aura-brasa','Canhão de Estilhaços':'canhao','Vampirismo':'vampirismo'};
 const upgImg=n=>{const s=UPGSLUG[n];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=3" alt="">`:''};
 // emojis antigos → PNG (shop/ conquistas/ HUD continuam usando o char no fonte)
-const EMICON={'❤️':'coracao','💪':'forca','⚡':'maos-rapidas','👟':'botas-leves','🎯':'olho-certeiro','💥':'alcance-maior','⏳':'foco','⌛':'tempo','⏱️':'foco','🧱':'placas-ferro','💚':'regeneracao','🩸':'pacto','✨':'projetil-extra','➡️':'perfuracao','🌵':'espinhos','💢':'punho-fatal','🚀':'vel-tiro','🫱':'empurrao','💨':'reflexo-relampago','❄️':'gelo','📖':'sabedoria','🧲':'ima','🪙':'ouro-real','🔒':'trancado','🔓':'desbloquear','💀':'craneo','☠️':'craneo','⭐':'estrela','🎖️':'estrela','👹':'golem','⚔️':'espadas','🗡️':'ossos-afiados','🦴':'horda-ossea','🧠':'ia'};
+const EMICON={'❤️':'coracao','💪':'forca','⚡':'maos-rapidas','👟':'botas-leves','🎯':'olho-certeiro','💥':'alcance-maior','⏳':'foco','⌛':'tempo','⏱️':'foco','🧱':'placas-ferro','💚':'regeneracao','🩸':'pacto','🦷':'vampirismo','✨':'projetil-extra','➡️':'perfuracao','🌵':'espinhos','💢':'punho-fatal','🚀':'vel-tiro','🫱':'empurrao','💨':'reflexo-relampago','❄️':'gelo','📖':'sabedoria','🧲':'ima','🪙':'ouro-real','🔒':'trancado','🔓':'desbloquear','💀':'craneo','☠️':'craneo','⭐':'estrela','🎖️':'estrela','👹':'golem','⚔️':'espadas','🗡️':'ossos-afiados','🦴':'horda-ossea','🧠':'ia'};
 const emIc=e=>{const s=EMICON[e];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=3" alt="">`:''};
 const icon=n=>upgImg(n)||ICONS[n]||'';
 const WEAPONS_NAMES=new Set(Object.values(WEAPONS).map(w=>w.nome));
 const BUILD_LIMITS={weapons:5,upgrades:5};
-const weaponSlots=p=>Object.values(p.weap||{}).filter(l=>l>0).length;
+const weaponSlots=p=>new Set([...(p.ownedWeaponIds||[]),...Object.entries(p.weap||{}).filter(([,l])=>l>0).map(([k])=>k)]).size;
 const upgradeSlots=p=>Object.keys(p.upgIds||{}).length;
 const UNLOCK={guerreiro:150}; // compra com ouro (Mago começa liberado)
 // Metas e progresso são definidos em assets/js/functions/missions.js; o motor fornece os dados vivos da partida.
@@ -824,68 +824,26 @@ function gainXP(v){player.xp+=v*player.stats.xpMul;while(player.xp>=player.xpNee
 const xpNeed=l=>Math.floor(5+l*3.2+l*l*.35);
 
 /* ================= ataques automáticos ================= */
+function weaponFor(cls){const C=CLASSES[cls],W=window.CLASS_WEAPONS&&window.CLASS_WEAPONS[C&&C.weaponId];if(!W)throw new Error(`Arma-base não registrada para a classe: ${cls}`);return W}
 function nearest(range){let b=null,bd=range;for(const e of enemies){const d=Math.hypot(e.x-player.x,e.z-player.z)-e.r;if(d<bd){bd=d;b=e}}return b}
 function autoAttack(){
-  const C=CLASSES[player.cls],st=player.stats;if(player.atkCd>0||player.spinT>0)return;
-  if(C.kind==='proj'){const t=nearest(C.range);if(!t)return;player.atkCd=C.atkCd/st.atkSpd;player.atkAnim=1;
-    const sp=C.projSpeed*st.pspd;
+  const C=CLASSES[player.cls],W=weaponFor(player.cls),st=player.stats;if(player.atkCd>0||player.spinT>0)return;
+  if(W.kind==='proj'){const t=nearest(W.range);if(!t)return;player.atkCd=W.atkCd/st.atkSpd;player.atkAnim=1;
+    const sp=W.projSpeed*st.pspd;
     const lead=Math.hypot(t.x-player.x,t.z-player.z)/sp;const tx=t.x+(t.mvx||0)*lead,tz=t.z+(t.mvz||0)*lead;const a=Math.atan2(tx-player.x,tz-player.z);player.aimAng=a;
-    let big=false;if(player.cls==='mago'){player.orbN=(player.orbN||0)+1;big=player.orbN%4===0}const n=1+st.multi;for(let i=0;i<n;i++){const aa=a+(i-(n-1)/2)*.15;const borb=big&&i===0;const r=roll(C.dmg*(borb?1.7:1));
-      spawnProj({x:player.x+Math.sin(aa)*.45,z:player.z+Math.cos(aa)*.45,y:.7+player.y,a:aa,speed:sp,dmg:r.d,crit:r.crit,owner:'p',kind:C.proj,pierce:C.pierce+st.pierce,r:C.proj==='fire'?(borb?.4:.26):.22,mScale:borb?1.55:1,big:borb,life:C.range/sp+.15})}
+    let big=false;if(player.cls==='mago'){player.orbN=(player.orbN||0)+1;big=player.orbN%4===0}const n=1+st.multi;for(let i=0;i<n;i++){const aa=a+(i-(n-1)/2)*.15;const borb=big&&i===0;const r=roll(W.dmg*(borb?1.7:1));
+      spawnProj({x:player.x+Math.sin(aa)*.45,z:player.z+Math.cos(aa)*.45,y:.7+player.y,a:aa,speed:sp,dmg:r.d,crit:r.crit,owner:'p',kind:W.proj,pierce:W.pierce+st.pierce,r:W.proj==='fire'?(borb?.4:.26):.22,mScale:borb?1.55:1,big:borb,life:W.range/sp+.15})}
     if(player.cls==='arqueiro')burst(player.x+Math.sin(a)*.52,.8+player.y,player.z+Math.cos(a)*.52,0x7fcf5a,3,{emi:.45,speed:1.8,up0:.1,up1:.8,life:.18,size:.055})}
-  else if(C.kind==='melee'){const R=C.range*st.area,t=nearest(R+.6);if(!t)return;player.atkCd=C.atkCd/st.atkSpd;player.atkAnim=1;const a=Math.atan2(t.x-player.x,t.z-player.z);player.aimAng=a;let hit=false;
-    for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d>R+e.r)continue;if(Math.abs(angDiff(a,Math.atan2(dx,dz)))>C.arc/2&&d>e.r+.45)continue;const r=roll(C.dmg);damageEnemy(e,r.d,r.crit,dx/d*C.knock*st.kb,dz/d*C.knock*st.kb);hit=true}
-    if(player.cls==='guerreiro')swingFX(R,C.arc,a,0xff5a42);else swingFX(R,C.arc,a,0xffffff);
+  else if(W.kind==='melee'){const R=W.range*st.area,t=nearest(R+.6);if(!t)return;player.atkCd=W.atkCd/st.atkSpd;player.atkAnim=1;const a=Math.atan2(t.x-player.x,t.z-player.z);player.aimAng=a;let hit=false;
+    for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d>R+e.r)continue;if(Math.abs(angDiff(a,Math.atan2(dx,dz)))>W.arc/2&&d>e.r+.45)continue;const r=roll(W.dmg);damageEnemy(e,r.d,r.crit,dx/d*W.knock*st.kb,dz/d*W.knock*st.kb);hit=true}
+    if(player.cls==='guerreiro')swingFX(R,W.arc,a,0xff5a42);else swingFX(R,W.arc,a,0xffffff);
     if(hit){if(player.cls==='guerreiro')burst(player.x+Math.sin(a)*.95,.78+player.y,player.z+Math.cos(a)*.95,0xffb08a,5,{emi:.45,speed:2.8,up0:.2,up1:1.4,life:.22,size:.06});addShake(.06);S('melee');hitStop(.03)}}
-  else{const R=C.radius*st.area,t=nearest(R);if(!t)return;player.atkCd=C.atkCd/st.atkSpd;player.atkAnim=1;player.aimAng=Math.atan2(t.x-player.x,t.z-player.z);
-    for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(C.dmg);damageEnemy(e,r.d,r.crit,dx/d*C.knock*st.kb,dz/d*C.knock*st.kb)}}
-    if(player.cls==='tank')slamFX(player.x,player.z,R);else{ringFX(player.x,player.z,R,0x9fc4ff,.35);burst(player.x,.15,player.z,0x8b7a66,10,{speed:5,up0:.5,up1:2.5})}
+  else{const R=W.radius*st.area,t=nearest(R);if(!t)return;player.atkCd=W.atkCd/st.atkSpd;player.atkAnim=1;player.aimAng=Math.atan2(t.x-player.x,t.z-player.z);
+    for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(W.dmg);damageEnemy(e,r.d,r.crit,dx/d*W.knock*st.kb,dz/d*W.knock*st.kb)}}
+  if(player.cls==='tank')slamFX(player.x,player.z,R);else{ringFX(player.x,player.z,R,0x9fc4ff,.35);burst(player.x,.15,player.z,0x8b7a66,10,{speed:5,up0:.5,up1:2.5})}
     addShake(.12);S('melee');hitStop(.03)}
 }
-function useAbility(){
-  if(state!=='play'||player.abCd>0)return;const C=CLASSES[player.cls],st=player.stats;player.abCd=C.ab.cd*st.cdr;player.atkAnim=1;S('ability');
-  if(player.cls==='mago'){const R=4.5*st.area;for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(C.dmg*2.5);damageEnemy(e,r.d,r.crit,dx/d*13*st.kb,dz/d*13*st.kb);e.slowT=Math.max(e.slowT||0,2);e.slowF=.55}}
-    arcaneNovaFX(player.x,player.z,R);addShake(.3)}
-  else if(player.cls==='arqueiro'){const t=nearest(18);const a0=t?Math.atan2(t.x-player.x,t.z-player.z):player.facing;player.aimAng=a0;
-    for(let i=0;i<9;i++){const aa=a0+(i-4)*.12;const r=roll(C.dmg*1.2);spawnProj({x:player.x+Math.sin(aa)*.45,z:player.z+Math.cos(aa)*.45,y:.7+player.y,a:aa,speed:C.projSpeed*st.pspd,dmg:r.d,crit:r.crit,owner:'p',kind:'arrow',pierce:3+st.pierce,life:.8})}
-    ringFX(player.x,player.z,1.55,0x7fcf5a,.24);
-    burst(player.x,.8,player.z,0x7fcf5a,18,{emi:.65,speed:5.2,up0:.5,up1:2.1});
-    burst(player.x,.8,player.z,0xd23b2f,6,{emi:.25,speed:3.4,up0:.4,up1:1.6});addShake(.16)}
-  else if(player.cls==='guerreiro'){player.spinT=1.5;player.spinTick=0;
-    ringFX(player.x,player.z,2.4*st.area,0xff6a55,.3);
-    burst(player.x,.72,player.z,0xffb08a,16,{emi:.55,speed:4.5,up0:.4,up1:2});
-    burst(player.x,.72,player.z,0xd23b2f,5,{emi:.25,speed:3.2,up0:.3,up1:1.5});addShake(.18)}
-  else if(player.cls==='tank'){player.shieldT=4;const R=3.6*st.area;for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(30);damageEnemy(e,r.d,r.crit,dx/d*16*st.kb,dz/d*16*st.kb)}}
-    baluarteFX(player.x,player.z,R);addShake(.35)}
-  else if(player.cls==='necro'){for(let i=0;i<3;i++)summonMinion();for(const m of minions)m.hp=m.maxHp;
-    ringFX(player.x,player.z,3*st.area,0x7ee0a8,.45);burst(player.x,.6,player.z,0x7ee0a8,24,{emi:1,speed:6,up0:.5,up1:3});addShake(.2)}
-  else if(player.cls==='chrono'){const R=7*st.area;for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){e.slowT=Math.max(e.slowT||0,3.5);e.slowF=.1;const r=roll(C.dmg*1.5);damageEnemy(e,r.d,r.crit,0,0,true)}}
-    chronoRiftFX(player.x,player.z,R);addShake(.2)}
-  else if(player.cls==='demon'){const R=5.5*st.area;for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(C.dmg*2);damageEnemy(e,r.d,r.crit,dx/d*13*st.kb,dz/d*13*st.kb)}}
-    ringFX(player.x,player.z,R,0xff6a2a,.55);ringFX(player.x,player.z,R*.6,0xffb04a,.45);burst(player.x,.5,player.z,0xff6a2a,32,{emi:1,speed:7,up0:.5,up1:3.5});
-    for(let i=0;i<10;i++)burst(player.x+rand(-1.5,1.5),.3,player.z+rand(-1.5,1.5),0x7a1a0a,2,{emi:.6,speed:3,up0:1,up1:3});addShake(.3)}
-  else if(player.cls==='future'){const t=nearest(16),a=t?Math.atan2(t.x-player.x,t.z-player.z):player.facing;player.aimAng=a;
-    let tx=player.x,tz=player.z;for(let s=.6;s<=7;s+=.5){const qx=player.x+Math.sin(a)*s,qz=player.z+Math.cos(a)*s;if(collide(qx,qz,player.r))break;tx=qx;tz=qz}
-    burst(player.x,.6+player.y,player.z,0x3bf0d0,18,{emi:1,speed:5}); // some do ponto de saída
-    player.x=tx;player.z=tz;player.invuln=Math.max(player.invuln,.6);camFx=tx;camFz=tz;
-    const R=2.8*st.area;for(const e of enemies.slice()){const d=Math.hypot(e.x-tx,e.z-tz)||.01;if(d<R+e.r){const r=roll(C.dmg*1.9);damageEnemy(e,r.d,r.crit,(e.x-tx)/d*9*st.kb,(e.z-tz)/d*9*st.kb)}}
-    ringFX(tx,tz,R,0x3bf0d0,.5);burst(tx,.6,tz,0x1affd8,26,{emi:1,speed:6,up0:.5,up1:3});addShake(.25)}
-  else if(player.cls==='king'){for(let i=0;i<4;i++)summonMinion('soldier');
-    ringFX(player.x,player.z,3*st.area,0xf2c14b,.45);burst(player.x,.6,player.z,0xf2c14b,24,{emi:1,speed:6,up0:.5,up1:3});addShake(.2)}
-  else if(player.cls==='human'){const t=nearest(14),a0=t?Math.atan2(t.x-player.x,t.z-player.z):player.facing;player.aimAng=a0;
-    for(let i=0;i<3;i++){const aa=a0+(i-1)*.14;const r=roll(C.dmg*1.2);spawnProj({x:player.x+Math.sin(aa)*.45,z:player.z+Math.cos(aa)*.45,y:.7+player.y,a:aa,speed:C.projSpeed*st.pspd,dmg:r.d,crit:r.crit,owner:'p',kind:'rock',pierce:st.pierce,r:.2,life:1.3})}
-    burst(player.x,.7,player.z,0x9a9a94,6,{speed:3});addShake(.08)}
-  else if(player.cls==='dracula'){const R=5*st.area;let dealt=0;
-    for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(C.dmg*1.6);damageEnemy(e,r.d,r.crit,dx/d*6*st.kb,dz/d*6*st.kb);dealt+=r.d}}
-    if(dealt>0)healPlayer(Math.min(player.maxHp*.25,dealt*.18)); // cura forte, mas não enche a vida inteira numa horda
-    ringFX(player.x,player.z,R,0x9c1f3a,.5);ringFX(player.x,player.z,R*.6,0xc23a55,.4);burst(player.x,.6,player.z,0x7a1024,26,{emi:.5,speed:6,up0:.5,up1:3});
-    for(let i=0;i<12;i++)burst(player.x+rand(-1.2,1.2),.7+player.y,player.z+rand(-1.2,1.2),0x2a1f38,2,{emi:.3,speed:3,up0:.5,up1:2});addShake(.2)}
-  else if(player.cls==='pistol'){const near=enemies.slice().map(e=>({e,d:Math.hypot(e.x-player.x,e.z-player.z)})).filter(o=>!o.e.dead&&o.d<16).sort((a,b)=>a.d-b.d).slice(0,6);
-    if(near[0])player.aimAng=Math.atan2(near[0].e.x-player.x,near[0].e.z-player.z);
-    for(const o of near){const e=o.e,a=Math.atan2(e.x-player.x,e.z-player.z),r=roll(C.dmg*2.2);damageEnemy(e,r.d,true,Math.sin(a)*5,Math.cos(a)*5);
-      burst(e.x,.6,e.z,0xffe08a,6,{emi:1,speed:3});ringFX(e.x,e.z,.6,0xffd27a,.2)}
-    burst(player.x+Math.sin(player.aimAng)*.5,.8+player.y,player.z+Math.cos(player.aimAng)*.5,0xfff4c8,10,{emi:1,speed:5});addShake(.22)}
-}
+function useAbility(){/* Habilidades Q removidas; passivas serão implementadas separadamente. */}
 function dash(){
   if(player.dashCd>0||player.dashT>0)return;let dx=moveVec.x,dz=moveVec.z;if(Math.hypot(dx,dz)<.1){dx=Math.sin(player.facing);dz=Math.cos(player.facing)}
   const l=Math.hypot(dx,dz);player.dvx=dx/l*18;player.dvz=dz/l*18;player.dashT=.17;player.dashCd=1.1*player.stats.dashCd;player.invuln=Math.max(player.invuln,.3);
@@ -991,10 +949,10 @@ function updateMinions(dt){
 function newRun(cls){
   if(!isUnlocked(cls))return;
   setPlayerPoisonTint(false);
-  const C=CLASSES[cls];selCls=cls;store.set('cv_cls',cls);
-  Object.assign(player,{cls,x:W/2,z:H/2,y:0,vy:0,r:.32,maxHp:C.hp,hp:C.hp,facing:Math.PI,atkCd:.5,abCd:0,dashCd:0,dashT:0,dvx:0,dvz:0,invuln:1,shieldT:0,spinT:0,spinTick:0,spinAng:0,walk:0,atkAnim:0,flash:0,aimAng:Math.PI,minCap:cls==='necro'?3:0,minDmg:1,orbN:0,
+  const C=CLASSES[cls],weapon=weaponFor(cls);selCls=cls;store.set('cv_cls',cls);
+  Object.assign(player,{cls,weaponId:weapon.id,ownedWeaponIds:[weapon.id],maxWeapons:BUILD_LIMITS.weapons,x:W/2,z:H/2,y:0,vy:0,r:.32,maxHp:C.hp,hp:C.hp,facing:Math.PI,atkCd:.5,dashCd:0,dashT:0,dvx:0,dvz:0,invuln:1,shieldT:0,spinT:0,spinTick:0,spinAng:0,walk:0,atkAnim:0,flash:0,aimAng:Math.PI,minCap:cls==='necro'?3:0,minDmg:1,orbN:0,
     lvl:1,xp:0,xpNeed:xpNeed(1),weap:Object.fromEntries(Object.keys(WEAPONS).map(k=>[k,0])),
-    stats:{dmg:1,atkSpd:1,move:1,cdr:1,ls:C.lsBase||0,crit:C.critBase||.05,armor:C.armor,multi:0,pierce:0,area:1,thorns:0,regen:0,magnet:1,xpMul:1,critDmg:2,pspd:1,kb:1,dashCd:1,chill:0},picks:[],upgIds:{}});
+    stats:{dmg:1,atkSpd:1,move:1,ls:weapon.lsBase||0,crit:weapon.critBase||.05,armor:C.armor,multi:0,pierce:0,area:1,thorns:0,regen:0,magnet:1,xpMul:1,critDmg:2,pspd:1,kb:1,dashCd:1,chill:0},picks:[],upgIds:{}});
   player.poisonT=0;player.poisonTick=0;
   applyShop(player);
   if(player.model)scene.remove(player.model.root);
@@ -1006,7 +964,7 @@ function newRun(cls){
   level=new THREE.Group();fxGroup=new THREE.Group();wGroup=new THREE.Group();scene.add(level,fxGroup,wGroup);
   buildField();makeGems();
   camYaw=player.facing;camDist=5.4;camFx=player.x;camFz=player.z;
-  $('#h-cls').textContent=C.nome;$('#sk-ab-n').textContent=C.ab.nome;$('#bossbar').hidden=true;
+  $('#h-cls').textContent=C.nome;$('#bossbar').hidden=true;
   for(let i=0;i<8;i++){const p=spawnPos(12,18);if(p)spawnEnemy('slime',p[0],p[1])}
   setScreen('play');lockMouse();camPitch=.5;toast('Sobreviva','Seus ataques são automáticos');
 }
@@ -1016,7 +974,7 @@ function openUpgrade(){
   const wSlots=weaponSlots(player),uSlots=upgradeSlots(player);
   $('#up-sub').textContent=`Build: ${wSlots}/${BUILD_LIMITS.weapons} armas · ${uSlots}/${BUILD_LIMITS.upgrades} melhorias — escolha uma opção ${upSource==='chest'?'(grátis) ':''}ou teclas 1/2/3.`;
   let pool=STAT_UPS.filter(u=>(!u.cls||u.cls.includes(player.cls))&&(!u.ok||u.ok(player))&&(player.upgIds[u.id]||uSlots<BUILD_LIMITS.upgrades)).map(u=>Object.assign({kind:u.cls?'cls':'stat'},u));
-  for(const k in WEAPONS){const l=player.weap[k];if(l<5&&(l>0||wSlots<BUILD_LIMITS.weapons)){const up={id:'w_'+k,kind:'weapon',nome:WEAPONS[k].nome+(l?' nv '+(l+1):''),desc:(l?'':'Nova arma. ')+WEAPONS[k].desc(l+1),apply:p=>p.weap[k]++,wk:k};pool.push(up)}}
+  for(const k in WEAPONS){const l=player.weap[k];if(l<5&&(l>0||wSlots<BUILD_LIMITS.weapons)){const up={id:'w_'+k,kind:'weapon',nome:WEAPONS[k].nome+(l?' nv '+(l+1):''),desc:(l?'':'Nova arma. ')+WEAPONS[k].desc(l+1),apply:p=>{if(!p.weap[k]&&p.ownedWeaponIds&&!p.ownedWeaponIds.includes(k))p.ownedWeaponIds.push(k);p.weap[k]++},wk:k};pool.push(up)}}
   const choice=[];while(choice.length<3&&pool.length){const u=pick(pool);choice.push(u);pool=pool.filter(x=>x.id!==u.id)}
   if(!choice.length){ // tudo no teto: recompensa de consolação encerra a cadeia de sorteios
     pendingUps=0;player.hp=Math.min(player.maxHp,player.hp+player.maxHp*.2);addCoins(10);
@@ -1071,13 +1029,13 @@ function setScreen(s){
   updateCoins();
 }
 function renderPause(){
-  const w=[];for(const k in WEAPONS)if(player.weap[k])w.push(`<div class="invslot" title="${WEAPONS[k].nome}">${icon(WEAPONS[k].nome)}<span class="q">${player.weap[k]}</span></div>`);
+  const base=window.CLASS_WEAPONS[player.weaponId],w=base?[`<div class="invslot" title="${base.nome} (arma fixa)">⚔️<span class="q">F</span></div>`]:[];for(const k in WEAPONS)if(player.weap[k])w.push(`<div class="invslot" title="${WEAPONS[k].nome}">${icon(WEAPONS[k].nome)}<span class="q">${player.weap[k]}</span></div>`);
   const c={};player.picks.forEach(n=>{if(!WEAPONS_NAMES.has(n))c[n]=(c[n]||0)+1});
   const up=Object.keys(c).map(n=>`<div class="invslot" title="${n}">${icon(n)||'●'}<span class="q">${c[n]}</span></div>`);
   $('#pause-inv').innerHTML=`<div class="invlabel">Armas ${weaponSlots(player)} / ${BUILD_LIMITS.weapons}</div><div class="invgrid">${w.length?w.join(''):'<span class="pnum">nenhuma ainda</span>'}</div>`+
     `<div class="invlabel">Melhorias ${upgradeSlots(player)} / ${BUILD_LIMITS.upgrades}</div><div class="invgrid">${up.length?up.join(''):'<span class="pnum">nenhuma ainda</span>'}</div>`;
   const st=player.stats,pct=v=>Math.round(v*100)+'%',mul=v=>'×'+(Math.round(v*100)/100);
-  const S=[[emIc('❤️')+' Vida',Math.round(player.maxHp)],[emIc('💪')+' Dano',mul(st.dmg)],[emIc('⚡')+' Vel. ataque',mul(st.atkSpd)],[emIc('👟')+' Vel. movimento',mul(st.move)],[emIc('🎯')+' Crítico',pct(st.crit)],[emIc('💥')+' Área',mul(st.area)],[emIc('⏳')+' Recarga hab.',mul(st.cdr)],[emIc('🧱')+' Armadura',pct(st.armor)]];
+  const S=[[emIc('❤️')+' Vida',Math.round(player.maxHp)],[emIc('💪')+' Dano',mul(st.dmg)],[emIc('⚡')+' Vel. ataque',mul(st.atkSpd)],[emIc('👟')+' Vel. movimento',mul(st.move)],[emIc('🎯')+' Crítico',pct(st.crit)],[emIc('💥')+' Área',mul(st.area)],[emIc('🧱')+' Armadura',pct(st.armor)]];
   if(st.regen)S.push([emIc('💚')+' Regeneração','+'+(Math.round(st.regen*10)/10)+'/s']);
   if(st.ls)S.push([emIc('🩸')+' Roubo de vida',pct(st.ls)]);
   if(st.thorns)S.push([emIc('🌵')+' Espinhos',pct(st.thorns)]);
@@ -1233,7 +1191,6 @@ function renderDetail(k){const C=CLASSES[k],best=store.get('cv_bestT',{}),det=$(
     `<div class="cd-meta">${best[k]?'★ Recorde '+fmtT(best[k]):'★ Sem recorde ainda'} · ${runs} corrida${runs===1?'':'s'}</div>`+
     `<p class="cd-role">${C.role}</p>`+
     `<div class="pips">${Object.entries(C.stats).map(([n,v])=>`<div class="pip-row" style="--c:${C.ui}"><span>${n}</span><i>${'<b class="on"></b>'.repeat(v)}${'<b></b>'.repeat(5-v)}</i></div>`).join('')}</div>`+
-    `<div class="ab"><strong>${clsImg(k)} ${C.ab.nome}<small>Q · ${C.ab.cd}s</small></strong><span>${C.ab.desc}</span></div>`+
     (locked&&MISSION[k]?`<div class="rec" style="color:var(--gold)">${emIc('🎯')} ${MISSION[k].desc}<br>Progresso: ${MISSION[k].fmt?MISSION[k].fmt(MISSION[k].prog()):fmtN(MISSION[k].prog())} / ${MISSION[k].fmt?MISSION[k].fmt(MISSION[k].goal):fmtN(MISSION[k].goal)} ${MISSION[k].label}</div>`:'')+
     (locked
       ?(MISSION[k]?`<button class="btn" id="startbtn" type="button" disabled style="opacity:.6;cursor:default">${emIc('🔒')} CUMPRA A MISSÃO</button>`
@@ -1272,7 +1229,7 @@ addEventListener('keydown',e=>{
   else if(state==='play'){
     if(e.code==='KeyM'){toggleMap();return}
     if(mapOpen){if(e.code==='Escape')toggleMap();return} // mapa aberto: ignora o resto
-    if(e.code==='KeyQ'||e.code==='KeyE')useAbility();if(e.code==='Space')jump();if(e.code==='ShiftLeft'||e.code==='ShiftRight'||e.code==='KeyX')dash();if(e.code==='Escape'||e.code==='KeyP')setScreen('pause')}
+    if(e.code==='Space')jump();if(e.code==='ShiftLeft'||e.code==='ShiftRight'||e.code==='KeyX')dash();if(e.code==='Escape'||e.code==='KeyP')setScreen('pause')}
   else if(state==='pause'){if(e.code==='KeyP'||e.code==='Enter'){setScreen('play');lockMouse()}}
   else if(state==='upgrade'){const i=['Digit1','Digit2','Digit3'].indexOf(e.code);const ch=$('#ups')._choice;if(i>=0&&ch&&ch[i]){chooseUpgrade(ch[i])}}
 });
@@ -1318,12 +1275,12 @@ bindCheck('#muteAll',setMuted);bindCheck('#optMuteAll',setMuted);
   addEventListener('touchend',end);addEventListener('touchcancel',end);
   function upd(t){let dx=t.clientX-ox,dy=t.clientY-oy;const l=Math.hypot(dx,dy),m=50;if(l>m){dx*=m/l;dy*=m/l}knob.style.transform=`translate(${dx}px,${dy}px)`;touchMove.x=dx/m;touchMove.y=dy/m}
   const tap=(id,fn)=>{const el=$(id);if(el)el.addEventListener('pointerdown',e=>{e.preventDefault();fn()})};
-  tap('#t-ab',useAbility);tap('#t-jump',jump);tap('#t-dash',dash);
+  tap('#t-jump',jump);tap('#t-dash',dash);
 })();
 
 /* ================= atualização ================= */
 function update(dt){
-  runTime+=dt;updAI(dt);const C=CLASSES[player.cls],st=player.stats;
+  runTime+=dt;updAI(dt);const C=CLASSES[player.cls],weapon=weaponFor(player.cls),st=player.stats;
   MISSION_SYSTEM.complete('chrono',runTime);
   // controle estilo Megabonk: direção relativa à câmera; o herói olha pra onde anda
   let ix=0,iz=0;if(keys.KeyW||keys.ArrowUp)iz+=1;if(keys.KeyS||keys.ArrowDown)iz-=1;if(keys.KeyD||keys.ArrowRight)ix+=1;if(keys.KeyA||keys.ArrowLeft)ix-=1;
@@ -1333,7 +1290,7 @@ function update(dt){
   let mx=fX*iz+rX*ix,mz=fZ*iz+rZ*ix;moveVec.x=mx;moveVec.z=mz;
   const moving=il>.1;
   if(moving)player.facing+=angDiff(player.facing,Math.atan2(mx,mz))*Math.min(1,dt*14);
-  player.atkCd-=dt;player.abCd=Math.max(0,player.abCd-dt);player.dashCd=Math.max(0,player.dashCd-dt);player.invuln-=dt;player.flash-=dt;player.shieldT=Math.max(0,player.shieldT-dt);
+  player.atkCd-=dt;player.dashCd=Math.max(0,player.dashCd-dt);player.invuln-=dt;player.flash-=dt;player.shieldT=Math.max(0,player.shieldT-dt);
   updatePoison(dt);
   if(st.regen>0&&player.hp<player.maxHp)healPlayer(st.regen*dt,true);
   if(player.dashT>0){player.dashT-=dt;moveEnt(player,player.dvx*dt,player.dvz*dt);if(Math.random()<.6)burst(player.x,.4+player.y,player.z,C.pal.body,1,{speed:.5,up0:0,up1:.5,grav:0,life:.3,size:.18})}
@@ -1348,7 +1305,7 @@ function update(dt){
         if(fireFx.lights[fireIndex])fireFx.lights[fireIndex].visible=false;
         for(let si=fireIndex*3;si<fireIndex*3+3;si++){const sm=fireFx.smokes[si];if(sm){sm.m.visible=false;sm.m.material.opacity=0}}}
       const R=3.25*st.area,cy=base?base.y+.62:relief(fire.x,fire.z)+.62;
-      for(const e of enemies.slice()){if(e.dead)continue;const dx=e.x-fire.x,dz=e.z-fire.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const hit=roll(C.dmg*1.5);damageEnemy(e,hit.d,hit.crit,dx/d*8*st.kb,dz/d*8*st.kb)}}
+      for(const e of enemies.slice()){if(e.dead)continue;const dx=e.x-fire.x,dz=e.z-fire.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const hit=roll(weapon.dmg*1.5);damageEnemy(e,hit.d,hit.crit,dx/d*8*st.kb,dz/d*8*st.kb)}}
       ringFX(fire.x,fire.z,R,0xff652e,.42);ringFX(fire.x,fire.z,R*.56,0xffc04a,.3);
       burst(fire.x,cy,fire.z,0xff5a2a,22,{emi:1,speed:5,up0:.3,up1:2.6,life:.52,size:.1});burst(fire.x,cy,fire.z,0xffc04a,15,{emi:1,speed:4,up0:.6,up1:2.8,life:.55,size:.075});burst(fire.x,cy,fire.z,0xfff1c0,8,{emi:1,speed:2.8,up0:.8,up1:3,life:.36,size:.055});addShake(.18);S('shot','fire')
     }else if(fireIndex>=0&&player.cls!=='demon'&&player.fireCd<=0){player.fireCd=.5;hurtPlayer(12,null,false);burst(player.x,.4,player.z,0xff7a1a,6,{emi:.7,speed:2.5,up0:.5,up1:2})}}
@@ -1356,12 +1313,12 @@ function update(dt){
   if(player.cls==='mago'&&landPos&&landPos.cry&&player.y<1.3){for(let i=0;i<landPos.cry.length;i++){const cr=landPos.cry[i];if(cr.used||Math.hypot(player.x-cr.x,player.z-cr.z)>=.9)continue;
       cr.used=true;const mesh=crystalMeshes[i];if(mesh){level.remove(mesh);crystalMeshes[i]=null}
       const R=3.25*st.area,cy=mesh?mesh.position.y+.62:relief(cr.x,cr.z)+.62;
-      for(const e of enemies.slice()){if(e.dead)continue;const dx=e.x-cr.x,dz=e.z-cr.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const hit=roll(C.dmg*1.5);damageEnemy(e,hit.d,hit.crit,dx/d*8*st.kb,dz/d*8*st.kb)}}
+      for(const e of enemies.slice()){if(e.dead)continue;const dx=e.x-cr.x,dz=e.z-cr.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const hit=roll(weapon.dmg*1.5);damageEnemy(e,hit.d,hit.crit,dx/d*8*st.kb,dz/d*8*st.kb)}}
       ringFX(cr.x,cr.z,R,0xb99dff,.4);ringFX(cr.x,cr.z,R*.56,0x8fe1ff,.28);
       burst(cr.x,cy,cr.z,0x8fe1ff,20,{emi:1,speed:4.8,up0:.3,up1:2.4,life:.5,size:.09});burst(cr.x,cy,cr.z,0xb99dff,14,{emi:1,speed:3.8,up0:.6,up1:2.8,life:.6,size:.075});burst(cr.x,cy,cr.z,0xf4f1ff,8,{emi:1,speed:2.5,up0:1,up1:3,life:.36,size:.055});addShake(.16);S('shot','fire')}}
   autoAttack();
   if(player.spinT>0){player.spinT-=dt;player.spinTick-=dt;if(player.spinTick<=0){player.spinTick=.16;const R=2.4*st.area;
-    for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(C.dmg*.55);damageEnemy(e,r.d,r.crit,dx/d*3*st.kb,dz/d*3*st.kb,true)}}
+    for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(weapon.dmg*.55);damageEnemy(e,r.d,r.crit,dx/d*3*st.kb,dz/d*3*st.kb,true)}}
     swingFX(R,TAU*.42,player.spinAng,0xff3a24);
     if(Math.random()<.38)burst(player.x+Math.sin(player.spinAng)*1.25,.72+player.y,player.z+Math.cos(player.spinAng)*1.25,Math.random()<.72?0xff6a55:0xf2b84b,1,{emi:.5,speed:1.2,up0:.1,up1:.8,grav:0,life:.18,size:.05})}}
   updWeapons(dt);
@@ -1644,9 +1601,8 @@ mm.addEventListener('pointerup',e=>{if(Math.hypot(e.clientX-px,e.clientY-py)<16&
 function hud(){
   $('#h-hp').style.width=(clamp(player.hp/player.maxHp,0,1)*100)+'%';$('#h-hpt').textContent=Math.max(0,Math.ceil(player.hp))+' / '+Math.round(player.maxHp);
   $('#xp-fill').style.width=(player.xp/player.xpNeed*100)+'%';$('#xp-lvl').textContent='NV '+player.lvl;$('#h-lvl').textContent='Nível '+player.lvl;
-  const C=CLASSES[player.cls],abT=C.ab.cd*player.stats.cdr;const ab=$('#sk-ab');ab.style.setProperty('--p',String(player.abCd/abT));ab.classList.toggle('ready',player.abCd<=0);
   const ds=$('#sk-dash');ds.style.setProperty('--p',String(player.dashCd/(1.1*player.stats.dashCd)));ds.classList.toggle('ready',player.dashCd<=0);
-  $('#t-ab').classList.toggle('cool',player.abCd>0);$('#t-dash').classList.toggle('cool',player.dashCd>0);
+  $('#t-dash').classList.toggle('cool',player.dashCd>0);
   $('#h-time').textContent=fmtT(runTime);$('#h-kills').textContent=kills;$('#h-lvlc').textContent=player.lvl;
   $('#h-wave').textContent=hordeN?'Horda '+hordeN:'Próxima horda em '+Math.ceil(nextHorde-runTime)+'s';
   $('#h-boss').textContent=boss?'':'Chefe em '+fmtT(Math.max(0,nextBoss-runTime));

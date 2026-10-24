@@ -7,19 +7,7 @@ window.CLASSES.pistol = {
   hp: 88,
   armor: 0,
   speed: 5.7,
-  atkCd: .4,
-  dmg: 9,
-  kind: 'proj',
-  proj: 'bullet',
-  projSpeed: 30,
-  range: 15,
-  pierce: 0,
-  critBase: .15,
-  ab: {
-    nome: 'Saque Rápido',
-    cd: 6,
-    desc: 'Num piscar, atira em até 6 inimigos próximos com crítico garantido.'
-  },
+  weaponId: 'pistol_revolver',
   pal: {
     body: 0x6e4a2e,
     trim: 0xe0a94f,

@@ -1,0 +1,92 @@
+PERSONAGENS, CLASSES, ARMAS FIXAS E PODERES ANTERIORES
+
+Nota: os poderes listados abaixo eram as habilidades ativas do Q. O Q foi removido/desativado para todas as classes. As descrições estão aqui apenas como referência para pensar nas novas passivas. A coluna de passiva fica em branco para você preencher.
+
+1. AURELION
+Classe: Mago
+Arma fixa: Orbes Arcanos (mage_orbs)
+Poder Q anterior: Nova Arcana
+Descrição: Nova arcana que empurra, causa dano alto e retarda os inimigos.
+Nova passiva: ______________________________________________
+
+2. OLIVER
+Classe: Arqueiro
+Arma fixa: Arco (archer_bow)
+Poder Q anterior: Rajada
+Descrição: Leque de 9 flechas que atravessam inimigos.
+Nova passiva: ______________________________________________
+
+3. DARIAN
+Classe: Guerreiro
+Arma fixa: Espada (warrior_sword)
+Poder Q anterior: Redemoinho
+Descrição: Gira por 1,5 s cortando tudo em volta.
+Nova passiva: ______________________________________________
+
+4. BROM
+Classe: Guardião
+Arma fixa: Martelo e escudo (guardian_hammer)
+Poder Q anterior: Baluarte
+Descrição: Escudo de 4 s que bloqueia 85% do dano e solta uma onda de choque.
+Nova passiva: ______________________________________________
+
+5. NECRONUS
+Classe: Necromante
+Arma fixa: Caveira Espectral (necro_skull)
+Poder Q anterior: Legião dos Mortos
+Descrição: Ergue 3 esqueletos na hora e cura os seus.
+Nova passiva: ______________________________________________
+
+6. VESPERA
+Classe: Cronomante
+Arma fixa: Orbe do Tempo (chrono_orb)
+Poder Q anterior: Distorção Temporal
+Descrição: Quase congela o tempo dos inimigos em volta por 3,5 s e causa dano.
+Nova passiva: ______________________________________________
+
+7. CASSIAN
+Classe: Pistoleiro
+Arma fixa: Revólver (pistol_revolver)
+Poder Q anterior: Saque Rápido
+Descrição: Num piscar, atira em até 6 inimigos próximos com crítico garantido.
+Nova passiva: ______________________________________________
+
+8. VLAD
+Classe: Vampiro
+Arma fixa: Morcego vampírico (vampire_bat)
+Poder Q anterior: Enxame de Morcegos
+Descrição: Solta um enxame que fere tudo em volta e cura você com o dano causado.
+Nova passiva: ______________________________________________
+
+9. CASTIEL
+Classe: Demônio
+Arma fixa: Fogo Infernal (demon_hellfire)
+Poder Q anterior: Inferno
+Descrição: Erupção de chamas ao redor que causa dano alto e arremessa os inimigos.
+Nova passiva: ______________________________________________
+
+10. SMITH
+Classe: Viajante do Tempo
+Arma fixa: Plasma (future_plasma)
+Poder Q anterior: Salto Quântico
+Descrição: Teleporta à frente, fica invencível um instante e explode ao chegar, ferindo os inimigos em volta.
+Nova passiva: ______________________________________________
+
+11. ZÉ
+Classe: Humano
+Arma fixa: Pedra (human_stone)
+Poder Q anterior: Pedrada Caprichada
+Descrição: Joga 3 pedras de uma vez.
+Nova passiva: ______________________________________________
+
+12. MIDAS
+Classe: Rei
+Arma fixa: Moedas Reais (king_coins)
+Poder Q anterior: Convocar a Guarda
+Descrição: Chama 4 soldados reais que lutam por você.
+Nova passiva: ______________________________________________
+
+REGRAS PLANEJADAS PARA A PRÓXIMA ETAPA
+- Cada personagem começa com sua arma original fixa, que ocupa 1 espaço.
+- O limite total planejado é de 5 armas por personagem.
+- As novas passivas ainda serão definidas; nenhuma foi criada neste passo.

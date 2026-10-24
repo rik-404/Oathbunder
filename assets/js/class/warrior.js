@@ -7,17 +7,7 @@ window.CLASSES.guerreiro = {
   hp: 130,
   armor: .1,
   speed: 5.3,
-  atkCd: .62,
-  dmg: 26,
-  kind: 'melee',
-  range: 2.2,
-  arc: 2.6,
-  knock: 5,
-  ab: {
-    nome: 'Redemoinho',
-    cd: 7,
-    desc: 'Gira por 1,5 s cortando tudo em volta.'
-  },
+  weaponId: 'warrior_sword',
   pal: {
     body: 0x2b3942,
     trim: 0x593928,

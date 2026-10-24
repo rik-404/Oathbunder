@@ -2,23 +2,12 @@
 window.CLASSES = window.CLASSES || {};
 window.CLASSES.king = {
   nome: 'Midas',
-  role: 'Arremessa moedas e convoca a guarda real',
+  role: 'Arremessa moedas e lidera o reino',
   ui: '#f2c14b',
   hp: 105,
   armor: .1,
   speed: 5,
-  atkCd: .5,
-  dmg: 17,
-  kind: 'proj',
-  proj: 'gcoin',
-  projSpeed: 17,
-  range: 14,
-  pierce: 1,
-  ab: {
-    nome: 'Convocar a Guarda',
-    cd: 10,
-    desc: 'Chama 4 soldados reais que lutam por você.'
-  },
+  weaponId: 'king_coins',
   pal: {
     body: 0x990000,
     trim: 0xe3ab28,

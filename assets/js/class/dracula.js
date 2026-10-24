@@ -7,19 +7,8 @@ window.CLASSES.dracula = {
   hp: 100,
   armor: .05,
   speed: 5.3,
-  atkCd: .5,
-  dmg: 16,
-  kind: 'proj',
-  proj: 'batp',
-  projSpeed: 16,
-  range: 14,
-  pierce: 1,
-  lsBase: .12,
-  ab: {
-    nome: 'Enxame de Morcegos',
-    cd: 8,
-    desc: 'Solta um enxame que fere tudo em volta e cura você com o dano causado.'
-  },
+  weaponId: 'vampire_bat',
+  passiveId: 'vampirism',
   pal: {
     body: 0x141414,
     trim: 0x0a0a0a,

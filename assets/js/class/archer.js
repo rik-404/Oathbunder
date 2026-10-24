@@ -7,18 +7,7 @@ window.CLASSES.arqueiro = {
   hp: 90,
   armor: 0,
   speed: 5.8,
-  atkCd: .42,
-  dmg: 12,
-  kind: 'proj',
-  proj: 'arrow',
-  projSpeed: 24,
-  range: 16,
-  pierce: 1,
-  ab: {
-    nome: 'Rajada',
-    cd: 5,
-    desc: 'Leque de 9 flechas que atravessam inimigos.'
-  },
+  weaponId: 'archer_bow',
   pal: {
     body: 0x275447,
     trim: 0x221812,

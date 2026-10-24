@@ -7,18 +7,7 @@ window.CLASSES.demon = {
   hp: 110,
   armor: .08,
   speed: 5.2,
-  atkCd: .55,
-  dmg: 22,
-  kind: 'proj',
-  proj: 'hellfire',
-  projSpeed: 15,
-  range: 14,
-  pierce: 1,
-  ab: {
-    nome: 'Inferno',
-    cd: 8,
-    desc: 'Erupção de chamas ao redor que causa dano alto e arremessa os inimigos.'
-  },
+  weaponId: 'demon_hellfire',
   pal: {
     body: 0x121212,
     trim: 0x8d0000,
