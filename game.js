@@ -474,6 +474,44 @@ const VLAD_BAT_PROJECTILE_GEO=mergeBoxes(VLAD_BAT_PROJECTILE_BOXES,.025);
 VLAD_BAT_PROJECTILE_GEO.userData=VLAD_BAT_PROJECTILE_GEO.userData||{};
 Object.assign(VLAD_BAT_PROJECTILE_GEO.userData,{voxelKind:'vlad-bat-projectile',voxelParts:VLAD_BAT_PROJECTILE_BOXES.length});
 
+const CASTIEL_HELLFIRE_BOXES=[
+  [0,0,0,.22,.22,.24,0x4a1009],                        // núcleo de pedra vulcânica
+  [0,0,.035,.17,.17,.16,0x8d0000],                     // casca carmesim
+  [0,0,.085,.13,.13,.11,0xff5a2a],                    // brasa central
+  [0,0,.125,.085,.085,.075,0xffb43b],                  // centro quente
+  [0,0,.163,.045,.045,.028,0xfff0a0],                  // ponto de incandescência
+  [0,.105,.005,.08,.04,.14,0x201312],                 // placas de obsidiana
+  [0,-.105,.005,.08,.04,.14,0x201312],
+  [-.105,0,.005,.04,.08,.14,0x201312],
+  [.105,0,.005,.04,.08,.14,0x201312],
+  [-.095,.08,.045,.055,.035,.07,0x5a1510],
+  [.095,-.08,.045,.055,.035,.07,0x5a1510],
+  [0,.14,-.055,.08,.12,.12,0xffa12a],                 // língua superior
+  [0,.205,-.105,.05,.07,.09,0xff5a2a],
+  [0,-.14,-.055,.08,.12,.12,0xff7b24],                // língua inferior
+  [0,-.205,-.105,.05,.07,.09,0xff4b21],
+  [-.14,0,-.06,.11,.08,.12,0xff8a25],                 // chamas laterais
+  [.14,0,-.06,.11,.08,.12,0xff8a25],
+  [-.205,.035,-.105,.07,.06,.09,0xff4b21],
+  [.205,.035,-.105,.07,.06,.09,0xff4b21],
+  [-.08,.08,-.16,.07,.07,.13,0xb51e13],
+  [.08,-.08,-.16,.07,.07,.13,0xb51e13],
+  [0,.035,-.205,.12,.10,.15,0xff6a1f],                // cauda flamejante
+  [0,.065,-.29,.075,.07,.11,0xffa52c],
+  [0,.08,-.36,.035,.04,.07,0xffd04a],
+  [-.04,.025,.155,.018,.07,.018,0xffe08a],             // fissuras quentes
+  [.035,-.035,.155,.018,.075,.018,0xffe08a],
+  [-.11,.035,.11,.05,.018,.02,0xffc04a],
+  [.11,-.035,.11,.05,.018,.02,0xffc04a],
+  [-.18,.10,-.015,.04,.04,.06,0xff7b24],               // fagulhas laterais
+  [.18,-.10,-.015,.04,.04,.06,0xff7b24],
+  [-.10,-.12,-.12,.035,.035,.06,0xffd04a],
+  [.10,.12,-.12,.035,.035,.06,0xffd04a]
+];
+const CASTIEL_HELLFIRE_GEO=mergeBoxes(CASTIEL_HELLFIRE_BOXES,.025);
+CASTIEL_HELLFIRE_GEO.userData=CASTIEL_HELLFIRE_GEO.userData||{};
+Object.assign(CASTIEL_HELLFIRE_GEO.userData,{voxelKind:'castiel-hellfire-projectile',voxelParts:CASTIEL_HELLFIRE_BOXES.length});
+
 const PROJ_GEO={
   fire:mergeBoxes([
     [0,0,0,.2,.2,.2,0x5539a8],[0,0,.015,.145,.145,.145,0x54bfe9],[0,0,.035,.085,.085,.085,0xeafaff],
@@ -488,7 +526,7 @@ const PROJ_GEO={
   skull:NECRO_SKULL_GEO,
   bullet:mergeBoxes([[0,0,0,.08,.08,.22,0xffe08a],[0,0,-.13,.045,.045,.14,0xffb84a],[0,0,.12,.05,.05,.05,0xfff4c8]]),
   batp:VLAD_BAT_PROJECTILE_GEO,
-  hellfire:mergeBoxes([[0,0,0,.28,.28,.28,0xff6a2a],[0,0,-.14,.16,.16,.3,0xffb04a],[0,0,.12,.14,.14,.1,0x7a1a0a]]),
+  hellfire:CASTIEL_HELLFIRE_GEO,
   plasma:mergeBoxes([[0,0,0,.14,.14,.34,0x3bf0d0],[0,0,-.18,.08,.08,.18,0xbffff4],[0,0,.14,.1,.1,.1,0x1affd8]]),
   rock:mergeBoxes([[0,0,0,.2,.17,.2,0x8a8a86],[0,.06,.05,.12,.08,.12,0x9a9a94],[-.06,-.05,-.04,.09,.09,.09,0x74746f],[.07,.03,.02,.06,.06,.06,0x9a9a94]]),
   gcoin:mergeBoxes([[0,0,0,.22,.22,.06,0xf2c14b],[0,0,.04,.11,.11,.02,0xffe9a0],[0,0,-.04,.11,.11,.02,0xcf9a2a]]),
@@ -1301,10 +1339,19 @@ function update(dt){
   if(player.dashT>0){player.dashT-=dt;moveEnt(player,player.dvx*dt,player.dvz*dt);if(Math.random()<.6)burst(player.x,.4+player.y,player.z,C.pal.body,1,{speed:.5,up0:0,up1:.5,grav:0,life:.3,size:.18})}
   else if(moving){let sp=C.speed*st.move;if(player.spinT>0)sp*=1.15;if(player.shieldT>0)sp*=.75;moveEnt(player,mx*sp*dt,mz*sp*dt)}
   player.vy-=24*dt;player.y+=player.vy*dt;if(player.y<0){if(player.vy<-6)burst(player.x,.05,player.z,0xb59a6a,4,{speed:2,up0:.2,up1:1});player.y=0;player.vy=0}
-  // fogueira: queima ao pisar em cima (o Castiel, sendo o diabo, quase não sente). Pular por cima escapa.
+  // Fogueiras: o calor machuca as outras classes; Castiel absorve a chama e a detona uma vez.
   if(landPos&&landPos.fire&&player.y<.5){player.fireCd=(player.fireCd||0)-dt;
-    const onFire=landPos.fire.some(f=>Math.hypot(player.x-f.x,player.z-f.z)<.85);
-    if(onFire&&player.fireCd<=0){player.fireCd=.5;hurtPlayer(player.cls==='demon'?3:12,null,false);burst(player.x,.4,player.z,0xff7a1a,6,{emi:.7,speed:2.5,up0:.5,up1:2})}}
+    const fireIndex=landPos.fire.findIndex(f=>!f.used&&Math.hypot(player.x-f.x,player.z-f.z)<.85);
+    if(fireIndex>=0&&player.cls==='demon'){
+      const fire=landPos.fire[fireIndex],base=fireFx&&fireFx.base[fireIndex];fire.used=true;
+      if(base){base.used=true;if(fireFx.mesh){ffq.setFromAxisAngle(ffup,base.ry);ffm4.compose(ffp.set(base.x,base.y,base.z),ffq,ffs.set(0,0,0));fireFx.mesh.setMatrixAt(fireIndex,ffm4);fireFx.mesh.instanceMatrix.needsUpdate=true}
+        if(fireFx.lights[fireIndex])fireFx.lights[fireIndex].visible=false;
+        for(let si=fireIndex*3;si<fireIndex*3+3;si++){const sm=fireFx.smokes[si];if(sm){sm.m.visible=false;sm.m.material.opacity=0}}}
+      const R=3.25*st.area,cy=base?base.y+.62:relief(fire.x,fire.z)+.62;
+      for(const e of enemies.slice()){if(e.dead)continue;const dx=e.x-fire.x,dz=e.z-fire.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const hit=roll(C.dmg*1.5);damageEnemy(e,hit.d,hit.crit,dx/d*8*st.kb,dz/d*8*st.kb)}}
+      ringFX(fire.x,fire.z,R,0xff652e,.42);ringFX(fire.x,fire.z,R*.56,0xffc04a,.3);
+      burst(fire.x,cy,fire.z,0xff5a2a,22,{emi:1,speed:5,up0:.3,up1:2.6,life:.52,size:.1});burst(fire.x,cy,fire.z,0xffc04a,15,{emi:1,speed:4,up0:.6,up1:2.8,life:.55,size:.075});burst(fire.x,cy,fire.z,0xfff1c0,8,{emi:1,speed:2.8,up0:.8,up1:3,life:.36,size:.055});addShake(.18);S('shot','fire')
+    }else if(fireIndex>=0&&player.cls!=='demon'&&player.fireCd<=0){player.fireCd=.5;hurtPlayer(12,null,false);burst(player.x,.4,player.z,0xff7a1a,6,{emi:.7,speed:2.5,up0:.5,up1:2})}}
   // Só o Mago desperta os cristais arcanos ao tocá-los; cada cristal explode uma única vez.
   if(player.cls==='mago'&&landPos&&landPos.cry&&player.y<1.3){for(let i=0;i<landPos.cry.length;i++){const cr=landPos.cry[i];if(cr.used||Math.hypot(player.x-cr.x,player.z-cr.z)>=.9)continue;
       cr.used=true;const mesh=crystalMeshes[i];if(mesh){level.remove(mesh);crystalMeshes[i]=null}
@@ -1541,7 +1588,7 @@ function drawMini(){
   const P=(px,pz)=>[(px-cx+half)*S,(pz-cz+half)*S];
   x.fillStyle='#f2b84b';for(const ch of chests)if(!ch.open){const[a,b]=P(ch.x,ch.z);x.fillRect(a-3,b-3,6,6)}
   x.fillStyle='#d23b2f';for(const T of totems)if(!T.used){const[a,b]=P(T.x,T.z);x.fillRect(a-3,b-3,6,6)}
-  if(landPos){x.fillStyle='#ff8a3a';for(const f of landPos.fire){const[a,b]=P(f.x,f.z);x.fillRect(a-2,b-2,4,4)}
+  if(landPos){x.fillStyle='#ff8a3a';for(const f of landPos.fire)if(!f.used){const[a,b]=P(f.x,f.z);x.fillRect(a-2,b-2,4,4)}
     x.fillStyle='#b08aff';for(const cr of landPos.cry)if(!cr.used){const[a,b]=P(cr.x,cr.z);x.fillRect(a-1.5,b-1.5,3,3)}}
   x.fillStyle='#e5473c';for(const e of enemies){const[a,b]=P(e.x,e.z);if(e.boss){x.fillStyle='#ff8a4a';x.fillRect(a-5,b-5,10,10);x.fillStyle='#e5473c'}else x.fillRect(a-1.5,b-1.5,3,3)}
   x.restore();
@@ -1570,7 +1617,7 @@ function drawMap(){
     if(ch.open){x.strokeStyle='#8a7a46';x.lineWidth=2;x.beginPath();x.moveTo(a,b-5);x.lineTo(a+5,b);x.lineTo(a,b+5);x.lineTo(a-5,b);x.closePath();x.stroke()}
     else{x.fillStyle='#f2b84b';x.beginPath();x.moveTo(a,b-6);x.lineTo(a+6,b);x.lineTo(a,b+6);x.lineTo(a-6,b);x.closePath();x.fill();x.strokeStyle='#fff6d0';x.lineWidth=1.5;x.stroke()}}
   // marcos do campo
-  if(landPos){x.fillStyle='#ff8a3a';for(const f of landPos.fire)x.fillRect(f.x*S-2,f.z*S-2,4,4);
+  if(landPos){x.fillStyle='#ff8a3a';for(const f of landPos.fire)if(!f.used)x.fillRect(f.x*S-2,f.z*S-2,4,4);
     x.fillStyle='#b08aff';for(const cr of landPos.cry)if(!cr.used)x.fillRect(cr.x*S-2,cr.z*S-2,4,4);
     x.fillStyle='#8a8a80';for(const g of landPos.grave)x.fillRect(g.x*S-1,g.z*S-1,2,2)}
   // totens de íma
@@ -1616,13 +1663,13 @@ function setSky(k){
 const ffm4=new THREE.Matrix4(),ffq=new THREE.Quaternion(),ffp=new THREE.Vector3(),ffs=new THREE.Vector3(),ffup=new THREE.Vector3(0,1,0);
 function updFireFx(dt){const F=fireFx;if(!F||!F.mesh||!level)return;F.t+=dt;const t=F.t;
   flameMat.color.setHSL(.07,.95,.84+.08*Math.sin(t*13)+.04*Math.sin(t*41));
-  for(let i=0;i<F.base.length;i++){const b=F.base[i],w=Math.sin(t*9+b.ph)+Math.sin(t*13.7+b.ph*1.3); // cada fogueira com fase própria
-    ffq.setFromAxisAngle(ffup,b.ry);ffm4.compose(ffp.set(b.x,b.y+w*.03,b.z),ffq,ffs.set(b.sc*(1-w*.09),b.sc*(1+w*.14),b.sc*(1-w*.09)));F.mesh.setMatrixAt(i,ffm4)}
+  for(let i=0;i<F.base.length;i++){const b=F.base[i];ffq.setFromAxisAngle(ffup,b.ry);if(b.used){ffm4.compose(ffp.set(b.x,b.y,b.z),ffq,ffs.set(0,0,0));F.mesh.setMatrixAt(i,ffm4);continue}const w=Math.sin(t*9+b.ph)+Math.sin(t*13.7+b.ph*1.3); // cada fogueira com fase própria
+    ffm4.compose(ffp.set(b.x,b.y+w*.03,b.z),ffq,ffs.set(b.sc*(1-w*.09),b.sc*(1+w*.14),b.sc*(1-w*.09)));F.mesh.setMatrixAt(i,ffm4)}
   F.mesh.instanceMatrix.needsUpdate=true;
-  for(const sm of F.smokes){const ph=((t*.22)+sm.ph)%1;
+  for(let i=0;i<F.smokes.length;i++){const sm=F.smokes[i];if(F.base[Math.floor(i/3)]?.used){sm.m.visible=false;sm.m.material.opacity=0;continue}sm.m.visible=true;const ph=((t*.22)+sm.ph)%1;
     sm.m.position.set(sm.x+Math.sin(t*.8+sm.ph*9)*.16,sm.y+.75+ph*1.7,sm.z+Math.cos(t*.6+sm.ph*7)*.16);
     sm.m.scale.setScalar(.14+ph*.34);sm.m.material.opacity=.2*(1-ph)}
-  for(const li of F.lights){li.visible=Math.abs(player.x-li.position.x)<15&&Math.abs(li.position.z-player.z)<15; // não paga luz longe (mobile)
+  for(let i=0;i<F.lights.length;i++){const li=F.lights[i];if(F.base[i]?.used){li.visible=false;continue}li.visible=Math.abs(player.x-li.position.x)<15&&Math.abs(li.position.z-player.z)<15; // não paga luz longe (mobile)
     if(li.visible)li.intensity=1.4+Math.sin(t*11+li.position.x)*.25+Math.sin(t*23.3+li.position.z)*.15}}
 let last=performance.now();
 function frame(now){

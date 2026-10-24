@@ -38,8 +38,7 @@ window.CLASSES.king = {
  * game.js buildHero(cls) chama CLASSES[cls].model(b, P, vox, makeBow, boxGeo).
  * =================================================================== */
 // Herói: king (Midas) — rei dourado: coroa com pontas e joias, barba branca, manto de
-// arminho nos ombros, capa vermelha com barra de arminho, cetro e a mão dourada que
-// transforma tudo em ouro (a mão que arremessa as moedas).
+// arminho nos ombros, capa vermelha com barra de arminho e a mão dourada que arremessa moedas.
 window.CLASSES.king.model=function(b,P,vox,makeBow,boxGeo){
 
     const RD=P.body,RD_D=0x6b0000,VELVET=0x7a0a0a;              // vermelho do manto
@@ -120,13 +119,4 @@ window.CLASSES.king.model=function(b,P,vox,makeBow,boxGeo){
     vox(b.handR,0,.0,.075,.12,.1,.035,GD_L,.25);
     vox(b.handR,.0,-.05,.1,.09,.03,.03,GD_D);                   // moeda entre os dedos
 
-    // ---------- cetro dourado com joia (mão esquerda) ----------
-    const sc=new THREE.Group();b.handL.add(sc);
-    vox(sc,0,.12,0,.045,.85,.045,GD_D);                         // haste
-    vox(sc,0,-.28,0,.06,.08,.06,GD);                            // contrapeso
-    vox(sc,0,.54,0,.075,.06,.075,GD);                           // colarinho
-    vox(sc,0,.61,0,.1,.06,.1,GD);                               // copo
-    vox(sc,0,.68,0,.07,.07,.07,RUBY,1.1);                       // joia
-    vox(sc,0,.735,0,.035,.035,.035,GD_L,.7);                    // ponta
-    b.keep.push({g:sc,arm:b.armL});
 };

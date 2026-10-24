@@ -118,6 +118,7 @@ frames(3);
 if(process.env.SMOKE_STATIC_ONLY==='1'){console.log(fails.length?('\n'+fails.length+' FALHA(S)'):'\nSMOKE_STATIC_OK — módulos e modelos da galeria validados');process.exit(fails.length?1:0)}
 console.log('[2] nova corrida (guerreiro)');
 G.runCheat('unlock all'); // localStorage vazio: libera todas as classes
+G.newRun('king');ok(!!G.player.model&&G.player.model.keep.length===0&&G.player.model.handL.children.length===0,'Midas aparece sem cajado e com a mão esquerda livre');
 G.newRun('guerreiro');
 ok(G.getState()==='play','partida iniciada');
 ok(G.enemies().length===8,'8 slimes iniciais');
@@ -216,6 +217,12 @@ const vladShot=G.projs().find(q=>q.owner==='p'&&q.kind==='batp');
 ok(!!vladShot&&vladShot.g.geometry.userData.voxelKind==='vlad-bat-projectile'&&vladShot.g.geometry.userData.voxelParts>=28,'Vlad dispara um morcego voxel com asas carmesim, olhos rubros e presas');
 const expectedVladDamage=vladShot&&CLASSES.dracula.dmg*G.player.stats.dmg*(vladShot.crit?G.player.stats.critDmg:1),vladDamageFactor=vladShot?vladShot.dmg/expectedVladDamage:0;
 ok(!!vladShot&&CLASSES.dracula.projSpeed===16&&CLASSES.dracula.dmg===16&&Math.abs(vladShot.speed-CLASSES.dracula.projSpeed*G.player.stats.pspd)<.01&&vladDamageFactor>.899&&vladDamageFactor<1.101&&vladShot.r===.22,'projétil do Vlad mantém velocidade, dano, crítico e colisão');
+console.log('[8e] projétil do Castiel');
+G.newRun('demon');G.enemies().length=0;G.player.atkCd=0;G.spawnEnemy('slime',G.player.x,G.player.z+8,false);G.update(1/60);
+const castielShot=G.projs().find(q=>q.owner==='p'&&q.kind==='hellfire');
+ok(!!castielShot&&castielShot.g.geometry.userData.voxelKind==='castiel-hellfire-projectile'&&castielShot.g.geometry.userData.voxelParts>=28,'Castiel lança uma brasa demoníaca voxel com núcleo vulcânico e cauda de fogo');
+const expectedCastielDamage=castielShot&&CLASSES.demon.dmg*G.player.stats.dmg*(castielShot.crit?G.player.stats.critDmg:1),castielDamageFactor=castielShot?castielShot.dmg/expectedCastielDamage:0;
+ok(!!castielShot&&CLASSES.demon.projSpeed===15&&CLASSES.demon.dmg===22&&Math.abs(castielShot.speed-CLASSES.demon.projSpeed*G.player.stats.pspd)<.01&&castielDamageFactor>.899&&castielDamageFactor<1.101&&castielShot.r===.22,'projétil do Castiel mantém velocidade, dano, crítico e colisão');
 console.log('[9] upgrade por XP em lote');
 G.gainXP(9999);
 let guard=0;
@@ -257,6 +264,12 @@ ok(crystal.used&&crystalTarget.hp<crystalHp,'Mago detona e consome o cristal, ca
 G.newRun('guerreiro');crystal=G.mapInfo().landPos.cry[0];G.player.x=crystal.x;G.player.z=crystal.z;G.player.y=0;G.player.atkCd=30;
 G.spawnEnemy('brute',crystal.x+1,crystal.z,false);crystalTarget=G.enemies().find(e=>e.type==='brute');crystalHp=crystalTarget.hp;G.update(1/60);
 ok(!crystal.used&&crystalTarget.hp===crystalHp,'outras classes passam pelo cristal sem ativá-lo nem causar dano');
+console.log('[11.6] fogueira exclusiva do Castiel');
+G.newRun('demon');let fire=G.mapInfo().landPos.fire[0];G.player.x=fire.x;G.player.z=fire.z;G.player.y=0;G.player.atkCd=30;G.player.fireCd=0;G.player.invuln=0;
+const castielHp=G.player.hp;G.spawnEnemy('brute',fire.x+.35,fire.z,false);let fireTarget=G.enemies().find(e=>e.type==='brute'),fireTargetHp=fireTarget&&fireTarget.hp;if(fireTarget){fireTarget.cd=30;fireTarget.speed=0}G.update(1/60);
+ok(fire.used===true&&G.player.hp===castielHp&&!!fireTarget&&fireTarget.hp<fireTargetHp,'Castiel consome a fogueira, não recebe dano e explode inimigos próximos');
+G.newRun('guerreiro');fire=G.mapInfo().landPos.fire[0];G.player.x=fire.x;G.player.z=fire.z;G.player.y=0;G.player.atkCd=30;G.player.fireCd=0;G.player.invuln=0;const warriorFireHp=G.player.hp;G.update(1/60);
+ok(!fire.used&&G.player.hp<warriorFireHp,'fogueira continua causando dano e não explode para as outras classes');
 console.log('[12] mapa diversificado e jogável');
 {
   const m=G.mapInfo(),{W,H,grid}=m;
