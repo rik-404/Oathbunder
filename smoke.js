@@ -16,6 +16,7 @@ const els={};
 const docEl=$=>els[$]||(els[$]=fakeEl());
 global.document={createElement:()=>fakeEl(),querySelector:s=>docEl(s),querySelectorAll:()=>[],addEventListener(){},pointerLockElement:null,exitPointerLock(){},body:fakeEl()};
 global.localStorage={_d:{},getItem(k){return k in this._d?this._d[k]:null},setItem(k,v){this._d[k]=String(v)},removeItem(k){delete this._d[k]}};
+global.localStorage.setItem('cv_shop',JSON.stringify({hp:6,dmg:6,spd:5,crit:5,magnet:3,greed:5}));
 global.matchMedia=()=>({matches:false});
 global.innerWidth=1280;global.innerHeight=720;
 let rafCb=null;
@@ -139,6 +140,7 @@ console.log('[2] nova corrida (guerreiro)');
 G.runCheat('unlock all'); // localStorage vazio: libera todas as classes
 G.newRun('king');G.enemies().length=0;const seatedKing=G.player,kingIntro=G.spawnIntro(),kingPose=kingIntro&&kingIntro.pose();ok(!!kingIntro&&kingIntro.duration===3.1&&kingIntro.throne.children.length>=55&&!!kingPose&&kingPose.offsetY>.5&&kingPose.offsetZ>.5&&kingPose.sit===1&&seatedKing.model.root.visible,'Rei começa sentado no trono real e visível antes de se erguer');finishKingIntro();ok(!G.spawnIntro()&&seatedKing.model.root.visible&&!kingIntro.active,'Rei levanta e avança do trono; a intro termina e remove o trono temporário');ok(!!G.player.model&&G.player.model.keep.length===0&&G.player.model.handL.children.length===0,'Midas aparece sem cajado e com a mão esquerda livre');
 ok(G.player.weaponId==='king_guard'&&G.player.passives.includes('midas_touch')&&G.player.stats.goldMul===1.5&&G.weaponSlots()===1,'Midas começa com Guarda Real e Toque de Midas fixos, ocupando um slot de cada grupo');
+{const oldShop=JSON.parse(localStorage.getItem('cv_shop')||'{}');ok(G.player.maxHp===105&&G.player.stats.dmg===1&&G.player.stats.move===1&&G.player.stats.magnet===1&&Object.keys(oldShop).length===0,'melhorias antigas da loja são limpas e não fortalecem novas partidas');}
 G.enemies().length=0;G.player.atkCd=0;G.update(1/60);const midasGuard=G.minions().find(m=>m.owner==='king');
 ok(!!midasGuard&&midasGuard.sold&&midasGuard.hp===110&&midasGuard.baseDmg===13&&G.projs().every(p=>p.kind!=='gcoin'),'ataque principal invoca um Guarda Real aliado e não dispara moedas');
 G.enemies().length=0;G.spawnEnemy('brute',G.player.x+3,G.player.z,true);const midasTarget=G.enemies()[0],targetHp=midasTarget?.hp;if(midasGuard&&midasTarget){midasGuard.x=midasTarget.x-.2;midasGuard.z=midasTarget.z;midasGuard.atkCd=0;G.update(1/60)}
