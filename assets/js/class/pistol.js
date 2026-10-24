@@ -8,6 +8,7 @@ window.CLASSES.pistol = {
   armor: 0,
   speed: 5.7,
   weaponId: 'pistol_revolver',
+  passiveId: 'keen_eye',
   pal: {
     body: 0x6e4a2e,
     trim: 0xe0a94f,

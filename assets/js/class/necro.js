@@ -8,6 +8,7 @@ window.CLASSES.necro = {
   armor: 0,
   speed: 5.2,
   weaponId: 'necro_skull',
+  passiveId: 'unholy_resurrection',
   pal: {
     body: 0x1f1b18,
     trim: 0x666561,

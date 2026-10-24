@@ -8,6 +8,7 @@ window.CLASSES.demon = {
   armor: .08,
   speed: 5.2,
   weaponId: 'demon_hellfire',
+  passiveId: 'burning_fire',
   pal: {
     body: 0x121212,
     trim: 0x8d0000,

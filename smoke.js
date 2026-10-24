@@ -57,17 +57,19 @@ const THREE={
 global.THREE=THREE;
 
 // ---------- carrega o jogo exposto via __G ----------
-// weapons.js e upgrades.js juntos com o game.js (no navegador são <script>s antes do game.js)
+// Armas, melhorias e passivas seguem a mesma ordem dos <script>s no navegador.
 const cdir='assets/js/class';
 const csrc=fs.readdirSync(cdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?1:b==='index.js'?-1:a.localeCompare(b)).map(f=>fs.readFileSync(cdir+'/'+f,'utf8')).join('\n')+'\n';
 const wdir='assets/js/weapons';
 const wsrc=fs.readdirSync(wdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?-1:b==='index.js'?1:a.localeCompare(b)).map(f=>fs.readFileSync(wdir+'/'+f,'utf8')).join('\n')+'\n';
 const udir='assets/js/upgrades';
 const usrc=['core.js','general.js','combat.js','utility.js','class.js','index.js'].map(f=>fs.readFileSync(udir+'/'+f,'utf8')).join('\n')+'\n';
-let src=csrc+wsrc+usrc+fs.readdirSync('assets/js/enimies').filter(f=>f.endsWith('.js')).sort().map(f=>fs.readFileSync('assets/js/enimies/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/decorations/chest.js','utf8')+'\n'+fs.readFileSync('assets/js/decorations/index.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
+const pdir='assets/js/passives';
+const psrc=['index.js','vampirism.js','iron_plating.js','midas_touch.js','burning_fire.js','ricochet.js','beer_bottle.js','keen_eye.js','wisdom.js','future_echo.js','frozen_pulse.js','fatal_fist.js','unholy_resurrection.js'].map(f=>fs.readFileSync(pdir+'/'+f,'utf8')).join('\n')+'\n';
+let src=csrc+wsrc+usrc+psrc+fs.readdirSync('assets/js/enimies').filter(f=>f.endsWith('.js')).sort().map(f=>fs.readFileSync('assets/js/enimies/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/decorations/chest.js','utf8')+'\n'+fs.readFileSync('assets/js/decorations/index.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
 const i=src.lastIndexOf('})();');
 const hook=`window.__G={newRun,update,openUpgrade,chooseUpgrade,damageEnemy,gainXP,hurtPlayer,dash,jump,useAbility,spawnBoss,spawnEnemy,killEnemy,S,setMuted,player,keys,setScreen,getBoss:()=>boss,getUps:()=>($('#ups')&&$('#ups')._choice)||null,hs:()=>hitStopT,getState:()=>state,enemies:()=>enemies,projs:()=>projs,mapInfo:()=>({W,H,grid,landPos,chestN:chests.length}),jv:(x,z)=>jv(x,z),relief:(x,z)=>relief(x,z),hills:()=>HILLS.length,runCheat,toggleMap,galNames:()=>{if(!galleryItems)galleryItems=buildGalleryItems();return galleryItems.map(g=>g.name)},galMake:(n)=>{if(!galleryItems)galleryItems=buildGalleryItems();const it=galleryItems.find(g=>g.name===n);return it?it.make():null},skelDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.skel),zombieDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.zombie)};\n})();`;
-src=src.slice(0,i)+hook.replace('projs:()=>projs,','projs:()=>projs,weaponGroup:()=>wGroup,statUps:()=>STAT_UPS,weaponSlots:()=>weaponSlots(player),');
+src=src.slice(0,i)+hook.replace('projs:()=>projs,','projs:()=>projs,minions:()=>minions,updateMinions,pickups:()=>pickups,weaponGroup:()=>wGroup,statUps:()=>STAT_UPS,weaponSlots:()=>weaponSlots(player),');
 try{eval(src)}catch(e){console.log('ERRO AO CARREGAR:',e.stack);process.exit(1)}
 const G=global.__G;
 const frames=n=>{for(let k=0;k<n;k++){const cb=rafCb;rafCb=null;fakeT+=16.7;cb&&cb(fakeT)}};
@@ -94,7 +96,8 @@ ok(G.zombieDef(),'zumbi registrado via assets/js/enimies/zombie.js');
 {const zombie=window.ENEMY_DEFS.zombie((P,o)=>o.extra||[]),parts=zombie.boxes();
  ok(parts.length>=35&&zombie.stats.hp===34&&zombie.stats.speed===2.3&&zombie.stats.dmg===9&&zombie.legged&&zombie.leg.length===3,'Zumbi redesenhado e atributos/animação preservados')}
 {const ks=Object.keys(CLASSES);ok(ks.length===12&&ks.every(k=>typeof CLASSES[k].model==='function'&&!!CLASSES[k].weaponId&&!CLASSES[k].ab&&window.CLASS_WEAPONS[CLASSES[k].weaponId]?.classId===k)&&Object.keys(window.CLASS_WEAPONS).length===12,'12 classes com modelo, sem Q ativo e arma-base individual registrada em CLASS_WEAPONS')}
-ok(STAT_UPS.length===22&&window.UPGRADE_REGISTRY.groups.map(g=>g.nome).join(',')==='general,combat,utility,class'&&new Set(STAT_UPS.map(u=>u.id)).size===22,'22 melhorias únicas agregadas em quatro módulos de categoria')
+ok(STAT_UPS.length===16&&!STAT_UPS.some(u=>u.id==='xp'||u.id==='crit'||u.id==='ls'||u.id==='armor')&&window.UPGRADE_REGISTRY.groups.map(g=>g.nome).join(',')==='general,combat,utility,class'&&new Set(STAT_UPS.map(u=>u.id)).size===16,'16 melhorias únicas; Sabedoria, Olho Certeiro, Vampirismo e Placas de Ferro não aparecem na roleta geral');
+ok(window.PASSIVE_REGISTRY.get('vampirism')?.nome==='Vampirismo'&&window.PASSIVE_REGISTRY.get('iron_plating')?.nome==='Placas de Ferro'&&window.PASSIVE_REGISTRY.get('midas_touch')?.nome==='Toque de Midas'&&window.PASSIVE_REGISTRY.get('burning_fire')?.nome==='Fogo Ardente'&&window.PASSIVE_REGISTRY.get('ricochet')?.nome==='Ricochete'&&window.PASSIVE_REGISTRY.get('beer_bottle')?.nome==='Garrafa de Cerveja'&&window.PASSIVE_REGISTRY.get('keen_eye')?.nome==='Olho Certeiro'&&window.PASSIVE_REGISTRY.get('wisdom')?.nome==='Sabedoria'&&window.PASSIVE_REGISTRY.get('frozen_pulse')?.nome==='Pulso Congelante'&&window.PASSIVE_REGISTRY.get('fatal_fist')?.nome==='Punho Fatal'&&window.PASSIVE_REGISTRY.get('unholy_resurrection')?.nome==='Ressurreição Profana'&&!window.PASSIVE_REGISTRY.randomOptions({cls:'dracula',passives:[],maxPassives:5}).some(p=>p.passiveId==='vampirism')&&!window.PASSIVE_REGISTRY.randomOptions({cls:'tank',passives:[],maxPassives:5}).some(p=>p.passiveId==='iron_plating')&&!window.PASSIVE_REGISTRY.randomOptions({cls:'king',passives:[],maxPassives:5}).some(p=>p.passiveId==='midas_touch')&&!window.PASSIVE_REGISTRY.randomOptions({cls:'demon',passives:[],maxPassives:5}).some(p=>p.passiveId==='burning_fire')&&!window.PASSIVE_REGISTRY.randomOptions({cls:'arqueiro',passives:[],maxPassives:5}).some(p=>p.passiveId==='ricochet')&&!window.PASSIVE_REGISTRY.randomOptions({cls:'human',passives:[],maxPassives:5}).some(p=>p.passiveId==='beer_bottle')&&!window.PASSIVE_REGISTRY.randomOptions({cls:'pistol',passives:[],maxPassives:5}).some(p=>p.passiveId==='keen_eye')&&!window.PASSIVE_REGISTRY.randomOptions({cls:'mago',passives:[],maxPassives:5}).some(p=>p.passiveId==='wisdom'),'passivas fixas: Vampirismo, Placas de Ferro, Toque de Midas, Fogo Ardente, Ricochete, Garrafa de Cerveja, Olho Certeiro, Sabedoria, Pulso Congelante, Punho Fatal e Ressurreição Profana')
 {const name=G.galNames().find(n=>n==='Brom · Guardião'),guard=name&&G.galMake(name);let head=null,shield=null;if(guard)guard.traverse(o=>{if(o.name==='guardianHammerHead')head=o;if(o.name==='guardianShield')shield=o});
  ok(!!head&&Math.abs(head.rotation.y+Math.PI/2)<1e-6&&head.children.length>=20&&!!shield&&shield.position.y===0,'Guardião tem face larga de impacto alinhada ao golpe e escudo centrado na mão')}
 {const name=G.galNames().find(n=>n.startsWith('Darian ·')),hero=name&&G.galMake(name);let hold=null,sword=null;if(hero)hero.traverse(o=>{if(o.name==='swordHold')hold=o;if(o.name==='sword')sword=o});
@@ -126,6 +129,26 @@ if(process.env.SMOKE_STATIC_ONLY==='1'){console.log(fails.length?('\n'+fails.len
 console.log('[2] nova corrida (guerreiro)');
 G.runCheat('unlock all'); // localStorage vazio: libera todas as classes
 G.newRun('king');ok(!!G.player.model&&G.player.model.keep.length===0&&G.player.model.handL.children.length===0,'Midas aparece sem cajado e com a mão esquerda livre');
+ok(G.player.weaponId==='king_guard'&&G.player.passives.includes('midas_touch')&&G.player.stats.goldMul===1.5&&G.weaponSlots()===1,'Midas começa com Guarda Real e Toque de Midas fixos, ocupando um slot de cada grupo');
+G.enemies().length=0;G.player.atkCd=0;G.update(1/60);const midasGuard=G.minions().find(m=>m.owner==='king');
+ok(!!midasGuard&&midasGuard.sold&&midasGuard.hp===110&&midasGuard.baseDmg===13&&G.projs().every(p=>p.kind!=='gcoin'),'ataque principal invoca um Guarda Real aliado e não dispara moedas');
+G.enemies().length=0;G.spawnEnemy('brute',G.player.x+3,G.player.z,true);const midasTarget=G.enemies()[0],targetHp=midasTarget?.hp;if(midasGuard&&midasTarget){midasGuard.x=midasTarget.x-.2;midasGuard.z=midasTarget.z;midasGuard.atkCd=0;G.update(1/60)}
+ok(!!midasTarget&&midasTarget.hp<targetHp,'Guarda Real persegue e causa dano ao inimigo por Midas');
+if(midasTarget)G.killEnemy(midasTarget);const midasCoin=G.pickups().find(p=>p.type==='coin');
+ok(!!midasCoin&&midasCoin.v>=5&&midasCoin.v<=9,'Toque de Midas aumenta em 50% o valor das moedas derrubadas por inimigos');
+G.newRun('arqueiro');ok(G.player.passives.includes('ricochet')&&G.player.stats.ricochetChance===.25&&G.player.stats.ricochetMax===2&&G.player.stats.ricochetRange===8&&G.player.stats.ricochetDamage===.75,'Oliver começa com Ricochete fixa: 25%, até 2 saltos e 75% de dano por salto');
+G.enemies().length=0;G.spawnEnemy('slime',G.player.x+4,G.player.z,false);G.spawnEnemy('brute',G.player.x+7,G.player.z,false);const ricFirst=G.enemies().find(e=>e.type==='slime'),ricSecond=G.enemies().find(e=>e.type==='brute'),ricFirstHp=ricFirst&&ricFirst.hp,ricSecondHp=ricSecond&&ricSecond.hp;
+if(ricFirst){ricFirst.speed=0;ricFirst.cd=30}if(ricSecond){ricSecond.speed=0;ricSecond.cd=30}G.player.stats.ricochetChance=1;G.player.stats.ricochetMax=1;G.player.atkCd=0;G.update(1/60);G.player.atkCd=30;for(let k=0;k<30;k++)G.update(1/60);
+ok(!!ricFirst&&!!ricSecond&&ricFirst.hp<ricFirstHp&&ricSecond.hp<ricSecondHp,'flecha do Oliver acerta o primeiro inimigo e ricocheteia para o segundo');
+G.newRun('human');ok(G.player.passives.includes('beer_bottle')&&G.player.passives.length===1&&G.player.maxPassives===5&&G.player.picks.includes('Garrafa de Cerveja')&&!Object.keys(G.player.stats).some(k=>k.startsWith('beer')),'Garrafa de Cerveja é o poder meme fixo do Zé: ocupa 1 dos 5 espaços e não altera atributos');
+G.newRun('pistol');const pistolWeapon=window.CLASS_WEAPONS[CLASSES.pistol.weaponId],expectedPistolCrit=(pistolWeapon.critBase||.05)+.08;ok(G.player.passives.includes('keen_eye')&&G.player.passives.length===1&&G.player.maxPassives===5&&Math.abs(G.player.stats.crit-expectedPistolCrit)<1e-9,'Olho Certeiro é passiva fixa do Cassian: +8% crítico e 1 dos 5 espaços');
+G.newRun('mago');ok(G.player.passives.includes('wisdom')&&G.player.passives.length===1&&G.player.maxPassives===5&&G.player.picks.includes('Sabedoria')&&Math.abs(G.player.stats.xpMul-1.15)<1e-9,'Sabedoria é passiva fixa do Mago: +15% XP e 1 dos 5 espaços');
+G.newRun('future');ok(G.player.passives.includes('future_echo')&&G.player.passives.length===1&&G.player.maxPassives===5&&G.player.stats.echoChance===.2&&G.player.stats.echoDamage===.5&&G.player.stats.echoDelay===.35&&!window.PASSIVE_REGISTRY.randomOptions({cls:'future',passives:[],maxPassives:5}).some(p=>p.passiveId==='future_echo'),'Smith começa com Eco do Futuro fixo: 20% de chance, atraso de 0,35 s e dano pela metade');
+G.enemies().length=0;G.spawnEnemy('brute',G.player.x+7,G.player.z,false);const futureEchoTarget=G.enemies()[0];if(futureEchoTarget){futureEchoTarget.speed=0;futureEchoTarget.cd=30}G.player.stats.echoChance=1;G.player.atkCd=30;G.damageEnemy(futureEchoTarget,20,false);const echoDirectHp=futureEchoTarget&&futureEchoTarget.hp;G.update(.4);const echoRepeatHp=futureEchoTarget&&futureEchoTarget.hp;G.update(.4);
+ok(!!futureEchoTarget&&Math.abs((echoDirectHp-echoRepeatHp)-10)<1e-6&&futureEchoTarget.hp===echoRepeatHp,'eco temporal repete o acerto com 50% do dano sem gerar ecos em cadeia');
+G.player.dashCd=0;G.dash();const smithDashStarted=G.player.dashT===.17&&G.player.dashCd===1.1*G.player.stats.dashCd;for(let k=0;k<15;k++)G.update(1/60);
+ok(smithDashStarted&&G.player.dashT<=0&&G.player.model.root.visible,'dash glitch do Smith preserva duração e recarga, restaurando o modelo após o flicker');
+G.newRun('guerreiro');ok(G.player.passives.includes('fatal_fist')&&G.player.passives.length===1&&G.player.maxPassives===5&&G.player.picks.includes('Punho Fatal')&&G.player.stats.critDmg===2.5&&!G.statUps().some(u=>u.id==='cdmg')&&!window.PASSIVE_REGISTRY.randomOptions({cls:'guerreiro',passives:[],maxPassives:5}).some(p=>p.passiveId==='fatal_fist'),'Darian começa com Punho Fatal fixo: multiplicador crítico 2,5× e 1 dos 5 slots');
 G.newRun('guerreiro');ok(G.player.weaponId===CLASSES.guerreiro.weaponId&&G.player.ownedWeaponIds.length===1&&G.player.maxWeapons===5&&G.weaponSlots()===1,'arma original fixa ocupa um dos cinco espaços de arma');
 for(const k of Object.keys(G.player.weap).slice(0,4)){G.player.weap[k]=1;G.player.ownedWeaponIds.push(k)}ok(G.weaponSlots()===5,'quatro armas adicionais completam o limite total de cinco incluindo a arma fixa');G.openUpgrade();const atCap=G.getUps()||[];ok(atCap.length===3&&atCap.every(u=>!u.wk||G.player.weap[u.wk]>0),'com cinco armas, nenhuma nova arma entra na oferta; só melhorias das já obtidas');G.newRun('guerreiro');
 ok(G.getState()==='play','partida iniciada');
@@ -156,7 +179,7 @@ console.log('[4] morte de inimigos + hit-stop');
 const p=G.player;
 for(let k=0;k<3;k++)G.spawnEnemy('slime',p.x+1,p.z+0.2*k,false);
 const antes=G.enemies().length;
-for(const e of G.enemies().slice(0,3)){if(e.type==='slime'){G.damageEnemy(e,99999)}}
+for(const e of G.enemies().slice(0,3))G.damageEnemy(e,99999);
 ok(G.enemies().length<antes,'inimigos morreram');
 ok(G.hs()>=0,'killStop executou sem erro');
 console.log('[5] chefe');
@@ -201,6 +224,14 @@ const skullShot=G.projs().find(q=>q.owner==='p'&&q.kind==='skull');
 ok(!!skullShot&&skullShot.g.name==='necroSkullProjectile'&&skullShot.g.geometry.userData.voxelKind==='necro-skull-projectile'&&skullShot.g.geometry.userData.voxelParts>=25,'Necromante dispara uma caveira voxel com órbitas verdes, maxilar e dentes');
 const necroWeapon=window.CLASS_WEAPONS[CLASSES.necro.weaponId],expectedSkullDamage=skullShot&&necroWeapon.dmg*G.player.stats.dmg*(skullShot.crit?G.player.stats.critDmg:1),skullDamageFactor=skullShot?skullShot.dmg/expectedSkullDamage:0;
 ok(!!skullShot&&necroWeapon.projSpeed===13&&necroWeapon.dmg===16&&Math.abs(skullShot.speed-necroWeapon.projSpeed*G.player.stats.pspd)<.01&&skullDamageFactor>.899&&skullDamageFactor<1.101&&skullShot.r===.22,'caveira do Necromante lê velocidade e dano do módulo, mantendo crítico e colisão');
+console.log('[8a] Ressurreição Profana');
+G.newRun('necro');ok(G.player.passives.includes('unholy_resurrection')&&G.player.passives.length===1&&G.player.maxPassives===5&&G.player.stats.unholyChance===.15&&G.player.stats.unholyDuration===12&&!window.PASSIVE_REGISTRY.randomOptions({cls:'necro',passives:[],maxPassives:5}).some(p=>p.passiveId==='unholy_resurrection'),'Ressurreição Profana é passiva fixa de Necronus: 15% de chance, 12 s e 1 dos 5 slots');
+G.enemies().length=0;G.player.stats.unholyChance=1;const slainEnemy=G.spawnEnemy('slime',G.player.x+5,G.player.z,false);G.killEnemy(slainEnemy);const risenSkeleton=G.minions().find(m=>m.temporary);
+ok(!!risenSkeleton&&!risenSkeleton.sold&&Math.abs(risenSkeleton.lifeLeft-12)<1e-9&&Math.hypot(risenSkeleton.x-slainEnemy.x,risenSkeleton.z-slainEnemy.z)<1,'inimigo derrotado retorna no local como esqueleto aliado temporário');
+G.enemies().length=0;const allyTarget=G.spawnEnemy('brute',risenSkeleton.x+.4,risenSkeleton.z,false),allyTargetHp=allyTarget.hp;G.updateMinions(.6);
+ok(allyTarget.hp<allyTargetHp,'esqueleto ressuscitado persegue e ataca inimigos próximos');
+G.player.minCap=0;G.enemies().length=0;G.updateMinions(12);
+ok(!G.minions().includes(risenSkeleton)&&!risenSkeleton.mesh.parent,'esqueleto temporário desaparece ao terminar os 12 segundos');
 G.newRun('mago');const mage=G.player;G.spawnEnemy('brute',mage.x+1,mage.z,false);const target=G.enemies().find(e=>e.type==='brute'),hpBefore=target.hp;G.useAbility();
 ok(target.hp===hpBefore&&mage.spinT===0,'Q do Mago removido sem aplicar dano ou lentidão');
 console.log('[8b] poderes da Véspera');
@@ -211,8 +242,12 @@ const chronoWeapon=window.CLASS_WEAPONS[CLASSES.chrono.weaponId],expectedTimeDam
 ok(!!timeShot&&chronoWeapon.projSpeed===15&&chronoWeapon.dmg===18&&Math.abs(timeShot.speed-chronoWeapon.projSpeed*G.player.stats.pspd)<.01&&timeDamageFactor>.899&&timeDamageFactor<1.101&&timeShot.r===.22,'Orbe do Tempo lê velocidade e dano do módulo, mantendo crítico e colisão');
 G.newRun('chrono');G.enemies().length=0;G.spawnEnemy('brute',G.player.x+2,G.player.z,false);const timeTarget=G.enemies().find(e=>e.type==='brute'),timeHp=timeTarget.hp;G.useAbility();
 ok(timeTarget.hp===timeHp&&G.player.spinT===0,'Q da Véspera removido sem dano ou controle temporal ativo');
+console.log('[8b.5] passiva fixa do Guardião');
+G.newRun('tank');const tank=G.player;
+ok(tank.passives.length===1&&tank.passives[0]==='iron_plating'&&tank.picks.includes('Placas de Ferro')&&tank.upgIds['passive:iron_plating']&&Object.keys(tank.upgIds).length===1&&Math.abs(tank.stats.armor-(CLASSES.tank.armor+.08))<1e-8,'Placas de Ferro é passiva fixa do Guardião, soma 8% de armadura e ocupa 1 dos 5 slots');
 console.log('[8c] dash-morcego do Vlad');
 G.newRun('dracula');G.enemies().length=0;const vlad=G.player,batForm=vlad.model.dashBat;G.dash();
+ok(vlad.passives.length===1&&vlad.passives[0]==='vampirism'&&vlad.picks.includes('Vampirismo')&&vlad.upgIds['passive:vampirism']&&Object.keys(vlad.upgIds).length===1&&Math.abs(vlad.stats.ls-.15)<1e-8,'Vampirismo é passiva fixa do Vlad, soma 3% ao roubo de vida da arma e ocupa 1 dos 5 slots');
 const vladDashSpeed=Math.hypot(vlad.dvx,vlad.dvz),vladDashCd=vlad.dashCd,vladDashT=vlad.dashT,vladDashInvuln=vlad.invuln;
 ok(vladDashSpeed===18&&Math.abs(vladDashCd-1.1*vlad.stats.dashCd)<.001&&Math.abs(vladDashT-.17)<.001&&vladDashInvuln>=.3,'dash do Vlad mantém velocidade, duração, recarga e invulnerabilidade');
 G.update(1/60);
@@ -244,19 +279,18 @@ ok(G.getState()==='pause','pausa abriu (renderPause sem erro)');
 G.setScreen('play');
 frames(3);
 console.log('[11] novos upgrades estilo Megabonk');
-const NOVOS=['Punho Fatal','Velocidade de Tiro','Empurrão','Reflexo Relâmpago','Pulso Congelante'];
+const NOVOS=['Velocidade de Tiro','Empurrão','Reflexo Relâmpago'];
+G.newRun('chrono');
+ok(G.player.passives.includes('frozen_pulse')&&G.player.passives.length===1&&G.player.maxPassives===5&&G.player.picks.includes('Pulso Congelante')&&G.player.stats.chill===1&&!G.statUps().some(u=>u.id==='chill')&&!window.PASSIVE_REGISTRY.randomOptions({cls:'chrono',passives:[],maxPassives:5}).some(p=>p.passiveId==='frozen_pulse'),'Pulso Congelante é passiva fixa da Véspera, ocupa 1 dos 5 slots e saiu da roleta');
+G.enemies().length=0;G.spawnEnemy('slime',G.player.x+2,G.player.z,false);const frozenPulseTarget=G.enemies()[0];if(frozenPulseTarget)G.damageEnemy(frozenPulseTarget,1,false);const frozenSlow=1-.2*G.player.stats.chill;
+ok(!!frozenPulseTarget&&frozenPulseTarget.slowF<=frozenSlow+1e-9&&Math.abs(frozenPulseTarget.slowT-.7)<1e-9,'Pulso Congelante deixa o inimigo 20% mais lento por 0,7 s');
 G.newRun('mago');
-const novosIds=['cdmg','pspd','kb','dc','chill'],defs=G.statUps();
+const novosIds=['pspd','kb','dc'],defs=G.statUps();
 for(const id of novosIds){const u=defs.find(x=>x.id===id);ok(!!u&&u.ok(G.player),'upgrade '+id+' está disponível para o perfil atual');if(u&&u.ok(G.player)){u.apply(G.player);G.player.picks.push(u.nome)}}
 const ganhos=new Set(G.player.picks.filter(x=>NOVOS.includes(x)));
-ok(ganhos.size===NOVOS.length,'os cinco upgrades individuais foram aplicados sem depender da roleta ('+[...ganhos].join(', ')+')');
-ok(G.player.stats.critDmg>2&&G.player.stats.pspd>1&&G.player.stats.kb>1&&G.player.stats.dashCd<1&&G.player.stats.chill>0,
-  'stats novos com valores: critDmg='+G.player.stats.critDmg+' pspd='+G.player.stats.pspd+' kb='+G.player.stats.kb+' dashCd='+G.player.stats.dashCd+' chill='+G.player.stats.chill);
-G.spawnEnemy('slime',G.player.x+1,G.player.z,false);
-const sl=G.enemies().find(e=>e.type==='slime');
-G.damageEnemy(sl,1,false);
-const cf=1-.2*G.player.stats.chill;
-ok(sl.slowT>0&&sl.slowF<=cf+1e-9,'Pulso Congelante lentifica o alvo (slowF='+sl.slowF+' slowT='+sl.slowT.toFixed(2)+')');
+ok(ganhos.size===NOVOS.length,'os três upgrades individuais restantes foram aplicados sem depender da roleta ('+[...ganhos].join(', ')+')');
+ok(G.player.stats.critDmg===2&&G.player.stats.pspd>1&&G.player.stats.kb>1&&G.player.stats.dashCd<1&&G.player.stats.chill===0,
+  'stats dos três upgrades: critDmg='+G.player.stats.critDmg+' pspd='+G.player.stats.pspd+' kb='+G.player.stats.kb+' dashCd='+G.player.stats.dashCd+' chill='+G.player.stats.chill);
 console.log('[11.5] cristais arcanos exclusivos do Mago');
 G.newRun('mago');let crystal=G.mapInfo().landPos.cry[0];G.player.x=crystal.x;G.player.z=crystal.z;G.player.y=0;G.player.atkCd=30;
 G.spawnEnemy('brute',crystal.x+1,crystal.z,false);let crystalTarget=G.enemies().find(e=>e.type==='brute'),crystalHp=crystalTarget.hp;G.update(1/60);
@@ -265,9 +299,10 @@ G.newRun('guerreiro');crystal=G.mapInfo().landPos.cry[0];G.player.x=crystal.x;G.
 G.spawnEnemy('brute',crystal.x+1,crystal.z,false);crystalTarget=G.enemies().find(e=>e.type==='brute');crystalHp=crystalTarget.hp;G.update(1/60);
 ok(!crystal.used&&crystalTarget.hp===crystalHp,'outras classes passam pelo cristal sem ativá-lo nem causar dano');
 console.log('[11.6] fogueira exclusiva do Castiel');
-G.newRun('demon');let fire=G.mapInfo().landPos.fire[0];G.player.x=fire.x;G.player.z=fire.z;G.player.y=0;G.player.atkCd=30;G.player.fireCd=0;G.player.invuln=0;
+G.newRun('demon');ok(G.player.passives.includes('burning_fire')&&G.player.stats.burnChance===.25&&G.player.stats.burnDuration===3,'Fogo Ardente é passiva fixa de Castiel: 25% de chance e 3s de Queimação');let fire=G.mapInfo().landPos.fire[0];G.player.x=fire.x;G.player.z=fire.z;G.player.y=0;G.player.atkCd=30;G.player.fireCd=0;G.player.invuln=0;G.player.stats.burnChance=1;
 const castielHp=G.player.hp;G.spawnEnemy('brute',fire.x+.35,fire.z,false);let fireTarget=G.enemies().find(e=>e.type==='brute'),fireTargetHp=fireTarget&&fireTarget.hp;if(fireTarget){fireTarget.cd=30;fireTarget.speed=0}G.update(1/60);
 ok(fire.used===true&&G.player.hp===castielHp&&!!fireTarget&&fireTarget.hp<fireTargetHp,'Castiel consome a fogueira, não recebe dano e explode inimigos próximos');
+const hpAfterFire=fireTarget&&fireTarget.hp;G.update(.8);ok(!!fireTarget&&fireTarget.burnT>0&&fireTarget.hp<hpAfterFire,'Queimação causa dano periódico e mantém o efeito visual no alvo');
 G.newRun('guerreiro');fire=G.mapInfo().landPos.fire[0];G.player.x=fire.x;G.player.z=fire.z;G.player.y=0;G.player.atkCd=30;G.player.fireCd=0;G.player.invuln=0;const warriorFireHp=G.player.hp;G.update(1/60);
 ok(!fire.used&&G.player.hp<warriorFireHp,'fogueira continua causando dano e não explode para as outras classes');
 console.log('[12] mapa diversificado e jogável');

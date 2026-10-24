@@ -8,6 +8,7 @@ window.CLASSES.arqueiro = {
   armor: 0,
   speed: 5.8,
   weaponId: 'archer_bow',
+  passiveId: 'ricochet',
   pal: {
     body: 0x275447,
     trim: 0x221812,

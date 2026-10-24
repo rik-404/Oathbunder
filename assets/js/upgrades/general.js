@@ -4,10 +4,7 @@ window.UPGRADE_REGISTRY.register('general', [
   { id: 'as', nome: 'Mãos Rápidas', desc: '+12% de velocidade de ataque.', ok: p => window.UPGRADE_REGISTRY.utils.pode(p, 'Mãos Rápidas', 10), apply: p => p.stats.atkSpd *= 1.12 },
   { id: 'ms', nome: 'Botas Leves', desc: '+8% de velocidade de movimento.', ok: p => window.UPGRADE_REGISTRY.utils.pode(p, 'Botas Leves', 6), apply: p => p.stats.move *= 1.08 },
   { id: 'hp', nome: 'Coração de Pedra', desc: '+25 de vida máxima e cura 25.', ok: p => window.UPGRADE_REGISTRY.utils.pode(p, 'Coração de Pedra', 10), apply: p => { p.maxHp += 25; p.hp += 25 } },
-  { id: 'crit', nome: 'Olho Certeiro', desc: '+8% de chance de crítico (dano dobrado).', ok: p => window.UPGRADE_REGISTRY.utils.pode(p, 'Olho Certeiro', 7), apply: p => p.stats.crit += .08 },
-  { id: 'armor', nome: 'Placas de Ferro', desc: 'Recebe 8% menos dano (teto de 70%).', ok: p => p.stats.armor < .69, apply: p => p.stats.armor = Math.min(.7, p.stats.armor + .08) },
   { id: 'regen', nome: 'Regeneração', desc: 'Recupera +0,8 de vida por segundo.', ok: p => window.UPGRADE_REGISTRY.utils.pode(p, 'Regeneração', 5), apply: p => p.stats.regen += .8 },
   { id: 'magnet', nome: 'Ímã', desc: '+40% de distância para puxar orbes de experiência.', ok: p => window.UPGRADE_REGISTRY.utils.pode(p, 'Ímã', 5), apply: p => p.stats.magnet *= 1.4 },
-  { id: 'xp', nome: 'Sabedoria', desc: '+15% de experiência ganha.', ok: p => window.UPGRADE_REGISTRY.utils.pode(p, 'Sabedoria', 8), apply: p => p.stats.xpMul *= 1.15 },
   { id: 'area', nome: 'Alcance Maior', desc: '+18% de área em golpes, explosões e auras.', ok: p => window.UPGRADE_REGISTRY.utils.pode(p, 'Alcance Maior', 8), apply: p => p.stats.area *= 1.18 }
 ]);

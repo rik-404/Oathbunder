@@ -2,12 +2,13 @@
 window.CLASSES = window.CLASSES || {};
 window.CLASSES.king = {
   nome: 'Midas',
-  role: 'Arremessa moedas e lidera o reino',
+  role: 'Invoca a Guarda Real e enriquece com cada vitória',
   ui: '#f2c14b',
   hp: 105,
   armor: .1,
   speed: 5,
-  weaponId: 'king_coins',
+  weaponId: 'king_guard',
+  passiveId: 'midas_touch',
   pal: {
     body: 0x990000,
     trim: 0xe3ab28,

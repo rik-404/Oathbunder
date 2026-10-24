@@ -8,6 +8,7 @@ window.CLASSES.guerreiro = {
   armor: .1,
   speed: 5.3,
   weaponId: 'warrior_sword',
+  passiveId: 'fatal_fist',
   pal: {
     body: 0x2b3942,
     trim: 0x593928,

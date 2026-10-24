@@ -8,6 +8,7 @@ window.CLASSES.chrono = {
   armor: .05,
   speed: 5.4,
   weaponId: 'chrono_orb',
+  passiveId: 'frozen_pulse',
   pal: {
     body: 0x0c231c,
     trim: 0xbdbd96,

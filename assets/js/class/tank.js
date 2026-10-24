@@ -8,6 +8,7 @@ window.CLASSES.tank = {
   armor: .25,
   speed: 4.6,
   weaponId: 'guardian_hammer',
+  passiveId: 'iron_plating',
   pal: {
     body: 0x5d6672,
     trim: 0x2f5fa8,

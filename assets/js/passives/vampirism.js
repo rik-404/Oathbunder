@@ -1,4 +1,4 @@
-// Passiva fixa de Vlad: reaproveita o efeito de Sede de Sangue sem entrar na roleta geral.
+// Passiva fixa de Vlad: rouba vida desde o início e não entra na roleta geral.
 window.PASSIVE_REGISTRY.register({
   id: 'vampirism',
   nome: 'Vampirismo',

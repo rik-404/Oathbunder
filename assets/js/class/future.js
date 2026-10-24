@@ -8,6 +8,7 @@ window.CLASSES.future = {
   armor: .05,
   speed: 5.6,
   weaponId: 'future_plasma',
+  passiveId: 'future_echo',
   pal: {
     body: 0x1c2b3a,
     trim: 0x3bf0d0,

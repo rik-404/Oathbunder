@@ -103,10 +103,10 @@ const WEAPONS=window.WEAPONS||{},WEAPON_UPDATERS=window.WEAPON_UPDATERS||{},WEAP
 // melhorias de nível em assets/js/upgrades/ (STAT_UPS agregado pelo index.js antes deste arquivo)
 // símbolos pra reconhecer cada poder e classe de relance
 const ICONS={
-  'Orbes Giratórios':'🔮','Raio Celeste':'🌩️','Aura de Brasa':'🔥','Canhão de Estilhaços':'💥',
+  'Orbes Giratórios':'🔮','Raio Celeste':'🌩️','Aura de Brasa':'🔥','Canhão de Estilhaços':'💥','Eco do Futuro':'⌛',
   'Força':'💪','Mãos Rápidas':'⚡','Botas Leves':'👟','Coração de Pedra':'❤️','Olho Certeiro':'🎯','Vampirismo':'🦷','Placas de Ferro':'🧱','Regeneração':'💚','Ímã':'🧲','Sabedoria':'📖','Alcance Maior':'💥','Foco':'⏳','Poção Grande':'🧪',
   'Projétil Extra':'✨','Perfuração':'➡️','Espinhos':'🌵','Horda Óssea':'🦴','Ossos Afiados':'⚰️',
-  'Punho Fatal':'💢','Velocidade de Tiro':'🚀','Empurrão':'🫱','Reflexo Relâmpago':'💨','Pulso Congelante':'❄️',
+  'Punho Fatal':'💢','Velocidade de Tiro':'🚀','Empurrão':'🫱','Reflexo Relâmpago':'💨','Pulso Congelante':'❄️','Garrafa de Cerveja':'🍺',
 };
 // ícones de classe: pixel art 16×16 gerada em assets/images/icons/ (via node _genicons.js) — um rosto por herói
 const CLSICON={mago:'assets/images/icons/mago.png?v=3',arqueiro:'assets/images/icons/arqueiro.png?v=3',guerreiro:'assets/images/icons/guerreiro.png?v=3',tank:'assets/images/icons/tank.png?v=3',necro:'assets/images/icons/necro.png?v=4',chrono:'assets/images/icons/chrono.png?v=4',pistol:'assets/images/icons/pistol.png?v=4',dracula:'assets/images/icons/dracula.png?v=4',demon:'assets/images/icons/demon.png?v=4',future:'assets/images/icons/future.png?v=4',human:'assets/images/icons/human.png?v=4',king:'assets/images/icons/king.png?v=4'};
@@ -114,11 +114,11 @@ let CLSIMG={};try{for(const k in CLSICON){const im=new Image();im.src=CLSICON[k]
 const clsImg=k=>`<img class="cimg" src="${CLSICON[k]}" alt="" title="${CLASSES[k]?CLASSES[k].nome:k}">`; // HTML: tamanho segue o font-size do pai (em)
 const CLSTIPO={mago:'Mago',arqueiro:'Arqueiro',guerreiro:'Guerreiro',tank:'Guardião',necro:'Necromante',chrono:'Chronomante',pistol:'Pistoleiro',dracula:'Vampiro',demon:'Demônio',future:'Viajante',human:'Humano',king:'Rei'};
 // ícones de poder/melhoria/interface: pixel art 16×16 em assets/images/icons/upg/ (via node _genicons.js)
-const UPGSLUG={'Orbes Giratórios':'orbes-giratorios','Raio Celeste':'raio-celeste','Aura de Brasa':'aura-brasa','Canhão de Estilhaços':'canhao','Vampirismo':'vampirismo'};
-const upgImg=n=>{const s=UPGSLUG[n];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=3" alt="">`:''};
+const UPGSLUG={'Orbes Giratórios':'orbes-giratorios','Raio Celeste':'raio-celeste','Aura de Brasa':'aura-brasa','Canhão de Estilhaços':'canhao','Vampirismo':'vampirismo','Placas de Ferro':'placas-ferro','Toque de Midas':'ouro-real','Guarda Real':'espadas','Fogo Ardente':'aura-brasa','Ricochete':'projetil-extra'};
+const upgImg=n=>{const s=UPGSLUG[n];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=4" alt="">`:''};
 // emojis antigos → PNG (shop/ conquistas/ HUD continuam usando o char no fonte)
 const EMICON={'❤️':'coracao','💪':'forca','⚡':'maos-rapidas','👟':'botas-leves','🎯':'olho-certeiro','💥':'alcance-maior','⏳':'foco','⌛':'tempo','⏱️':'foco','🧱':'placas-ferro','💚':'regeneracao','🩸':'pacto','🦷':'vampirismo','✨':'projetil-extra','➡️':'perfuracao','🌵':'espinhos','💢':'punho-fatal','🚀':'vel-tiro','🫱':'empurrao','💨':'reflexo-relampago','❄️':'gelo','📖':'sabedoria','🧲':'ima','🪙':'ouro-real','🔒':'trancado','🔓':'desbloquear','💀':'craneo','☠️':'craneo','⭐':'estrela','🎖️':'estrela','👹':'golem','⚔️':'espadas','🗡️':'ossos-afiados','🦴':'horda-ossea','🧠':'ia'};
-const emIc=e=>{const s=EMICON[e];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=3" alt="">`:''};
+const emIc=e=>{const s=EMICON[e];return s?`<img class="cimg" src="assets/images/icons/upg/${s}.png?v=4" alt="">`:''};
 const icon=n=>upgImg(n)||ICONS[n]||'';
 const WEAPONS_NAMES=new Set(Object.values(WEAPONS).map(w=>w.nome));
 const BUILD_LIMITS={weapons:5,upgrades:5};
@@ -529,7 +529,6 @@ const PROJ_GEO={
   hellfire:CASTIEL_HELLFIRE_GEO,
   plasma:mergeBoxes([[0,0,0,.14,.14,.34,0x3bf0d0],[0,0,-.18,.08,.08,.18,0xbffff4],[0,0,.14,.1,.1,.1,0x1affd8]]),
   rock:mergeBoxes([[0,0,0,.2,.17,.2,0x8a8a86],[0,.06,.05,.12,.08,.12,0x9a9a94],[-.06,-.05,-.04,.09,.09,.09,0x74746f],[.07,.03,.02,.06,.06,.06,0x9a9a94]]),
-  gcoin:mergeBoxes([[0,0,0,.22,.22,.06,0xf2c14b],[0,0,.04,.11,.11,.02,0xffe9a0],[0,0,-.04,.11,.11,.02,0xcf9a2a]]),
   time:VESPERA_TIME_GEO,
 };
 
@@ -667,6 +666,12 @@ function spawnProj(o){
   projs.push(Object.assign({r:.2,life:1.6,pierce:0,y:.62},o,{vx:Math.sin(o.a)*o.speed,vz:Math.cos(o.a)*o.speed,g:m,hit:new Set()}));
   if(o.owner==='e')S('bone');else S('shot',o.kind);
 }
+function tryRicochet(p,hit){const st=player.stats,n=p.ricochets||0,max=st.ricochetMax||0;if(!st.ricochetChance||n>=max)return false;
+  let target=null,best=st.ricochetRange||8;for(const e of enemies){if(e===hit||e.dead||p.hit.has(e))continue;const d=Math.hypot(e.x-hit.x,e.z-hit.z);if(d<best){best=d;target=e}}
+  if(!target||Math.random()>=st.ricochetChance)return false;const dx=target.x-p.x,dz=target.z-p.z,d=Math.hypot(dx,dz)||.001;
+  p.vx=dx/d*p.speed;p.vz=dz/d*p.speed;p.ricochets=n+1;p.dmg*=st.ricochetDamage||.75;p.life=Math.max(p.life,d/p.speed+.08);p.g.rotation.y=Math.atan2(p.vx,p.vz);
+  burst(hit.x,hit.h*.55,hit.z,0xffd24a,7,{emi:1,speed:3,up0:.2,up1:1.1,life:.25,size:.07});return true
+}
 const GEM_MAX=900;let gemMesh=null,gems=[];
 const orbGeo=new THREE.IcosahedronGeometry(1,1);
 // Verde sólido no próprio material (sem cor por instância, que saía preta em algumas GPUs). Tamanho distingue o valor.
@@ -704,6 +709,9 @@ function disposeFx(f){fxGroup.remove(f.obj);f.obj.traverse(o=>{if(o.isMesh&&o.us
 function flatMesh(geo,color,op){const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:op,depthWrite:false,side:THREE.DoubleSide}));m.rotation.x=-Math.PI/2;m.userData.own=true;return m}
 function ringFX(x,z,R,color,life=.4){const g=new THREE.Group();g.position.set(x,.08,z);const m=flatMesh(ringGeo,color,.8);g.add(m);
   addFx(g,life,k=>{const s=lerp(.3,R,1-Math.pow(1-k,3));g.scale.set(s,1,s);m.material.opacity=.8*(1-k)})}
+function glitchDashFX(x,y,z){ringFX(x,z,.92,0x3bf0d0,.2);ringFX(x,z,.6,0xf247d7,.16);
+  burst(x,y,z,0x3bf0d0,7,{emi:1,speed:4.8,up0:.15,up1:1.6,life:.24,size:.07});
+  burst(x,y,z,0xf247d7,6,{emi:1,speed:4.2,up0:.1,up1:1.3,life:.22,size:.065})}
 function arcaneNovaFX(x,z,R){
   ringFX(x,z,R,0x8fe1ff,.58);ringFX(x,z,R*.72,0xb99dff,.46);ringFX(x,z,R*.4,0xf0eaff,.34);
   const seal=new THREE.Group(),glyphs=[];seal.position.set(x,.11,z);
@@ -775,13 +783,19 @@ function addShake(v){if(!reduceMotion)shake=Math.max(shake,v)}
 
 /* ================= combate ================= */
 function roll(base){let d=base*player.stats.dmg*rand(.9,1.1);const crit=Math.random()<player.stats.crit;if(crit)d*=player.stats.critDmg;return{d,crit}}
-function damageEnemy(e,amt,crit,kx=0,kz=0,quiet){
+let temporalEchoes=[];
+function damageEnemy(e,amt,crit,kx=0,kz=0,quiet,noBurn=false,noEcho=false){
   if(e.dead)return;
   e.hp-=amt;runDealt+=amt;e.flash=.08;const kb=e.boss?.08:e.type==='brute'||e.elite?.4:1;e.kx+=kx*kb;e.kz+=kz*kb;
   if(!quiet){S('hit',!!crit);const chill=player.stats.chill;
     if(chill&&!e.boss){const cf=1-.2*chill;if((e.slowF||1)>cf)e.slowF=cf;e.slowT=Math.max(e.slowT||0,.5+.2*chill)}}
   if(!quiet||crit)dmgText(e.x,e.h+.2,e.z,Math.round(amt),crit?'crit':'');
   if(player.stats.ls>0)healPlayer(amt*player.stats.ls*(quiet ? .4 : 1),true);
+  if(!noBurn&&e.hp>0&&player.stats.burnChance>0&&Math.random()<player.stats.burnChance){const duration=player.stats.burnDuration||3,interval=player.stats.burnInterval||.75;
+    e.burnT=Math.max(e.burnT||0,duration);e.burnCd=e.burnCd>0?Math.min(e.burnCd,interval):interval;e.burnDmg=Math.max(e.burnDmg||0,Math.max(.1,amt*(player.stats.burnRatio||.08)));
+    burst(e.x,e.h*.52,e.z,0xff702b,5,{emi:.85,speed:1.8,up0:.25,up1:1.15,life:.3,size:.07})}
+  if(!noEcho&&player.stats.echoChance>0&&Math.random()<player.stats.echoChance){temporalEchoes.push({target:e,x:e.x,z:e.z,damage:Math.max(.1,amt*(player.stats.echoDamage||.5)),t:player.stats.echoDelay||.35,range:player.stats.echoRange||4.5});
+    ringFX(e.x,e.z,Math.max(.4,e.r*1.25),0x62dbff,.24);burst(e.x,e.h*.55,e.z,0x81eaff,5,{emi:1,speed:1.7,up0:.2,up1:1,life:.32,size:.065})}
   if(e.hp<=0)killEnemy(e);
 }
 function killEnemy(e){
@@ -791,10 +805,12 @@ function killEnemy(e){
   if(e.boss){handleBossDeath(e);}
   else{S('kill');killStop(e.type==='brute'||e.elite?.05:.04);dropGem(e.x,e.z,e.xp);const r=Math.random();
     if(r<.022)dropPickup(e.x,e.z,'heart'); // íma: saiu do drop dos bichos — agora é totem fixo no mapa
-    if(Math.random()<(e.elite?1:.16))dropPickup(e.x,e.z,'coin',e.elite?randi(3,6):randi(1,2))} // moeda no chão
+    if(Math.random()<(e.elite?1:.16)){const base=e.elite?randi(3,6):randi(1,2);dropPickup(e.x,e.z,'coin',Math.ceil(base*(player.stats.goldMul||1)))}} // moeda no chão
   if(e.type==='skel'){runSkel++;MISSION_SYSTEM.complete('necro',metaStat().skelKills+runSkel)}
   if(e.type==='bat'){runBat++;MISSION_SYSTEM.complete('dracula',metaStat().batKills+runBat)}
   const i=enemies.indexOf(e);if(i>=0){enemies[i]=enemies[enemies.length-1];enemies.pop()}
+  if(!e.boss&&player.cls==='necro'&&state==='play'&&player.stats.unholyChance>0&&minions.length<8&&Math.random()<player.stats.unholyChance)
+    summonMinion('skeleton',player.stats.unholyDuration||12,{x:e.x,z:e.z});
 }
 function healPlayer(a,quiet){const before=player.hp;player.hp=Math.min(player.maxHp,player.hp+a);if(!quiet&&player.hp-before>=1)dmgText(player.x,1.6+player.y,player.z,'+'+Math.round(player.hp-before),'heal')}
 function hurtPlayer(amt,src,contact,bypassIFrames){
@@ -818,6 +834,16 @@ function updatePoison(dt){if(player.poisonT<=0){setPlayerPoisonTint(false);retur
     if(hurtPlayer(effect.damage,null,false,true))burst(player.x,.75+player.y,player.z,0x8bdc65,4,{emi:.55,speed:1.5,up0:.1,up1:1.1,life:.35,size:.07})}
   if(player.poisonT<=0)setPlayerPoisonTint(false);
 }
+function updateBurning(dt){for(const e of enemies.slice()){if(e.dead||!(e.burnT>0))continue;
+  e.burnT-=dt;e.burnCd-=dt;
+  if(e.burnCd<=0){e.burnCd+=player.stats.burnInterval||.75;burst(e.x,e.h*.52,e.z,0xff702b,3,{emi:.8,speed:1.3,up0:.15,up1:.9,life:.28,size:.06});damageEnemy(e,e.burnDmg||0,false,0,0,true,true)}
+  if(e.burnT<=0){e.burnT=0;e.burnCd=0;e.burnDmg=0}
+}}
+function updateTemporalEchoes(dt){for(let i=temporalEchoes.length-1;i>=0;i--){const echo=temporalEchoes[i];echo.t-=dt;if(echo.t>0)continue;temporalEchoes.splice(i,1);
+  let target=echo.target;if(!target||target.dead||!enemies.includes(target)){target=null;let best=echo.range;for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-echo.x,e.z-echo.z);if(d<best){best=d;target=e}}}
+  if(!target)continue;ringFX(target.x,target.z,Math.max(.45,target.r*1.4),0x79dfff,.3);burst(target.x,target.h*.55,target.z,0x9beeff,8,{emi:1,speed:2.4,up0:.15,up1:1.2,life:.36,size:.07});
+  damageEnemy(target,echo.damage,false,0,0,true,true,true)
+}}
 function gainXP(v){player.xp+=v*player.stats.xpMul;while(player.xp>=player.xpNeed){player.xp-=player.xpNeed;player.lvl++;player.xpNeed=xpNeed(player.lvl);pendingUps++;S('level')}
   MISSION_SYSTEM.complete('future',player.lvl);
   if(pendingUps>0&&state==='play'){upSource='lvl';openUpgrade()}}
@@ -828,6 +854,7 @@ function weaponFor(cls){const C=CLASSES[cls],W=window.CLASS_WEAPONS&&window.CLAS
 function nearest(range){let b=null,bd=range;for(const e of enemies){const d=Math.hypot(e.x-player.x,e.z-player.z)-e.r;if(d<bd){bd=d;b=e}}return b}
 function autoAttack(){
   const C=CLASSES[player.cls],W=weaponFor(player.cls),st=player.stats;if(player.atkCd>0||player.spinT>0)return;
+  if(W.kind==='summon'){player.atkCd=W.atkCd/st.atkSpd;if(!minions.some(m=>m.owner==='king')){player.atkAnim=1;const t=nearest(W.range||14);player.aimAng=t?Math.atan2(t.x-player.x,t.z-player.z):player.facing;const update=WEAPON_UPDATERS[W.id];if(update)update(0,{player,minions,summonMinion,weapon:W})}return}
   if(W.kind==='proj'){const t=nearest(W.range);if(!t)return;player.atkCd=W.atkCd/st.atkSpd;player.atkAnim=1;
     const sp=W.projSpeed*st.pspd;
     const lead=Math.hypot(t.x-player.x,t.z-player.z)/sp;const tx=t.x+(t.mvx||0)*lead,tz=t.z+(t.mvz||0)*lead;const a=Math.atan2(tx-player.x,tz-player.z);player.aimAng=a;
@@ -847,7 +874,8 @@ function useAbility(){/* Habilidades Q removidas; passivas serão implementadas 
 function dash(){
   if(player.dashCd>0||player.dashT>0)return;let dx=moveVec.x,dz=moveVec.z;if(Math.hypot(dx,dz)<.1){dx=Math.sin(player.facing);dz=Math.cos(player.facing)}
   const l=Math.hypot(dx,dz);player.dvx=dx/l*18;player.dvz=dz/l*18;player.dashT=.17;player.dashCd=1.1*player.stats.dashCd;player.invuln=Math.max(player.invuln,.3);
-  if(player.cls==='dracula'){burst(player.x,.65+player.y,player.z,0xb2000a,14,{emi:.7,speed:4.8,up0:.15,up1:1.5,life:.28,size:.085});burst(player.x,.55+player.y,player.z,0x1c0507,8,{speed:3.4,up0:.1,up1:1.1,life:.24,size:.095})}
+  if(player.cls==='future'){player.glitchT=0;player.glitchFxT=0;glitchDashFX(player.x,.45+player.y,player.z)}
+  else if(player.cls==='dracula'){burst(player.x,.65+player.y,player.z,0xb2000a,14,{emi:.7,speed:4.8,up0:.15,up1:1.5,life:.28,size:.085});burst(player.x,.55+player.y,player.z,0x1c0507,8,{speed:3.4,up0:.1,up1:1.1,life:.24,size:.095})}
   else burst(player.x,.3,player.z,0xcfc7b0,8,{speed:2,up0:.2,up1:1.5});S('dash');
 }
 function jump(){if(player.y<=.001&&state==='play'){player.vy=8;burst(player.x,.1,player.z,0xb59a6a,5,{speed:2,up0:.3,up1:1.2});S('jump')}}
@@ -914,15 +942,17 @@ function buildMinionMesh(sold){
   const legR=new THREE.Mesh(lgeo,mm);legR.position.set(.11,.34,0);g.add(legR);
   g.traverse(o=>{if(o.isMesh)o.castShadow=true});g.scale.setScalar(sold?.86:.82);
   return{g,legL,legR}}
-function summonMinion(type){
+function summonMinion(type,life=0,origin=null){
   if(minions.length>=8)return;
-  const a=rand(0,TAU),x=player.x+Math.sin(a)*rand(.9,1.7),z=player.z+Math.cos(a)*rand(.9,1.7);
-  if(collide(x,z,.3))return;
+  let a=rand(0,TAU),x,z;
+  if(origin){let found=false;for(let k=0;k<10;k++){a=rand(0,TAU);const d=rand(.35,.85);x=origin.x+Math.sin(a)*d;z=origin.z+Math.cos(a)*d;if(!collide(x,z,.3)){found=true;break}}if(!found)return}
+  else{x=player.x+Math.sin(a)*rand(.9,1.7);z=player.z+Math.cos(a)*rand(.9,1.7);if(collide(x,z,.3))return}
   const sold=type==='soldier',{g,legL,legR}=buildMinionMesh(sold);
   fxGroup.add(g);
-  const hp=sold?70:45;
-  minions.push({x,z,y:0,r:.3,hp,maxHp:hp,t:rand(0,6),atkCd:0,face:a,mesh:g,legL,legR,anim:0,sold});
+  const hp=sold?70:45,lifeLeft=Math.max(0,Number(life)||0);
+  const minion={x,z,y:0,r:.3,hp,maxHp:hp,t:rand(0,6),atkCd:0,face:a,mesh:g,legL,legR,anim:0,sold,temporary:lifeLeft>0,lifeLeft};minions.push(minion);
   burst(x,.5,z,sold?0xf2c14b:0x7ee0a8,12,{emi:.9,speed:3,up0:.6,up1:2.4});
+  if(lifeLeft>0){ringFX(x,z,.9,0x7ee0a8,.32);ringFX(x,z,.58,0x7250a8,.24)}return minion;
 }
 function clearMinions(){for(const m of minions)if(m.mesh&&m.mesh.parent)m.mesh.parent.remove(m.mesh);minions=[]}
 function updateMinions(dt){
@@ -931,11 +961,12 @@ function updateMinions(dt){
     const dx=B.x-A.x,dz=B.z-A.z,rr=A.r+B.r+.06,d2=dx*dx+dz*dz;if(d2>=rr*rr)continue;
     const d=Math.sqrt(d2)||.001,p=(rr-d)/d*.25;moveEnt(A,-dx*p,-dz*p);moveEnt(B,dx*p,dz*p)}
   for(let i=minions.length-1;i>=0;i--){const m=minions[i];m.t+=dt;m.atkCd-=dt;m.anim=Math.max(0,m.anim-dt*4);
+    if(m.temporary){m.lifeLeft-=dt;if(m.lifeLeft<=0){ringFX(m.x,m.z,.8,0x7ee0a8,.24);burst(m.x,.5,m.z,0x7ee0a8,10,{emi:.75,speed:2.5,up0:.2,up1:1.8,life:.4});fxGroup.remove(m.mesh);minions.splice(i,1);continue}}
     let tgt=null,bd=14;for(const e of enemies){const d=Math.hypot(e.x-m.x,e.z-m.z);if(d<bd){bd=d;tgt=e}}
     let moving=false;
     if(tgt){const dx=tgt.x-m.x,dz=tgt.z-m.z,d=Math.hypot(dx,dz)||.01;m.face=Math.atan2(dx,dz);const reach=m.r+tgt.r+.25;
       if(d>reach){moveEnt(m,dx/d*4.4*dt,dz/d*4.4*dt);moving=true}
-      else if(m.atkCd<=0){m.atkCd=.55;m.anim=1;const base=9+runTime*.025,crit=Math.random()<player.stats.crit;let dd=base*dmgMul*rand(.9,1.1);if(crit)dd*=player.stats.critDmg;damageEnemy(tgt,dd,crit,dx/d*2.5,dz/d*2.5,true)}
+      else if(m.atkCd<=0){m.atkCd=.55;m.anim=1;const base=(m.baseDmg||9)+runTime*.025,crit=Math.random()<player.stats.crit;let dd=base*dmgMul*rand(.9,1.1);if(crit)dd*=player.stats.critDmg;damageEnemy(tgt,dd,crit,dx/d*2.5,dz/d*2.5,true)}
     }else{const dx=player.x-m.x,dz=player.z-m.z,d=Math.hypot(dx,dz)||.01;if(d>2.2){m.face=Math.atan2(dx,dz);moveEnt(m,dx/d*4*dt,dz/d*4*dt);moving=true}}
     for(const e of enemies){if(Math.hypot(e.x-m.x,e.z-m.z)<m.r+e.r+.1){m.hp-=e.dmg*dt*1.3}}
     if(m.hp<=0){burst(m.x,.5,m.z,m.sold?0xf2c14b:0x7ee0a8,9,{emi:.7,speed:2.6});fxGroup.remove(m.mesh);minions.splice(i,1);continue}
@@ -952,7 +983,8 @@ function newRun(cls){
   const C=CLASSES[cls],weapon=weaponFor(cls);selCls=cls;store.set('cv_cls',cls);
   Object.assign(player,{cls,weaponId:weapon.id,ownedWeaponIds:[weapon.id],maxWeapons:BUILD_LIMITS.weapons,x:W/2,z:H/2,y:0,vy:0,r:.32,maxHp:C.hp,hp:C.hp,facing:Math.PI,atkCd:.5,dashCd:0,dashT:0,dvx:0,dvz:0,invuln:1,shieldT:0,spinT:0,spinTick:0,spinAng:0,walk:0,atkAnim:0,flash:0,aimAng:Math.PI,minCap:cls==='necro'?3:0,minDmg:1,orbN:0,
     lvl:1,xp:0,xpNeed:xpNeed(1),weap:Object.fromEntries(Object.keys(WEAPONS).map(k=>[k,0])),
-    stats:{dmg:1,atkSpd:1,move:1,ls:weapon.lsBase||0,crit:weapon.critBase||.05,armor:C.armor,multi:0,pierce:0,area:1,thorns:0,regen:0,magnet:1,xpMul:1,critDmg:2,pspd:1,kb:1,dashCd:1,chill:0},picks:[],upgIds:{}});
+    stats:{dmg:1,atkSpd:1,move:1,ls:weapon.lsBase||0,crit:weapon.critBase||.05,armor:C.armor,multi:0,pierce:0,area:1,thorns:0,regen:0,magnet:1,xpMul:1,critDmg:2,pspd:1,kb:1,dashCd:1,chill:0},picks:[],upgIds:{},passives:[],maxPassives:BUILD_LIMITS.upgrades});
+  window.PASSIVE_REGISTRY.applyFixed(player,C);
   player.poisonT=0;player.poisonTick=0;
   applyShop(player);
   if(player.model)scene.remove(player.model.root);
@@ -960,7 +992,7 @@ function newRun(cls){
   kills=0;runTime=0;hordeN=0;nextHorde=60;nextBoss=180;bossCount=0;spawnAcc=0;pendingUps=0;boss=null;bossKills=0;runDmg=0;runSkel=0;runBat=0;cheatGod=false;ogreLoose=false;aiSkill=.5;aiHpAvg=1;runDealt=0;aiT=0;moonOn=false;moonT=0;moonCd=0;moonKills=0;moonA=0;moonBudget=0;moonAcc=0;
   scene.remove(menuGroup);
   if(level)scene.remove(level);if(fxGroup)scene.remove(fxGroup);if(wGroup)scene.remove(wGroup);
-  enemies=[];projs=[];pickups=[];fxs=[];parts=[];gems=[];texts.forEach(t=>t.el.remove());texts=[];WEAPON_RESETS.forEach(f=>f());minions=[];minSummonT=1;
+  enemies=[];projs=[];pickups=[];temporalEchoes.length=0;fxs=[];parts=[];gems=[];texts.forEach(t=>t.el.remove());texts=[];WEAPON_RESETS.forEach(f=>f());minions=[];minSummonT=1;
   level=new THREE.Group();fxGroup=new THREE.Group();wGroup=new THREE.Group();scene.add(level,fxGroup,wGroup);
   buildField();makeGems();
   camYaw=player.facing;camDist=5.4;camFx=player.x;camFz=player.z;
@@ -972,8 +1004,9 @@ function openUpgrade(){
   setScreen('upgrade');
   $('#up-title').textContent=upSource==='chest'?'Baú aberto!':'Nível '+player.lvl+'!';
   const wSlots=weaponSlots(player),uSlots=upgradeSlots(player);
-  $('#up-sub').textContent=`Build: ${wSlots}/${BUILD_LIMITS.weapons} armas · ${uSlots}/${BUILD_LIMITS.upgrades} melhorias — escolha uma opção ${upSource==='chest'?'(grátis) ':''}ou teclas 1/2/3.`;
+  $('#up-sub').textContent=`Build: ${wSlots}/${BUILD_LIMITS.weapons} armas · ${uSlots}/${BUILD_LIMITS.upgrades} passivas/melhorias — escolha uma opção ${upSource==='chest'?'(grátis) ':''}ou teclas 1/2/3.`;
   let pool=STAT_UPS.filter(u=>(!u.cls||u.cls.includes(player.cls))&&(!u.ok||u.ok(player))&&(player.upgIds[u.id]||uSlots<BUILD_LIMITS.upgrades)).map(u=>Object.assign({kind:u.cls?'cls':'stat'},u));
+  if(uSlots<BUILD_LIMITS.upgrades&&window.PASSIVE_REGISTRY)pool.push(...window.PASSIVE_REGISTRY.randomOptions(player));
   for(const k in WEAPONS){const l=player.weap[k];if(l<5&&(l>0||wSlots<BUILD_LIMITS.weapons)){const up={id:'w_'+k,kind:'weapon',nome:WEAPONS[k].nome+(l?' nv '+(l+1):''),desc:(l?'':'Nova arma. ')+WEAPONS[k].desc(l+1),apply:p=>{if(!p.weap[k]&&p.ownedWeaponIds&&!p.ownedWeaponIds.includes(k))p.ownedWeaponIds.push(k);p.weap[k]++},wk:k};pool.push(up)}}
   const choice=[];while(choice.length<3&&pool.length){const u=pick(pool);choice.push(u);pool=pool.filter(x=>x.id!==u.id)}
   if(!choice.length){ // tudo no teto: recompensa de consolação encerra a cadeia de sorteios
@@ -1033,7 +1066,7 @@ function renderPause(){
   const c={};player.picks.forEach(n=>{if(!WEAPONS_NAMES.has(n))c[n]=(c[n]||0)+1});
   const up=Object.keys(c).map(n=>`<div class="invslot" title="${n}">${icon(n)||'●'}<span class="q">${c[n]}</span></div>`);
   $('#pause-inv').innerHTML=`<div class="invlabel">Armas ${weaponSlots(player)} / ${BUILD_LIMITS.weapons}</div><div class="invgrid">${w.length?w.join(''):'<span class="pnum">nenhuma ainda</span>'}</div>`+
-    `<div class="invlabel">Melhorias ${upgradeSlots(player)} / ${BUILD_LIMITS.upgrades}</div><div class="invgrid">${up.length?up.join(''):'<span class="pnum">nenhuma ainda</span>'}</div>`;
+    `<div class="invlabel">Passivas / melhorias ${upgradeSlots(player)} / ${BUILD_LIMITS.upgrades}</div><div class="invgrid">${up.length?up.join(''):'<span class="pnum">nenhuma ainda</span>'}</div>`;
   const st=player.stats,pct=v=>Math.round(v*100)+'%',mul=v=>'×'+(Math.round(v*100)/100);
   const S=[[emIc('❤️')+' Vida',Math.round(player.maxHp)],[emIc('💪')+' Dano',mul(st.dmg)],[emIc('⚡')+' Vel. ataque',mul(st.atkSpd)],[emIc('👟')+' Vel. movimento',mul(st.move)],[emIc('🎯')+' Crítico',pct(st.crit)],[emIc('💥')+' Área',mul(st.area)],[emIc('🧱')+' Armadura',pct(st.armor)]];
   if(st.regen)S.push([emIc('💚')+' Regeneração','+'+(Math.round(st.regen*10)/10)+'/s']);
@@ -1186,10 +1219,11 @@ function renderCards(){
 }
 function renderDetail(k){const C=CLASSES[k],best=store.get('cv_bestT',{}),det=$('#chardetail'),locked=!isUnlocked(k);
   det.style.setProperty('--c',C.ui);
-  const runs=metaStat().runs;
+  const passive=window.PASSIVE_REGISTRY&&window.PASSIVE_REGISTRY.get(C.passiveId),runs=metaStat().runs;
   det.innerHTML=`<div class="cd-top" style="--c:${C.ui}"><span class="cd-ic">${clsImg(k)}</span><div class="cd-id"><h3 style="color:${C.ui}">${C.nome}</h3><span class="cd-tipo">${CLSTIPO[k]}</span></div></div>`+
     `<div class="cd-meta">${best[k]?'★ Recorde '+fmtT(best[k]):'★ Sem recorde ainda'} · ${runs} corrida${runs===1?'':'s'}</div>`+
     `<p class="cd-role">${C.role}</p>`+
+    (passive?`<div class="ab"><strong>${upgImg(passive.nome)} ${passive.nome}<small>PASSIVA FIXA</small></strong><span>${passive.desc}</span></div>`:'')+
     `<div class="pips">${Object.entries(C.stats).map(([n,v])=>`<div class="pip-row" style="--c:${C.ui}"><span>${n}</span><i>${'<b class="on"></b>'.repeat(v)}${'<b></b>'.repeat(5-v)}</i></div>`).join('')}</div>`+
     (locked&&MISSION[k]?`<div class="rec" style="color:var(--gold)">${emIc('🎯')} ${MISSION[k].desc}<br>Progresso: ${MISSION[k].fmt?MISSION[k].fmt(MISSION[k].prog()):fmtN(MISSION[k].prog())} / ${MISSION[k].fmt?MISSION[k].fmt(MISSION[k].goal):fmtN(MISSION[k].goal)} ${MISSION[k].label}</div>`:'')+
     (locked
@@ -1292,9 +1326,17 @@ function update(dt){
   if(moving)player.facing+=angDiff(player.facing,Math.atan2(mx,mz))*Math.min(1,dt*14);
   player.atkCd-=dt;player.dashCd=Math.max(0,player.dashCd-dt);player.invuln-=dt;player.flash-=dt;player.shieldT=Math.max(0,player.shieldT-dt);
   updatePoison(dt);
+  updateBurning(dt);
+  updateTemporalEchoes(dt);
   if(st.regen>0&&player.hp<player.maxHp)healPlayer(st.regen*dt,true);
-  if(player.dashT>0){player.dashT-=dt;moveEnt(player,player.dvx*dt,player.dvz*dt);if(Math.random()<.6)burst(player.x,.4+player.y,player.z,C.pal.body,1,{speed:.5,up0:0,up1:.5,grav:0,life:.3,size:.18})}
+  if(player.dashT>0){player.dashT-=dt;moveEnt(player,player.dvx*dt,player.dvz*dt);
+    if(player.cls==='future'){player.glitchT=(player.glitchT||0)+dt;player.glitchFxT=(player.glitchFxT||0)-dt;
+      if(player.glitchFxT<=0){player.glitchFxT=.045;glitchDashFX(player.x,.4+player.y,player.z)}
+      if(player.model)player.model.root.visible=Math.floor(player.glitchT*52)%6!==0;
+    }else if(Math.random()<.6)burst(player.x,.4+player.y,player.z,C.pal.body,1,{speed:.5,up0:0,up1:.5,grav:0,life:.3,size:.18});
+    if(player.cls==='future'&&player.dashT<=0&&player.model)player.model.root.visible=true}
   else if(moving){let sp=C.speed*st.move;if(player.spinT>0)sp*=1.15;if(player.shieldT>0)sp*=.75;moveEnt(player,mx*sp*dt,mz*sp*dt)}
+  if(player.cls==='future'&&player.dashT<=0&&player.model)player.model.root.visible=true;
   player.vy-=24*dt;player.y+=player.vy*dt;if(player.y<0){if(player.vy<-6)burst(player.x,.05,player.z,0xb59a6a,4,{speed:2,up0:.2,up1:1});player.y=0;player.vy=0}
   // Fogueiras: o calor machuca as outras classes; Castiel absorve a chama e a detona uma vez.
   if(landPos&&landPos.fire&&player.y<.5){player.fireCd=(player.fireCd||0)-dt;
@@ -1343,6 +1385,7 @@ function update(dt){
           if(p.kind==='time'){e.slowT=Math.max(e.slowT||0,2.5);e.slowF=.5;const R=1.6*st.area; // lentifica o alvo e os próximos
             for(const o of enemies.slice()){if(o===e||o.dead)continue;if(Math.hypot(o.x-p.x,o.z-p.z)<R+o.r){o.slowT=Math.max(o.slowT||0,2.2);o.slowF=.5;damageEnemy(o,p.dmg*.4,false,0,0,true)}}
             ringFX(p.x,p.z,R,0x9fe8ff,.25);burst(p.x,p.y,p.z,0x9fe8ff,5,{emi:1,speed:2.5})}
+          if(tryRicochet(p,e)){dead=false;break}
           if(p.pierce--<=0){dead=true;break}}}}
     else if(!dead&&p.owner==='e'){if(Math.hypot(player.x-p.x,player.z-p.z)<player.r+p.r&&Math.abs(player.y+.6-p.y)<.8){if(player.invuln<=0){hurtPlayer(p.dmg,null,false);dead=true}}}
     if(dead){fxGroup.remove(p.g);projs.splice(i,1)}}

@@ -8,6 +8,7 @@ window.CLASSES.mago = {
   armor: 0,
   speed: 5,
   weaponId: 'mage_orbs',
+  passiveId: 'wisdom',
   pal: {
     body: 0x5b3fa8,
     trim: 0xf2b84b,

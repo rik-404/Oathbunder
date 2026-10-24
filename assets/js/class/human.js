@@ -8,6 +8,7 @@ window.CLASSES.human = {
   armor: 0,
   speed: 2.6,
   weaponId: 'human_stone',
+  passiveId: 'beer_bottle',
   pal: {
     body: 0x12b5b5,
     trim: 0x3838c8,
