@@ -158,6 +158,7 @@ ok(G.getState()==='play','partida iniciada');
 ok(G.enemies().length===8,'8 slimes iniciais');
 {G.enemies().length=0;G.player.weap.orbit=2;G.update(1/60);const orbs=G.weaponGroup().children.filter(m=>m.name==='orbitOrb'),first=orbs[0],core=first&&first.userData.orbitCore;
  ok(orbs.length===3&&!!core&&first.children.length>=20&&first.scale.x===.78,'Orbes Giratórios constroem três relicários voxel detalhados sem alterar o nível da arma')}
+{G.player.weap.aura=1;G.update(1/60);const aura=G.weaponGroup().children.find(m=>m.userData.weaponAura==='voxel-fire-v2'),flames=aura&&aura.children.filter(m=>m.userData.auraFlame),embers=aura&&aura.children.filter(m=>m.userData.auraEmber);ok(!!aura&&flames.length===10&&embers.length===12&&aura.scale.y===1&&window.WEAPONS.aura.desc(1).includes('9 de dano'),'Aura de Brasa redesenhada como coroa voxel de dez chamas e brasas orbitais, mantendo o dano da arma')}
 {G.newRun('tank');G.enemies().length=0;G.player.shieldT=1;G.update(1/60);const t=G.player.model,idleTilt=t.armR.rotation.x+t.hammer.rotation.x,shieldPose=Math.abs(t.armL.rotation.x+1)<1e-6&&Math.abs(t.shield.rotation.x-1)<1e-6;
  G.player.shieldT=0;G.player.atkAnim=.01;G.update(.001);const impactAngle=t.armR.rotation.x+t.hammer.rotation.x;
  ok(idleTilt>.66&&idleTilt<.72,'martelo recebe mais 10 graus de inclinação para a frente no repouso');

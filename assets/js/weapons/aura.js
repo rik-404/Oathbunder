@@ -6,59 +6,112 @@
     desc: l => `Queima tudo num raio de ${(1.7 + .3 * l).toFixed(1).replace('.', ',')} m, ${5 + 4 * l} de dano a cada 0,5 s.`
   };
 
-  let auraT = 0, auraFx = null, auraFlares = [], auraStains = [];
+  let auraT = 0, auraFx = null, auraFlares = [], auraEmbers = [], auraHalos = [];
 
   (window.WEAPON_RESETS = window.WEAPON_RESETS || []).push(() => {
     auraT = 0;
     auraFx = null;
     auraFlares.length = 0;
-    auraStains.length = 0;
+    auraEmbers.length = 0;
+    auraHalos.length = 0;
   });
+
+  function buildAura(C) {
+    const root = new C.THREE.Group();
+    root.name = 'voxelFireAura';
+    root.userData.weaponAura = 'voxel-fire-v2';
+
+    // Selo de calor no chão: disco discreto e dois anéis independentes e pulsantes.
+    const ground = C.flatMesh(new C.THREE.CircleGeometry(1, 20), 0x8b2818, .12);
+    ground.position.y = .012;
+    ground.scale.set(.94, .94, .94);
+    root.add(ground);
+    const outer = C.flatMesh(new C.THREE.RingGeometry(.91, 1, 24), 0xff5a21, .38);
+    outer.position.y = .024;
+    root.add(outer);
+    auraHalos.push({ m: outer, op: .38, phase: .2 });
+    const inner = C.flatMesh(new C.THREE.RingGeometry(.72, .79, 20), 0xffc34b, .48);
+    inner.position.y = .03;
+    inner.scale.set(.66, .66, .66);
+    root.add(inner);
+    auraHalos.push({ m: inner, op: .48, phase: 1.7 });
+
+    // Placas de carvão e magma formam uma coroa segmentada, mais legível que uma mancha lisa.
+    for (let i = 0; i < 16; i++) {
+      const a = i / 16 * C.TAU, tile = new C.THREE.Group();
+      const color = i % 4 === 0 ? 0xffb83c : i % 2 ? 0x9b291b : 0xd74620;
+      C.vox(tile, 0, .045, 0, i % 4 === 0 ? .13 : .105, .055, .17, color, i % 4 === 0 ? .9 : .35);
+      tile.position.set(Math.sin(a) * .87, 0, Math.cos(a) * .87);
+      tile.rotation.y = a;
+      root.add(tile);
+    }
+
+    // Dez torres de chama em blocos escalonados, com base de carvão, brasa e ponta dourada.
+    for (let i = 0; i < 10; i++) {
+      const g = new C.THREE.Group();
+      const phase = i * 2.399 + C.rand(-.2, .2);
+      C.vox(g, 0, .055, 0, .19, .09, .18, 0x54201b, .35);
+      C.vox(g, -.008, .14, 0, .15, .12, .15, 0xe8441c, 1);
+      C.vox(g, .012, .245, -.008, .12, .12, .12, i % 3 ? 0xff8c23 : 0xffb12f, 1.1);
+      C.vox(g, -.014, .345, .012, .085, .105, .09, 0xffd45a, 1.15);
+      C.vox(g, .022, .435, -.008, .055, .09, .06, 0xff6a1d, 1);
+      const a = i / 10 * C.TAU + .12;
+      g.position.set(Math.sin(a) * .86, 0, Math.cos(a) * .86);
+      g.rotation.y = phase;
+      g.userData.auraFlame = true;
+      root.add(g);
+      auraFlares.push({ g, phase, base: .78 + C.rand(-.12, .2) });
+    }
+
+    // Brasas cúbicas orbitam em alturas diferentes, deixando o efeito vivo sem virar fumaça lisa.
+    for (let i = 0; i < 12; i++) {
+      const g = new C.THREE.Group(), color = i % 3 === 0 ? 0xffdf70 : i % 2 ? 0xff5425 : 0xff9b2e;
+      C.vox(g, 0, 0, 0, .065, .075, .065, color, 1.2);
+      if (i % 3 === 0) C.vox(g, .025, .035, 0, .035, .035, .035, 0xfff0a0, 1.4);
+      g.userData.auraEmber = true;
+      root.add(g);
+      auraEmbers.push({ g, phase: i / 12 * C.TAU, radius: .48 + (i % 4) * .11, speed: (i % 2 ? 1 : -1) * (1.1 + (i % 3) * .22), height: .25 + (i % 4) * .105, size: .72 + (i % 3) * .16 });
+    }
+
+    // Pequeno núcleo em cruz, quase encostado no chão, para amarrar o selo visualmente.
+    const core = new C.THREE.Group();
+    C.vox(core, 0, .035, 0, .22, .045, .075, 0xff7825, 1);
+    C.vox(core, 0, .037, 0, .075, .048, .22, 0xffc54d, 1.1);
+    core.userData.auraCore = true;
+    root.add(core);
+
+    return root;
+  }
 
   (window.WEAPON_UPDATERS = window.WEAPON_UPDATERS || {}).aura = function (dt, C) {
     const Wp = C.player.weap, st = C.player.stats;
 
     if (!auraFx) {
-      auraFx = new C.THREE.Group();
+      auraFx = buildAura(C);
       C.wGroup.add(auraFx);
-
-      for (let i = 0; i < 5; i++) {
-        const a = C.rand(0, C.TAU), r = C.rand(.08, .6);
-        const s = C.flatMesh(new C.THREE.CircleGeometry(C.rand(.28, .5), 20), C.pick([0xff8a2a, 0xd9571e]), C.rand(.07, .13));
-        s.userData.own = false;
-        s.position.set(Math.sin(a) * r, C.rand(0, .014), Math.cos(a) * r);
-        auraFx.add(s);
-        auraStains.push({ m: s, ph: C.rand(0, C.TAU), op: s.material.opacity });
-      }
-
-      for (let i = 0; i < 14; i++) {
-        const g = new C.THREE.Group();
-        C.vox(g, 0, .09, 0, .1, .18, .1, C.pick([0xffb02f, 0xff9a1f]), 1);
-        const t = C.vox(g, 0, .23, 0, .065, .12, .065, 0xff4a1a, 1);
-        t.rotation.x = C.rand(-.3, .3);
-
-        const fa = i / 14 * C.TAU + C.rand(-.15, .15), fr = .92 + C.rand(-.1, .14);
-        g.position.set(Math.sin(fa) * fr, 0, Math.cos(fa) * fr);
-        auraFx.add(g);
-        auraFlares.push({ g, ph: C.rand(0, C.TAU), base: .8 + C.rand(-.25, .3), cur: .5 });
-      }
     }
 
     const R = (1.7 + .3 * Wp.aura) * st.area;
-    auraFx.position.set(C.player.x, .04, C.player.z);
-    auraFx.scale.setScalar(R);
-    auraFx.rotation.y += dt * .6;
+    auraFx.position.set(C.player.x, .04 + C.player.y, C.player.z);
+    auraFx.scale.set(R, 1, R);
+    auraFx.rotation.y += dt * .16;
 
     for (const fl of auraFlares) {
-      const tgt = Math.sin(C.runTime * .7 + fl.ph * 3.1) > .0 ? fl.base : 0;
-      fl.cur += (tgt - fl.cur) * Math.min(1, dt * 7);
-      const w = .3 + .7 * fl.cur * (.75 + .35 * Math.sin(C.runTime * 8 + fl.ph * 5));
-      fl.g.scale.set(w, w, w);
+      const wave = Math.sin(C.runTime * 8 + fl.phase * 3);
+      const height = fl.base * (.88 + .12 * wave);
+      fl.g.scale.set(.92 + .08 * Math.sin(C.runTime * 6 + fl.phase), height, .92 + .08 * Math.cos(C.runTime * 7 + fl.phase));
+      fl.g.rotation.z = Math.sin(C.runTime * 9 + fl.phase) * .09;
     }
+    for (const ember of auraEmbers) {
+      const a = ember.phase + C.runTime * ember.speed;
+      ember.g.position.set(Math.sin(a) * ember.radius, ember.height + Math.sin(C.runTime * 5 + ember.phase) * .075, Math.cos(a) * ember.radius);
+      ember.g.rotation.y = a * 1.7;
+      ember.g.scale.setScalar(ember.size * (.78 + .22 * Math.sin(C.runTime * 11 + ember.phase)));
+    }
+    for (const halo of auraHalos)
+      halo.m.material.opacity = halo.op * (.78 + .22 * Math.sin(C.runTime * 3.2 + halo.phase));
 
-    for (const sn of auraStains)
-      sn.m.material.opacity = sn.op * (.7 + .4 * Math.sin(C.runTime * 2.5 + sn.ph * 2));
-
+    // Dano e intervalo mantêm o balanceamento já existente: pulso de 0,5 s no mesmo raio.
     auraT -= dt;
     if (auraT <= 0) {
       auraT = .5;
@@ -68,8 +121,10 @@
           C.damageEnemy(e, r.d, r.crit, 0, 0, true);
         }
       }
-      if (Math.random() < .8)
-        C.burst(C.player.x + C.rand(-R, R) * .7, .1, C.player.z + C.rand(-R, R) * .7, 0xff8a3a, 2, { emi: 1, speed: .5, up0: 1, up1: 2.5, grav: 0, life: .5, size: .1 });
+      if (Math.random() < .8) {
+        const a = C.rand(0, C.TAU), r = C.rand(.25, .92) * R;
+        C.burst(C.player.x + Math.sin(a) * r, .12 + C.player.y, C.player.z + Math.cos(a) * r, 0xff9a32, 3, { emi: 1, speed: .65, up0: .8, up1: 2.2, grav: 0, life: .42, size: .065 });
+      }
     }
   };
 })();
