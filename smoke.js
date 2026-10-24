@@ -24,7 +24,7 @@ const realNow=()=>performance.now();let fakeT=realNow();
 global.performance={now:()=>fakeT};
 global.addEventListener=function(){};
 global.window=global;
-eval(fs.readFileSync('assets/js/tree/trees.js','utf8'));
+eval(fs.readFileSync('assets/js/decorations/trees.js','utf8'));
 eval(fs.readFileSync('assets/js/functions/missions.js','utf8'));
 
 // ---------- THREE ----------
@@ -57,7 +57,7 @@ global.THREE=THREE;
 
 // ---------- carrega o jogo exposto via __G ----------
 // weapons.js e upgrades.js juntos com o game.js (no navegador são <script>s antes do game.js)
-const cdir='assets/js/class';const csrc=fs.readdirSync(cdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?1:b==='index.js'?-1:a.localeCompare(b)).map(f=>fs.readFileSync(cdir+'/'+f,'utf8')).join('\n')+'\n';const wdir='assets/js/weapons';let src=csrc+fs.readdirSync(wdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?-1:b==='index.js'?1:a.localeCompare(b)).map(f=>fs.readFileSync(wdir+'/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/functions/upgrades.js','utf8')+'\n'+fs.readdirSync('assets/js/enimies').filter(f=>f.endsWith('.js')).sort().map(f=>fs.readFileSync('assets/js/enimies/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/environment/chest.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
+const cdir='assets/js/class';const csrc=fs.readdirSync(cdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?1:b==='index.js'?-1:a.localeCompare(b)).map(f=>fs.readFileSync(cdir+'/'+f,'utf8')).join('\n')+'\n';const wdir='assets/js/weapons';let src=csrc+fs.readdirSync(wdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?-1:b==='index.js'?1:a.localeCompare(b)).map(f=>fs.readFileSync(wdir+'/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/functions/upgrades.js','utf8')+'\n'+fs.readdirSync('assets/js/enimies').filter(f=>f.endsWith('.js')).sort().map(f=>fs.readFileSync('assets/js/enimies/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/decorations/chest.js','utf8')+'\n'+fs.readFileSync('assets/js/decorations/index.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
 const i=src.lastIndexOf('})();');
 const hook=`window.__G={newRun,update,openUpgrade,chooseUpgrade,damageEnemy,gainXP,hurtPlayer,dash,jump,useAbility,spawnBoss,spawnEnemy,killEnemy,S,setMuted,player,keys,setScreen,getBoss:()=>boss,getUps:()=>($('#ups')&&$('#ups')._choice)||null,hs:()=>hitStopT,getState:()=>state,enemies:()=>enemies,projs:()=>projs,mapInfo:()=>({W,H,grid,landPos,chestN:chests.length}),jv:(x,z)=>jv(x,z),relief:(x,z)=>relief(x,z),hills:()=>HILLS.length,runCheat,toggleMap,galNames:()=>{if(!galleryItems)galleryItems=buildGalleryItems();return galleryItems.map(g=>g.name)},galMake:(n)=>{if(!galleryItems)galleryItems=buildGalleryItems();const it=galleryItems.find(g=>g.name===n);return it?it.make():null},skelDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.skel),zombieDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.zombie)};\n})();`;
 src=src.slice(0,i)+hook;
@@ -89,13 +89,13 @@ ok(G.zombieDef(),'zumbi registrado via assets/js/enimies/zombie.js');
 {const ks=Object.keys(CLASSES);ok(ks.length===12&&ks.every(k=>typeof CLASSES[k].model==='function'),'12 classes com o próprio modelo voxel (CLASSES[k].model)')}
 {const gn=G.galNames();ok(gn.some(n=>n.includes('TARDIS'))&&gn.some(n=>n.includes('Trono')),'galeria de modelos inclui TARDIS e trono ('+gn.length+' itens)');
  const a=G.galMake(gn.find(n=>n.includes('TARDIS'))),b=G.galMake(gn.find(n=>n.includes('Trono')));
- ok(!!a&&!!b&&a.children.length>=20&&b.children.length>0,'cabine do tempo detalhada e trono constroem na galeria')}
+ ok(!!a&&!!b&&a.children.length>=20&&b.children.length>=55,'cabine do tempo detalhada e trono real com mais de 55 peças voxel constroem na galeria')}
 {const n=G.galNames().find(n=>n==='Soldado Real · minion do Midas'),soldier=n&&G.galMake(n),combo=G.galMake('Midas + Guarda Real · combo');
  ok(!!soldier&&soldier.children.length===3&&soldier.scale.x===.86&&!!combo&&combo.children.length===5,'Soldado Real detalhado e combo do Midas constroem na galeria')}
 {const gn=G.galNames(),n=gn.find(n=>n==='Ogro Brutamontes · chefe'),ogre=n&&G.galMake(n);
  ok(!!ogre&&ogre.children.length>0,'chefe Ogro constrói o modelo atualizado na galeria')}
 {const chest=G.galMake(G.galNames().find(n=>n.includes('Baú')));ok(!!window.CHEST_MODEL&&!!chest&&chest.children.length>=3,'baú separado carrega e constrói na galeria')}
-{const n=G.galNames().find(n=>n==='Árvore Morta · árvore'),tree=n&&G.galMake(n);ok(!!tree&&!!tree.geometry,'árvore morta carrega do módulo assets/js/tree/trees.js')}
+{const n=G.galNames().find(n=>n==='Árvore Morta · árvore'),tree=n&&G.galMake(n);ok(!!tree&&!!tree.geometry,'árvore morta carrega do módulo assets/js/decorations/trees.js')}
 {const names=G.galNames().filter(n=>n.endsWith(' · árvore')),models=names.map(n=>G.galMake(n));
  ok(names.length===6&&models.every(m=>m&&m.geometry)&&new Set(models.map(m=>m.geometry)).size===6,'seis árvores da galeria têm geometrias próprias')}
 frames(3);

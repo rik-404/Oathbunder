@@ -79,13 +79,31 @@
         }}
       const lamp=new THREE.PointLight(GLASS,.45,4,2);lamp.position.set(0,2.43,0);g.add(lamp);return g}
 
-    function buildRoyalThrone(){const thr=new THREE.Group(),GD=0xc9a24a,GLD=0xe8c86a,RED=0x8a1220,WOOD=0x2a1a12;
-      vox(thr,0,.05,0,1.3,.1,1.06,WOOD);vox(thr,0,.11,0,1.24,.03,1,GD);
-      for(const x of[-.44,.44])for(const z of[-.32,.32])vox(thr,x,.24,z,.12,.24,.12,GD);
-      vox(thr,0,.36,0,1,.08,.8,GD);vox(thr,0,.43,0,.9,.08,.7,RED);vox(thr,0,.86,-.33,.92,.86,.1,WOOD);vox(thr,0,.9,-.28,.84,.7,.05,RED);
-      vox(thr,-.42,.9,-.28,.04,.7,.06,GD);vox(thr,.42,.9,-.28,.04,.7,.06,GD);vox(thr,0,1.28,-.3,.86,.05,.1,GD);
-      vox(thr,-.28,1.36,-.3,.09,.1,.09,GD);vox(thr,0,1.42,-.3,.1,.18,.09,GD);vox(thr,.28,1.36,-.3,.09,.1,.09,GD);vox(thr,0,1.42,-.245,.04,.045,.02,0xd42020,1);
-      vox(thr,-.5,.5,.02,.1,.08,.72,GD);vox(thr,.5,.5,.02,.1,.08,.72,GD);vox(thr,-.5,.56,.04,.13,.06,.68,RED);vox(thr,.5,.56,.04,.13,.06,.68,RED);vox(thr,-.5,.4,.32,.09,.2,.09,GD);vox(thr,.5,.4,.32,.09,.2,.09,GD);vox(thr,-.5,.615,.34,.07,.07,.07,GLD);vox(thr,.5,.615,.34,.07,.07,.07,GLD);return thr}
+    function buildRoyalThrone(){const thr=new THREE.Group(),GD=0xc99b35,GLD=0xf4d36a,RED=0x861727,RED2=0xb72b3d,WOOD=0x24170f,DARK=0x111019,GEM=0x31d6a0;
+      // Base em degraus, com friso dourado e pés esculpidos.
+      vox(thr,0,.065,0,1.5,.13,1.28,WOOD);vox(thr,0,.135,0,1.43,.035,1.21,GD);vox(thr,0,.19,0,1.31,.09,1.1,0x3b2516);vox(thr,0,.235,0,1.36,.035,1.13,GLD);
+      for(const x of[-.52,.52])for(const z of[-.4,.4]){vox(thr,x,.34,z,.15,.2,.15,GD);vox(thr,x,.45,z,.105,.08,.105,GLD);vox(thr,x,.285,z,.18,.07,.18,WOOD)}
+      // Assento acolchoado em veludo, com debrum e tachas em pixels.
+      vox(thr,0,.43,.11,.98,.12,.78,WOOD);vox(thr,0,.51,.11,.96,.07,.76,GD);vox(thr,0,.575,.11,.88,.11,.68,RED);vox(thr,0,.635,.11,.82,.035,.62,RED2);
+      for(const x of[-.34,-.17,0,.17,.34]){vox(thr,x,.66,.405,.045,.035,.045,GLD);vox(thr,x,.66,-.185,.045,.035,.045,GLD)}
+      // Encosto alto: madeira escura, painel acolchoado e moldura dourada em camadas.
+      vox(thr,0,1.12,-.43,1.08,1.16,.16,WOOD);vox(thr,0,1.12,-.335,.91,.99,.045,DARK);vox(thr,0,1.12,-.305,.82,.88,.035,RED);vox(thr,0,1.12,-.278,.72,.78,.025,RED2);
+      vox(thr,0,1.12,-.257,.07,.7,.018,RED);vox(thr,0,1.12,-.256,.58,.07,.018,RED);
+      for(const x of[-.53,.53]){vox(thr,x,1.08,-.43,.12,1.18,.17,GD);vox(thr,x,1.08,-.33,.065,1.02,.055,GLD);vox(thr,x,1.68,-.43,.19,.13,.22,WOOD);vox(thr,x,1.7,-.3,.13,.12,.08,GLD)}
+      vox(thr,0,1.69,-.43,1.12,.14,.19,GD);vox(thr,0,1.65,-.31,.86,.07,.045,GLD);
+      // Brasões laterais, cravejados de ouro e pequenas esmeraldas.
+      for(const x of[-.32,.32]){vox(thr,x,1.13,-.24,.18,.2,.055,GD);vox(thr,x,1.13,-.205,.105,.12,.025,GEM,.35);vox(thr,x,1.39,-.24,.11,.08,.045,GLD)}
+      const crest=vox(thr,0,1.26,-.225,.27,.27,.055,GEM,.55);crest.rotation.z=Math.PI/4;vox(thr,0,1.26,-.19,.1,.1,.025,0xeaffd6,.8);
+      // Coroa entalhada no topo do espaldar, com pontas alternadas e rubi central.
+      vox(thr,0,1.81,-.43,.9,.16,.22,WOOD);vox(thr,0,1.87,-.31,.82,.09,.08,GD);vox(thr,0,1.95,-.4,.62,.12,.17,GLD);
+      for(const x of[-.35,-.18,0,.18,.35])vox(thr,x,2.04-(Math.abs(x)*.28),-.4,.105,.23,.14,GD);
+      vox(thr,0,2.12,-.4,.18,.19,.17,GLD);const ruby=vox(thr,0,2.13,-.29,.09,.11,.04,0xff4055,1);ruby.rotation.z=Math.PI/4;
+      for(const x of[-.57,.57]){vox(thr,x,1.91,-.43,.15,.18,.15,GLD);vox(thr,x,2.03,-.43,.09,.12,.09,0x4fd8ff,.65)}
+      // Apoios largos com guarnição, punhos facetados e descanso para os pés.
+      for(const x of[-.61,.61]){vox(thr,x,.72,-.02,.15,.47,.17,WOOD);vox(thr,x,.96,-.02,.2,.13,.22,GLD);vox(thr,x,.79,.16,.18,.09,.48,GD);vox(thr,x,.85,.16,.14,.035,.39,RED);vox(thr,x,.85,.39,.2,.12,.16,GLD);vox(thr,x,.91,.39,.13,.08,.11,GEM,.3);vox(thr,x,.42,.04,.18,.1,.2,WOOD)}
+      vox(thr,0,.22,.69,.82,.18,.3,WOOD);vox(thr,0,.31,.69,.76,.08,.25,GD);vox(thr,0,.37,.69,.67,.07,.19,RED);
+      for(const x of[-.25,0,.25])vox(thr,x,.405,.69,.06,.025,.06,GLD);
+      return thr}
 
     function makeTotem(){const g=new THREE.Group();
       vox(g,0,.11,0,1.05,.22,1.05,0x6f6a63);vox(g,0,.28,0,.82,.14,.82,0x837e74);vox(g,0,.42,0,.6,.1,.6,0x74706a);vox(g,0,.95,0,.46,1,.46,0x8f8a80);vox(g,-.23,.95,0,.1,1,.5,0x7d786f);vox(g,.23,.95,0,.1,1,.5,0x7d786f);vox(g,0,.7,.25,.4,.14,.07,0xd23b2f,.6);
