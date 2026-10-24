@@ -125,21 +125,15 @@ const BUILD_LIMITS={weapons:5,upgrades:5};
 const weaponSlots=p=>Object.values(p.weap||{}).filter(l=>l>0).length;
 const upgradeSlots=p=>Object.keys(p.upgIds||{}).length;
 const UNLOCK={guerreiro:150}; // compra com ouro (Mago começa liberado)
-// Classes liberadas por missão (não por ouro). prog(): progresso atual rumo a goal.
-// há uma corrida em andamento? (soma o progresso atual no total mostrado)
-function inRun(){return state==='play'||state==='pause'||state==='upgrade'||state==='dying'}
-const MISSION={
-  arqueiro:{goal:1,label:'corrida',desc:'Jogue uma corrida até o fim (até morrer)',prog:()=>Math.min(1,metaStat().runs)},
-  tank:{goal:2000,label:'de dano',desc:'Receba 2.000 de dano numa única corrida',prog:()=>Math.min(2000,Math.max(metaStat().maxDmg,inRun()?runDmg:0))},
-  necro:{goal:2500,label:'esqueletos',desc:'Abata 2.500 esqueletos no total',prog:()=>Math.min(2500,metaStat().skelKills+(inRun()?runSkel:0))},
-  chrono:{goal:1200,label:'',fmt:v=>fmtT(v),desc:'Sobreviva 20 minutos numa única corrida',prog:()=>Math.min(1200,Math.max(metaStat().bestTime,inRun()?runTime:0))},
-  pistol:{goal:300,label:'abates numa corrida',desc:'Faça 300 abates numa única corrida',prog:()=>Math.min(300,Math.max(metaStat().maxKills,inRun()?kills:0))},
-  dracula:{goal:1500,label:'morcegos',desc:'Abata 1.500 morcegos no total',prog:()=>Math.min(1500,metaStat().batKills+(inRun()?runBat:0))},
-  demon:{goal:5,label:'Golens',desc:'Derrote o Golem 5 vezes no total',prog:()=>Math.min(5,metaStat().bosses+(inRun()?bossKills:0))},
-  future:{goal:20,label:'de nível',desc:'Alcance o nível 20 numa única corrida',prog:()=>Math.min(20,Math.max(metaStat().bestLvl,inRun()?player.lvl:0))},
-  human:{goal:3,label:'corridas',desc:'Jogue 3 corridas (o Zé insiste em aparecer)',prog:()=>Math.min(3,metaStat().runs)},
-  king:{goal:1000,label:'de ouro',desc:'Acumule 1.000 de ouro',prog:()=>Math.min(1000,coins())},
-};
+// Metas e progresso são definidos em assets/js/functions/missions.js; o motor fornece os dados vivos da partida.
+const MISSION_SYSTEM=window.MISSIONS_MODULE.create({
+  isRunActive:()=>state==='play'||state==='pause'||state==='upgrade'||state==='dying',
+  getMeta:()=>metaStat(),getRunDamage:()=>runDmg,getRunSkeletons:()=>runSkel,getRunBats:()=>runBat,
+  getRunTime:()=>runTime,getKills:()=>kills,getBossKills:()=>bossKills,getPlayerLevel:()=>player.lvl,getCoins:()=>coins(),
+  isUnlocked:k=>isUnlocked(k),unlock:k=>doUnlock(k),className:k=>CLASSES[k]?CLASSES[k].nome:k,
+  toast:(title,subtitle)=>toast(title,subtitle),formatTime:v=>fmtT(v),formatNumber:v=>fmtN(v)
+});
+const MISSION=MISSION_SYSTEM.missions;
 const isUnlocked=k=>(!UNLOCK[k]&&!MISSION[k])||!!store.get('cv_unlocked',{})[k];
 const doUnlock=k=>{const u=store.get('cv_unlocked',{});u[k]=1;store.set('cv_unlocked',u)};
 const RARITY={novo:{t:'NOVO',c:'#f2b84b'},comum:{t:'COMUM',c:'#7fcf5a'},incomum:{t:'INCOMUM',c:'#62b8ff'},raro:{t:'RARO',c:'#c08bff'}};
@@ -179,8 +173,8 @@ function claimAch(){const st=metaStat(),claimed=store.get('cv_ach',{});let bonus
   for(const a of ACH)if(!claimed[a.id]&&a.cur(st)>=a.goal){claimed[a.id]=1;bonus+=a.rw}
   if(bonus){store.set('cv_ach',claimed);addCoins(bonus)}return bonus}
 function recordRun(){const s=metaStat();s.runs++;s.kills+=kills;s.bestTime=Math.max(s.bestTime,Math.floor(runTime));s.bestLvl=Math.max(s.bestLvl,player.lvl);s.bosses+=bossKills;s.maxDmg=Math.max(s.maxDmg,Math.round(runDmg));s.skelKills+=runSkel;s.maxKills=Math.max(s.maxKills,kills);s.batKills+=runBat;s.classes[player.cls]=true;store.set('cv_stat',s);
-  let newCls=null;if(!store.get('cv_unlocked',{}).arqueiro){doUnlock('arqueiro');newCls='arqueiro'} // missão do Arqueiro: completar uma corrida
-  if(!store.get('cv_unlocked',{}).human&&s.runs>=MISSION.human.goal){doUnlock('human');newCls=newCls||'human'} // missão do Zé: 3 corridas
+  let newCls=null;if(MISSION_SYSTEM.complete('arqueiro',s.runs,{silent:true}))newCls='arqueiro';
+  if(MISSION_SYSTEM.complete('human',s.runs,{silent:true}))newCls=newCls||'human';
   const greed=1+(shopLv().greed||0)*.15,earned=Math.max(1,Math.floor((kills*.6+runTime/4)*greed));addCoins(earned);
   return{earned,bonus:claimAch(),newCls}}
 
@@ -201,16 +195,6 @@ function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);camera.
 addEventListener('resize',resize);resize();
 
 const boxGeo=new THREE.BoxGeometry(1,1,1);
-// Bloco com faces coloridas (estilo Minecraft). Ordem de faces do BoxGeometry: +X,-X,+Y(topo),-Y(base),+Z,-Z — 4 vértices cada.
-function faceBoxGeo(topHex,sideHex,botHex){
-  const g=new THREE.BoxGeometry(1,1,1),n=g.attributes.position.count,a=new Float32Array(n*3);
-  const top=new THREE.Color(topHex),side=new THREE.Color(sideHex),bot=new THREE.Color(botHex==null?sideHex:botHex);
-  for(let i=0;i<n;i++){const c=(i>=8&&i<12)?top:(i>=12&&i<16)?bot:side;a[i*3]=c.r;a[i*3+1]=c.g;a[i*3+2]=c.b}
-  g.setAttribute('color',new THREE.Float32BufferAttribute(a,3));return g;
-}
-// Paleta casada com as árvores .vox: verde puro saturado (#00aa00) + terra no tom do tronco (#663300)
-const grassBlockGeo=faceBoxGeo(0x6f9143,0x6b4a2b,0x3a1c00); // grama: topo oliva (paleta "entardecer"), lados/base terra
-const dirtBlockGeo=faceBoxGeo(0x8a5016,0x663300,0x3a1c00);  // terra batida (caminho)
 const ringGeo=new THREE.RingGeometry(.86,1,40);
 const discGeo=new THREE.CircleGeometry(1,40);
 const mats={};
@@ -232,64 +216,8 @@ function mergeBoxes(boxes,amp=0){const pos=[],nor=[],col=[],idx=[];let off=0;con
     for(const i of g.index.array)idx.push(i+off);off+=P.length/3;g.dispose()}
   const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));G.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));G.setAttribute('color',new THREE.Float32BufferAttribute(col,3));G.setIndex(idx);G.computeBoundingSphere();return G}
 
-// Tipos de árvore procedurais (variedade). Cada uma é uma geometria mesclada (1 draw call por tipo via InstancedMesh).
-const treeMat=new THREE.MeshLambertMaterial({vertexColors:true});
-const TREE_GEOS=[
-  // carvalho: tronco curto + copa redonda cheia (verdes vivos)
-  mergeBoxes([[0,.65,0,.36,1.3,.36,0x6b4a2b],[0,1.5,0,.46,.5,.46,0x5a3f26],
-    [0,1.95,0,1.6,1.05,1.6,0x6a9a3e],[0,2.62,0,1.05,.75,1.05,0x7cab4d],
-    [.55,2.12,.35,.7,.6,.7,0x4d7a37],[-.5,2.18,-.3,.66,.55,.66,0x5f9042],[.22,2.5,-.42,.5,.5,.5,0x5f9042]],.12),
-  // pinheiro: silhueta cônica em camadas
-  mergeBoxes([[0,.5,0,.28,1.0,.28,0x5a3f26],[0,1.2,0,1.5,.55,1.5,0x2d7a38],
-    [0,1.66,0,1.15,.55,1.15,0x339040],[0,2.12,0,.8,.55,.8,0x6a9a3e],[0,2.56,0,.46,.5,.46,0x7cab4d],[0,2.9,0,.2,.3,.2,0x7cab4d]],.12),
-  // arbusto: tufo arredondado (sem tronco)
-  mergeBoxes([[0,.45,0,1.2,.85,1.2,0x6a9a3e],[.36,.9,.26,.66,.6,.66,0x7cab4d],[-.33,.76,-.26,.6,.55,.6,0x4d7a37],[.1,1.05,-.1,.5,.45,.5,0x5f9042]],.12),
-  // outono: copa quente (laranja/âmbar)
-  mergeBoxes([[0,.65,0,.34,1.3,.34,0x6b4a2b],[0,1.5,0,.44,.5,.44,0x5a3f26],
-    [0,1.95,0,1.5,1.0,1.5,0xe09428],[0,2.6,0,1.0,.72,1.0,0xf0b53a],
-    [.5,2.12,.32,.66,.6,.66,0xc85528],[-.46,2.18,-.3,.6,.55,.6,0xd9702a]],.15),
-  // bétula: tronco claro com marcas + copa leve
-  mergeBoxes([[0,.8,0,.24,1.6,.24,0xe4ded0],[0,1.0,0,.26,.08,.26,0x3a352c],[0,1.5,0,.26,.07,.26,0x3a352c],
-    [0,2.18,0,1.15,.95,1.15,0x83ad55],[0,2.82,0,.72,.6,.72,0x9cbf68],[.46,2.32,.3,.55,.5,.55,0x749c47]],.08),
-  // árvore morta: galhos que saem do tronco em L (blocos sobrepostos, sem buracos)
-  mergeBoxes([
-    // tronco afinando
-    [0,.6,0,.32,1.2,.32,0x6a5240],[0,1.35,0,.24,.5,.24,0x6a5240],[0,1.78,0,.17,.56,.17,0x6a5240],
-    // galho direito: horizontal saindo do tronco + sobe
-    [.26,1.4,0,.5,.16,.16,0x5c4636],[.46,1.68,0,.16,.56,.16,0x5c4636],[.46,2.02,0,.11,.3,.11,0x5c4636],
-    // galho esquerdo: um pouco mais alto, com leve z
-    [-.25,1.62,-.02,.48,.15,.15,0x5c4636],[-.45,1.9,-.02,.15,.56,.15,0x5c4636],[-.45,2.24,-.02,.1,.28,.1,0x5c4636],
-    // galho central saindo do topo do tronco, inclinado pra frente
-    [.1,2.02,.12,.28,.15,.15,0x6a5240],[.22,2.28,.18,.13,.4,.13,0x5c4636]],.12),
-];
-// pedras procedurais (facetadas, com musguinho no topo)
-const ROCK_GEOS=[
-  mergeBoxes([[0,.3,0,1.0,.6,.9,0x8a8a86],[.22,.72,.1,.6,.42,.56,0x9a9a94],[-.26,.56,-.2,.5,.4,.5,0x76766f],
-    [0,.96,.05,.36,.26,.36,0xa6a69f],[0,1.07,.08,.52,.08,.5,0x6f8f3f]],.14),
-  mergeBoxes([[0,.25,0,.82,.5,.82,0x82827c],[.16,.56,.1,.46,.36,.46,0x94948d],[-.2,.42,-.14,.42,.3,.42,0x70706b],[-.08,.64,.06,.32,.1,.32,0x6f8f3f]],.14),
-];
-// geometrias de decoração do campo (compartilhadas entre o jogo e a galeria)
-const DECOR_GEO={
-  grave:mergeBoxes([
-    [0,.08,0,.52,.16,.24,0x7a7a72],                                   // base
-    [0,.46,0,.42,.68,.16,0x9d9d95],[0,.82,0,.3,.14,.16,0x9d9d95],[0,.9,0,.17,.08,.16,0x9d9d95], // laje + topo arredondado
-    [0,.58,.085,.05,.24,.02,0x6c6c66],[0,.62,.085,.17,.05,.02,0x6c6c66]]), // cruz gravada na frente
-  cross:mergeBoxes([[0,.37,0,.13,.74,.11,0x94948c],[0,.52,0,.44,.13,.1,0x9a9a92]]), // poste alto + trave mais baixa (cruz, não T)
-  shroom:mergeBoxes([[0,.13,0,.16,.26,.16,0xe8e0c8],[0,.3,0,.44,.14,.44,0xd0402a]]),
-  fire:mergeBoxes([[.46,.15,0,.26,.3,.3,0x7a7a72],[-.46,.15,.06,.26,.3,.3,0x8a8a80],[.08,.15,.46,.3,.3,.26,0x7f7f77],[-.12,.15,-.46,.3,.3,.26,0x8a8a80],[.4,.15,-.38,.24,.28,.24,0x82827a],
-    [0,.14,0,.62,.14,.17,0x6a4a2b],[0,.14,0,.17,.14,.62,0x5a3f26],[-.04,.27,.04,.52,.12,.15,0x7a5230],[.04,.27,-.04,.15,.12,.52,0x6a4a2b],
-    [.31,.14,0,.08,.1,.14,0xc8a878],[-.31,.14,0,.08,.1,.14,0xc8a878],[0,.1,0,.34,.06,.34,0x8a2a0a]]),
-  flame:mergeBoxes([[0,.3,0,.34,.3,.34,0xff7a1a],[0,.54,0,.26,.26,.26,0xff7a1a],[0,.76,0,.17,.24,.17,0xff7a1a],[0,.96,0,.1,.2,.1,0xff7a1a],[0,1.12,0,.05,.14,.05,0xff7a1a],
-    [-.14,.52,.06,.1,.22,.1,0xff7a1a],[.13,.62,-.05,.09,.24,.09,0xff7a1a]]),
-  crystal:mergeBoxes([
-    // base de rocha escura (dá contorno/borda contra o chão claro)
-    [0,.11,0,.5,.22,.5,0x241c36],[.17,.2,.1,.22,.14,.22,0x1b1430],[-.14,.17,-.12,.2,.12,.2,0x1b1430],
-    // cristais facetados: tons diferentes dão volume e definição de aresta
-    [0,.52,0,.28,.66,.28,0x7a54c8],[.23,.48,.12,.18,.52,.18,0xa888f2],[-.19,.42,-.12,.16,.46,.16,0x5e3fa8],[.03,.86,0,.14,.26,.14,0xd4bcff]]),
-  stump:mergeBoxes([[0,.18,0,.5,.36,.5,0x6b4a2b],[0,.37,0,.4,.05,.4,0xc9a06a]]),
-};
+const DECORATIONS=window.DECORATION_MODULE({THREE,boxGeo,mergeBoxes,mat,vox,vcMat,rand,randi,TAU,pick});
 
-/* ================= heróis (articulados) ================= */
 function buildBody(P){
   const root=new THREE.Group();
   const leg=x=>{const l=new THREE.Group();l.position.set(x,.34,0);vox(l,0,-.15,0,.16,.32,.18,P.legs);vox(l,0,-.3,.02,.18,.09,.23,P.boots||0x2a2118);root.add(l);return l};
@@ -329,6 +257,25 @@ const LEGGED={};
 const ENEMY_DEFS=(function(){const D=(window&&window.ENEMY_DEFS)||{},out={};
   for(const k in D){const S=D[k](humanoid);if(!S)continue;out[k]=S;ENEMY_BOXES[k]=S.boxes;ENEMIES[k]=S.stats;if(S.legged)LEGGED[k]=1}
   return out})();
+const _SPIDER_LEG_GEO={};
+function spiderLegGeos(){if(_SPIDER_LEG_GEO.upper)return _SPIDER_LEG_GEO;const c=ENEMY_DEFS.spider.legColors;
+  _SPIDER_LEG_GEO.upper=mergeBoxes([[0,0,0,.4,.055,.055,c.leg]]);
+  _SPIDER_LEG_GEO.lower=mergeBoxes([[0,0,0,.055,.34,.055,c.leg]]);
+  _SPIDER_LEG_GEO.joint=mergeBoxes([[0,0,0,.09,.09,.09,c.joint]]);
+  _SPIDER_LEG_GEO.foot=mergeBoxes([[0,0,0,.08,.04,.1,c.foot]]);return _SPIDER_LEG_GEO}
+function buildSpiderModel(emat){
+  const mesh=new THREE.Group(),parts=[],legs=[],G=spiderLegGeos();
+  const body=new THREE.Mesh(enemyGeo('spider'),emat);body.castShadow=true;mesh.add(body);parts.push(body);
+  const add=(geo,parent,x,y,z)=>{const part=new THREE.Mesh(geo,emat);part.position.set(x,y,z);part.castShadow=true;parent.add(part);parts.push(part);return part};
+  for(const spec of ENEMY_DEFS.spider.legs()){
+    const hip=new THREE.Group();hip.position.set(spec.side*.18,.4,spec.z);mesh.add(hip);
+    add(G.upper,hip,spec.side*.2,0,0);add(G.joint,hip,spec.side*.4,0,0);
+    const knee=new THREE.Group();knee.position.set(spec.side*.4,0,0);hip.add(knee);
+    add(G.lower,knee,0,-.17,0);add(G.foot,knee,0,-.36,.02);
+    legs.push({hip,knee,side:spec.side,phase:spec.phase});
+  }
+  mesh.userData.spiderLegs=legs;return {mesh,parts};
+}
 const _BODY={},_LEG={},_WING={};
 function enemyBodyGeo(t){if(_BODY[t])return _BODY[t];let bx=ENEMY_BOXES[t]();
   if(LEGGED[t])bx=bx.slice(2); // tira pernas (as asas do morcego são geometria separada)
@@ -365,15 +312,27 @@ function buildGolem(){const b=buildBody({body:0x6e6578,trim:0x4a4352,skin:0x7d74
   b.root.scale.setScalar(2.6);collect(b.root);return b}
 function buildOgre(){const b=buildBody({body:0x6a5a3a,trim:0x4a3a28,skin:0x7aa84a,legs:0x5a4a2e,arm:0x7aa84a,eye:0xffd24a,eyeE:.6,boots:0x3a2a1a});
   vox(b.torso,0,.06,.13,.54,.44,.24,0x7aa84a);                                              // barrigão
-  vox(b.torso,-.35,.5,0,.22,.14,.3,0x4a3a28);vox(b.torso,.35,.5,0,.22,.14,.3,0x4a3a28);     // ombreiras de couro
+  vox(b.torso,0,-.02,.26,.48,.09,.08,0x513b27);vox(b.torso,0,-.02,.31,.14,.1,.025,0xd3ad57); // cinto e fivela
+  vox(b.torso,-.15,.3,.17,.07,.25,.035,0x8c6c3c);vox(b.torso,.15,.3,.17,.07,.25,.035,0x6d512f); // tiras do peitoral
+  vox(b.torso,0,.27,.19,.18,.16,.04,0x34472c);vox(b.torso,0,.27,.22,.075,.075,.025,0xd9c779); // placa e runa
+  vox(b.torso,-.35,.5,0,.28,.22,.34,0x51412d);vox(b.torso,.35,.5,0,.28,.22,.34,0x51412d);   // ombreiras de couro
+  vox(b.torso,-.39,.59,.04,.1,.1,.1,0xd1c49c);vox(b.torso,.39,.59,.04,.1,.1,.1,0xd1c49c);  // rebites de osso
+  vox(b.torso,-.24,.11,.25,.12,.14,.04,0x8da957);vox(b.torso,.23,.18,.25,.09,.1,.04,0x97b65d); // verrugas
   vox(b.head,0,-.15,.11,.3,.12,.18,0x7aa84a);                                               // mandíbula
-  vox(b.head,-.08,-.19,.18,.045,.09,.03,0xf0ead8);vox(b.head,.08,-.19,.18,.045,.09,.03,0xf0ead8); // presas
-  vox(b.head,-.21,.02,0,.06,.12,.09,0x7aa84a);vox(b.head,.21,.02,0,.06,.12,.09,0x7aa84a);   // orelhas
-  vox(b.head,0,.2,-.02,.32,.12,.32,0x2a1f14);                                               // cabelo
-  // bastão de guerra na mão direita
+  vox(b.head,0,-.19,.18,.14,.045,.04,0x3c3320);                                             // boca
+  vox(b.head,-.08,-.19,.2,.055,.1,.045,0xf0ead8);vox(b.head,.08,-.19,.2,.055,.1,.045,0xf0ead8); // presas
+  vox(b.head,-.21,.02,0,.08,.12,.1,0x7aa84a);vox(b.head,.21,.02,0,.08,.12,.1,0x7aa84a);     // orelhas
+  vox(b.head,-.21,.07,.04,.045,.045,.045,0xd1b76d);vox(b.head,.21,.07,.04,.045,.045,.045,0xd1b76d); // brincos
+  vox(b.head,0,.2,-.02,.34,.12,.32,0x2a1f14);                                               // cabelo
+  vox(b.head,-.13,.24,-.02,.12,.1,.12,0x3b2a1d);vox(b.head,.13,.24,-.02,.12,.1,.12,0x3b2a1d);
+  vox(b.head,-.08,.1,.18,.13,.06,.04,0x4b3a24);vox(b.head,.08,.1,.18,.13,.06,.04,0x4b3a24); // sobrancelhas
+  vox(b.head,-.05,.055,.19,.035,.025,.02,0xfff0a0);vox(b.head,.11,.055,.19,.035,.025,.02,0xfff0a0); // olhos
+  // bastão de guerra: madeira amarrada e cabeça de pedra serrilhada
   const club=new THREE.Group();club.rotation.x=Math.PI/2;b.handR.add(club);
   vox(club,0,.38,0,.12,1.15,.12,0x5a3f26);vox(club,0,1.05,0,.38,.52,.38,0x7a5a3a);vox(club,0,1.05,0,.44,.17,.44,0x5a3f26);
+  vox(club,0,.55,.01,.15,.09,.15,0xb58b4a);vox(club,0,.72,.01,.15,.09,.15,0xb58b4a); // amarrações
   vox(club,.21,1.1,0,.11,.15,.11,0x9a9a90);vox(club,-.19,.92,.13,.11,.15,.11,0x9a9a90);vox(club,.1,1.2,-.1,.1,.13,.1,0x9a9a90);
+  vox(club,0,1.32,0,.12,.14,.12,0x493521);vox(club,0,.78,0,.12,.14,.12,0x493521); // espinhos
   b.root.scale.setScalar(2.4);collect(b.root);return b}
 
 const PROJ_GEO={
@@ -440,101 +399,8 @@ function genField(){
 }
 function buildField(){
   const{trees,rocks}=genField();
-  const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),p=new THREE.Vector3(),s=new THREE.Vector3(),col=new THREE.Color(),up=new THREE.Vector3(0,1,0);
-  const inst=(n,cast)=>{const m=new THREE.InstancedMesh(boxGeo,new THREE.MeshLambertMaterial({color:0xffffff}),Math.max(1,n));m.receiveShadow=true;m.castShadow=!!cast;level.add(m);return m};
-  // chão — blocos de grama (topo verde) com manchas de terra batida, estilo Minecraft
-  const gCells=[],dCells=[];
-  for(let z=0;z<H;z++)for(let x=0;x<W;x++)(nz(x,z)>1.2?dCells:gCells).push([x,z]);
-  const ROCK_TONE=new THREE.Color(0x8c8c80); // pedra dos topos de montanha
-  const blockInst=(geo,cells,dry)=>{const m=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({vertexColors:true}),Math.max(1,cells.length));
-    m.receiveShadow=true;level.add(m);
-    cells.forEach(([x,z],i)=>{m4.compose(p.set(x,relief(x,z)+jv(x,z)*.06-.7,z),q,s.set(1,1.4,1));m.setMatrixAt(i,m4); // topo segue o relevo + micro-relevo voxel; bloco mais alto fecha os desníveis
-      const yv=relief(x,z);
-      if(dry&&nz2(x,z)>0.98)col.setHex(0xa8a24a).offsetHSL(0,0,rand(-.06,.04)); // manchas de grama seca/amarelada
-      else col.setScalar(1.0+rand(-.08,.08)+((x+z)%2?.03:-.03)); // contraste/brilho: patches claros e escuros como as folhas
-      if(yv>2)col.lerp(ROCK_TONE,Math.min(.8,(yv-2)/3));m.setColorAt(i,col)}); // acima de 2u o topo da montanha fica rochoso
-    return m};
-  blockInst(grassBlockGeo,gCells,true);blockInst(dirtBlockGeo,dCells);
-  // penhascos da borda
-  const bl=[];for(let z=0;z<H;z++)for(let x=0;x<W;x++)if(grid[z*W+x]===1)bl.push([x,z]);
-  const bm=inst(bl.length,true);bl.forEach(([x,z],i)=>{const h=hgt[z*W+x];m4.compose(p.set(x,h/2,z),q,s.set(1,h,1));bm.setMatrixAt(i,m4);col.setHex(0x7d8274).offsetHSL(0,0,rand(-.06,.04));bm.setColorAt(i,col)});
-  // árvores — vários tipos procedurais, 1 InstancedMesh por tipo
-  {const buckets=TREE_GEOS.map(()=>[]);
-    trees.forEach(t=>buckets[(Math.random()*TREE_GEOS.length)|0].push(t));
-    TREE_GEOS.forEach((geo,bi)=>{const list=buckets[bi];if(!list.length)return;
-      const im=new THREE.InstancedMesh(geo,treeMat,list.length);im.castShadow=true;im.receiveShadow=true;
-      list.forEach(([x,z],i)=>{q.setFromAxisAngle(up,rand(0,TAU));m4.compose(p.set(x,relief(x,z)+jv(x,z)*.06,z),q,s.setScalar(rand(.82,1.22)));im.setMatrixAt(i,m4);
-        col.setScalar(1+rand(-.07,.07));im.setColorAt(i,col)}); // leve variação de tom por árvore
-      level.add(im)});}
-  // pedras — variantes facetadas, 1 InstancedMesh por tipo
-  {const rb=ROCK_GEOS.map(()=>[]);rocks.forEach(t=>rb[(Math.random()*ROCK_GEOS.length)|0].push(t));
-    ROCK_GEOS.forEach((geo,bi)=>{const list=rb[bi];if(!list.length)return;
-      const im=new THREE.InstancedMesh(geo,treeMat,list.length);im.castShadow=true;im.receiveShadow=true;
-      list.forEach(([x,z],i)=>{q.setFromAxisAngle(up,rand(0,TAU));m4.compose(p.set(x,relief(x,z)+jv(x,z)*.06,z),q,s.setScalar(rand(.75,1.1)));im.setMatrixAt(i,m4);
-        col.setScalar(1+rand(-.06,.05));im.setColorAt(i,col)});
-      level.add(im)});}
-  // flores espalhadas pelo chão (decoração plana, estilo Minecraft)
-  const N=600,dm=inst(N,false);let n=0;
-  for(let i=0;i<N;i++){const x=rand(4,W-5),z=rand(4,H-5);if(isWall(x,z)||relief(x,z)>1.5)continue;
-    m4.compose(p.set(x,.07+relief(x,z)+jv(x,z)*.06,z),q,s.set(.12,.14,.12));col.setHex(pick([0xf2d24b,0xe86a8a,0xffffff,0xa58bff,0xff7a3a]));
-    dm.setMatrixAt(n,m4);dm.setColorAt(n++,col)}
-  dm.count=Math.max(1,n);
-  // marcos do campo (decoração que não bloqueia): cemitérios, cogumelos, fogueiras, cristais e tocos
-  landPos={fire:[],cry:[],grave:[]};
-  {const decInst=(geo,matl,list,sc)=>{if(!list.length)return;const im=new THREE.InstancedMesh(geo,matl,list.length);im.castShadow=true;im.receiveShadow=true;level.add(im);
-      list.forEach((it,i)=>{q.setFromAxisAngle(up,it[2]!=null?it[2]:rand(0,TAU));const k=sc?sc[0]+Math.random()*(sc[1]-sc[0]):1;
-        m4.compose(p.set(it[0],relief(it[0],it[1])+jv(it[0],it[1])*.06,it[1]),q,s.setScalar(k));im.setMatrixAt(i,m4);col.setScalar(1+rand(-.08,.05));im.setColorAt(i,col)});return im};
-    const open=(x,z,dC=12)=>x>4&&z>4&&x<W-5&&z<H-5&&!isWall(x,z)&&Math.hypot(x-W/2,z-H/2)>dC&&relief(x,z)<2; // marcos no terreno baixo
-    // cemitérios: pequenos grupos de lápides e cruzes
-    const graveG=DECOR_GEO.grave,crossG=DECOR_GEO.cross;
-    const spots=[];let gt=0;while(spots.length<6&&gt++<250){const x=randi(12,W-13),z=randi(12,H-13);
-      if(!open(x,z)||spots.some(s=>Math.hypot(s.x-x,s.z-z)<18))continue;spots.push({x,z})}
-    landPos.grave=spots.map(s=>({x:s.x,z:s.z}));
-    const graves=[],crosses=[];
-    for(const s of spots){const n=randi(3,6);for(let i=0;i<n;i++){const x=s.x+randi(-2,2),z=s.z+randi(-2,2);
-      if(isWall(x,z)||x<4||z<4||x>=W-5||z>=H-5)continue;(Math.random()<.55?graves:crosses).push([x,z,rand(-.5,.5)])}}
-    decInst(graveG,new THREE.MeshLambertMaterial({vertexColors:true}),graves,[.9,1.2]);
-    decInst(crossG,new THREE.MeshLambertMaterial({vertexColors:true}),crosses,[.9,1.2]);
-    // tufos de cogumelo
-    const shroomG=DECOR_GEO.shroom;
-    const shList=[];let ht=0;while(shList.length<24&&ht++<400){const x=randi(6,W-7),z=randi(6,H-7);
-      if(!open(x,z,6))continue;if(shList.some(s=>Math.hypot(s[0]-x,s[1]-z)<6))continue;shList.push([x,z,rand(0,TAU)])}
-    decInst(shroomG,new THREE.MeshLambertMaterial({vertexColors:true}),shList,[.7,1.2]);
-    // fogueiras (chama usa material brilhante com flicker no frame)
-    const fireG=DECOR_GEO.fire,flG=DECOR_GEO.flame;
-    const fires=[];let ft=0;while(fires.length<7&&ft++<300){const x=randi(10,W-11),z=randi(10,H-11);
-      if(!open(x,z,20)||fires.some(f=>Math.hypot(f[0]-x,f[1]-z)<24))continue;fires.push([x,z,rand(0,TAU)])}
-    landPos.fire=fires.map(f=>({x:f[0],z:f[1]}));
-    decInst(fireG,new THREE.MeshLambertMaterial({vertexColors:true}),fires,[1,1.1]);
-    flameMat=new THREE.MeshBasicMaterial({color:0xff8a2a});
-    fireFx={mesh:null,base:[],smokes:[],lights:[],t:rand(0,9)};
-    if(fires.length){const fm=new THREE.InstancedMesh(flG,flameMat,fires.length);level.add(fm);fireFx.mesh=fm;
-      fires.forEach(([x,z,ry],i)=>{const y=relief(x,z)+jv(x,z)*.06,sc=rand(.85,1.1);
-        q.setFromAxisAngle(up,ry);m4.compose(p.set(x,y,z),q,s.setScalar(sc));fm.setMatrixAt(i,m4);
-        fireFx.base.push({x,z,y,ry,sc,ph:rand(0,TAU)});
-        const li=new THREE.PointLight(0xff8a3a,1.5,6,2);li.position.set(x,y+.85,z);li.visible=false;level.add(li);fireFx.lights.push(li); // luz quente só de perto
-        for(let k=0;k<3;k++){const sm=new THREE.Mesh(boxGeo,new THREE.MeshBasicMaterial({color:0xaab0b8,transparent:true,opacity:0,depthWrite:false}));
-          sm.position.set(x,y-1.5,z);level.add(sm);fireFx.smokes.push({m:sm,x,y,z,ph:k/3})}})}
-    // cristais arcanos (emitem luz própria até de dia)
-    const cryG=DECOR_GEO.crystal;
-    const crys=[];let yt=0;while(crys.length<8&&yt++<300){const x=randi(8,W-9),z=randi(8,H-9);
-      if(!open(x,z,16)||crys.some(c=>Math.hypot(c[0]-x,c[1]-z)<22))continue;crys.push([x,z,rand(0,TAU)])}
-    landPos.cry=crys.map(c=>({x:c[0],z:c[1]}));
-    if(crys.length){const cm=new THREE.InstancedMesh(cryG,new THREE.MeshBasicMaterial({vertexColors:true}),crys.length);level.add(cm); // vertexColors mostra as facetas/base (não um borrão)
-      crys.forEach(([x,z,ry],i)=>{q.setFromAxisAngle(up,ry);m4.compose(p.set(x,relief(x,z)+jv(x,z)*.06,z),q,s.setScalar(rand(.9,1.4)));cm.setMatrixAt(i,m4);
-        col.setScalar(1+rand(-.06,.08));cm.setColorAt(i,col)})} // só leve variação de brilho
-    // tocos onde as árvores caíram
-    const stumpG=DECOR_GEO.stump;
-    const stumps=[];for(let i=0;i<26;i++){const x=randi(5,W-6),z=randi(5,H-6);if(open(x,z,10))stumps.push([x,z,rand(0,TAU)])}
-    decInst(stumpG,new THREE.MeshLambertMaterial({vertexColors:true}),stumps,[.8,1.2]);
-  }
-  // baús
-  chests=[];let tries=0;while(chests.length<20&&tries++<800){const x=randi(6,W-7),z=randi(6,H-7);if(isWall(x,z)||Math.hypot(x-W/2,z-H/2)<14)continue;if(chests.some(c=>Math.hypot(c.x-x,c.z-z)<10))continue;
-    const {g,lid}=makeChest();g.position.set(x,relief(x,z)+jv(x,z)*.06,z);g.rotation.y=rand(0,TAU);level.add(g);chests.push({x,z,g,lid,open:false})}
-  // totens de íma — dois por partida, bem afastados. Ao usar: puxa orbes e moedas de todo o mapa e fica apagado
-  totems=[];let tt=0;while(totems.length<2&&tt++<900){const x=randi(12,W-13),z=randi(12,H-13);if(isWall(x,z)||Math.hypot(x-W/2,z-H/2)<22)continue;if(totems.some(c=>Math.hypot(c.x-x,c.z-z)<40))continue;if(chests.some(c=>Math.hypot(c.x-x,c.z-z)<4))continue;
-    const {g,m,off}=makeTotem();g.position.set(x,relief(x,z)+jv(x,z)*.06,z);level.add(g);
-    totems.push({x,z,g,m,off,t:rand(0,5),used:false})}
+  const field=DECORATIONS.buildField({level,trees,rocks,grid,hgt,W,H,relief,jv,nz,nz2,isWall});
+  landPos=field.landPos;chests=field.chests;totems=field.totems;flameMat=field.flameMat;fireFx=field.fireFx;
 }
 
 /* ================= entidades ================= */
@@ -560,7 +426,8 @@ function scaleT(){const H=Math.min(22,hordeN),a=clamp((aiSkill-.5)*.4,-.1,.1);re
 function spawnEnemy(type,x,z,elite,opts){
   const D=ENEMIES[type],S=scaleT(),ms=(opts&&opts.ms)||1;const sc=(D.scale||1)*(elite?1.35:1)*ms;const emat=elite?eliteMat:vcMat;
   let mesh,legL,legR,wingL,wingR,parts;
-  if(LEGGED[type]||type==='bat'){ // corpo + partes articuladas
+  if(type==='spider'){const model=buildSpiderModel(emat);mesh=model.mesh;parts=model.parts}
+  else if(LEGGED[type]||type==='bat'){ // corpo + partes articuladas
     mesh=new THREE.Group();const body=new THREE.Mesh(enemyBodyGeo(type),emat);body.castShadow=true;mesh.add(body);parts=[body];
     if(LEGGED[type]){legL=new THREE.Mesh(enemyLegGeo(type),emat);legR=new THREE.Mesh(enemyLegGeo(type),emat);
       legL.castShadow=legR.castShadow=true;legL.position.set(-.11,.34,0);legR.position.set(.11,.34,0);mesh.add(legL,legR);parts.push(legL,legR)}
@@ -597,7 +464,7 @@ function handleBossDeath(e){
   else if(e.type==='slimeking'){toast('Rei do Slime derrotado!','O bando de slimes menores escapou...');
     for(let i=0;i<12;i++){const a=i/12*TAU+rand(-.25,.25),dd=2.4+rand(0,1.8),sx=e.x+Math.sin(a)*dd,sz=e.z+Math.cos(a)*dd;if(!collide(sx,sz,.4)){const mm=spawnEnemy('slime',sx,sz,false,{ms:.55,mini:true});if(mm){mm.kx=Math.sin(a)*4;mm.kz=Math.cos(a)*4}}}}
   else toast('Golem derrotado!','O próximo vai ser mais forte');
-  if(!store.get('cv_unlocked',{}).demon&&metaStat().bosses+bossKills>=MISSION.demon.goal){doUnlock('demon');toast('😈 '+CLASSES.demon.nome+' liberado!','Missão cumprida: '+MISSION.demon.goal+' Golens derrotados')}
+  MISSION_SYSTEM.complete('demon',metaStat().bosses+bossKills);
 }
 function checkBossSpawn(){const t=runTime;if(t>=nextBoss&&!moonOn){nextBoss+=240;if(!boss)spawnBoss()}}
 function pickType(){const t=runTime,w=[['slime',5],['bat',t>15?3:0],['spider',t>30?3:0],['zombie',t>40?4:0],['slimeB',t>80?3:0],['skel',t>100?2:0],['brute',t>160?1:0],['ogre',ogreLoose?2:0]];
@@ -702,31 +569,39 @@ function damageEnemy(e,amt,crit,kx=0,kz=0,quiet){
 }
 function killEnemy(e){
   e.dead=true;if(e.boss)level.remove(e.obj);else level.remove(e.mesh);kills++;if(!moonOn&&!boss&&moonCd<=0&&hordeN>=3&&aiSkill>.62){moonKills++;if(moonKills>=80)bloodMoon()}
-  if(!store.get('cv_unlocked',{}).pistol&&kills>=MISSION.pistol.goal){doUnlock('pistol');toast('🔫 '+CLASSES.pistol.nome+' liberado!','Missão cumprida: '+MISSION.pistol.goal+' abates numa corrida')}
+  MISSION_SYSTEM.complete('pistol',kills);
   burst(e.x,e.h*.5,e.z,e.color,e.boss?50:7,{speed:e.boss?7:4,size:e.boss?.22:.13,life:.7});
   if(e.boss){handleBossDeath(e);}
   else{S('kill');killStop(e.type==='brute'||e.elite?.05:.04);dropGem(e.x,e.z,e.xp);const r=Math.random();
     if(r<.022)dropPickup(e.x,e.z,'heart'); // íma: saiu do drop dos bichos — agora é totem fixo no mapa
     if(Math.random()<(e.elite?1:.16))dropPickup(e.x,e.z,'coin',e.elite?randi(3,6):randi(1,2))} // moeda no chão
-  if(e.type==='skel'){runSkel++; // missão do Necromante: abater esqueletos no total
-    if(!store.get('cv_unlocked',{}).necro&&metaStat().skelKills+runSkel>=MISSION.necro.goal){doUnlock('necro');toast('💀 '+CLASSES.necro.nome+' liberado!','Missão cumprida: '+MISSION.necro.goal+' esqueletos abatidos')}}
-  if(e.type==='bat'){runBat++; // missão do Drácula: abater morcegos no total
-    if(!store.get('cv_unlocked',{}).dracula&&metaStat().batKills+runBat>=MISSION.dracula.goal){doUnlock('dracula');toast('🧛 '+CLASSES.dracula.nome+' liberado!','Missão cumprida: '+MISSION.dracula.goal+' morcegos abatidos')}}
+  if(e.type==='skel'){runSkel++;MISSION_SYSTEM.complete('necro',metaStat().skelKills+runSkel)}
+  if(e.type==='bat'){runBat++;MISSION_SYSTEM.complete('dracula',metaStat().batKills+runBat)}
   const i=enemies.indexOf(e);if(i>=0){enemies[i]=enemies[enemies.length-1];enemies.pop()}
 }
 function healPlayer(a,quiet){const before=player.hp;player.hp=Math.min(player.maxHp,player.hp+a);if(!quiet&&player.hp-before>=1)dmgText(player.x,1.6+player.y,player.z,'+'+Math.round(player.hp-before),'heal')}
-function hurtPlayer(amt,src,contact){
-  if(state!=='play'||player.invuln>0||player.hp<=0||cheatGod)return;
+function hurtPlayer(amt,src,contact,bypassIFrames){
+  if(state!=='play'||(!bypassIFrames&&player.invuln>0)||player.hp<=0||cheatGod)return false;
   let a=amt*(1-player.stats.armor);if(player.shieldT>0)a*=.15;
-  player.hp-=a;player.invuln=.5;player.flash=.12;hurtA=Math.min(1,.35+a/player.maxHp*3);addShake(.2);S('hurt');
-  runDmg+=a; // missão do Tank: receber bastante dano numa corrida
-  if(!store.get('cv_unlocked',{}).tank&&runDmg>=MISSION.tank.goal){doUnlock('tank');toast('🛡️ '+CLASSES.tank.nome+' liberado!','Missão cumprida: '+MISSION.tank.goal+' de dano recebido')}
-  dmgText(player.x,1.5+player.y,player.z,'-'+Math.round(a),'hurt');burst(player.x,.7+player.y,player.z,0xe5473c,5,{speed:3});
+  player.hp-=a;if(!bypassIFrames)player.invuln=.5;player.flash=bypassIFrames?.08:.12;hurtA=Math.min(1,.35+a/player.maxHp*3);addShake(bypassIFrames?.05:.2);S('hurt');
+  runDmg+=a;MISSION_SYSTEM.complete('tank',runDmg);
+  dmgText(player.x,1.5+player.y,player.z,'-'+Math.round(a),'hurt');burst(player.x,.7+player.y,player.z,bypassIFrames?0x8bdc65:0xe5473c,5,{speed:3});
   if(src&&contact&&player.stats.thorns>0&&!src.dead)damageEnemy(src,amt*player.stats.thorns,false,0,0,true);
   if(player.hp<=0)die();
+  return true;
+}
+function applyPoison(effect){const fresh=player.poisonT<=0;player.poisonT=Math.max(player.poisonT||0,effect.duration);
+  if(fresh){player.poisonTick=effect.interval;toast('ENVENENADO','A picada da aranha causa dano por '+effect.duration.toFixed(1)+'s')}
+  else if(player.poisonTick<=0)player.poisonTick=effect.interval;
+  burst(player.x,.65+player.y,player.z,0x91d64b,9,{emi:.65,speed:2,up0:.2,up1:1.5,life:.45,size:.08});
+}
+function updatePoison(dt){if(player.poisonT<=0)return;const effect=ENEMY_DEFS.spider.poison;
+  player.poisonT=Math.max(0,player.poisonT-dt);player.poisonTick-=dt;
+  if(player.poisonTick<=0){player.poisonTick+=effect.interval;
+    if(hurtPlayer(effect.damage,null,false,true))burst(player.x,.75+player.y,player.z,0x8bdc65,4,{emi:.55,speed:1.5,up0:.1,up1:1.1,life:.35,size:.07})}
 }
 function gainXP(v){player.xp+=v*player.stats.xpMul;while(player.xp>=player.xpNeed){player.xp-=player.xpNeed;player.lvl++;player.xpNeed=xpNeed(player.lvl);pendingUps++;S('level')}
-  if(!store.get('cv_unlocked',{}).future&&player.lvl>=MISSION.future.goal){doUnlock('future');toast('🛸 '+CLASSES.future.nome+' liberado!','Missão cumprida: nível '+MISSION.future.goal+' alcançado')}
+  MISSION_SYSTEM.complete('future',player.lvl);
   if(pendingUps>0&&state==='play'){upSource='lvl';openUpgrade()}}
 const xpNeed=l=>Math.floor(5+l*3.2+l*l*.35);
 
@@ -808,14 +683,53 @@ function updWeapons(dt){
 /* ===== necromante: horda de esqueletos ===== */
 let minions=[],minSummonT=1;
 const minMat=new THREE.MeshLambertMaterial({vertexColors:true,emissive:new THREE.Color(0x2f8f4a),emissiveIntensity:.55});
-// soldado real (guarda do Rei): humanoide de aço com elmo e emblema dourado
-const SOLDIER_GEO=mergeBoxes(humanoid({legs:0x5a4433,body:0x8b95a3,trim:0xf2c14b,skin:0xe0b088,arm:0x8b95a3,eye:0x2a2018},{extra:[[0,1.14,0,.3,.08,.3,0x6d7682],[0,1.22,0,.06,.1,.06,0xf2c14b],[0,.56,.16,.1,.14,.02,0xf2c14b]]}));
+// Guarda do Midas: elmo fechado, armadura de aço, tabardo rubro, capa, escudo e espada dourada.
+const SOLDIER_BOXES=()=>humanoid({legs:0x5a4433,body:0x8b95a3,trim:0xf2c14b,skin:0xe0b088,arm:0x8b95a3,eye:0x2a2018},{extra:[
+  [0,1.13,0,.4,.14,.4,0x596878],                         // casco de aço
+  [0,1.16,.18,.32,.055,.08,0xe3ab28],                    // testa dourada
+  [0,1.02,.186,.29,.08,.06,0x37404b],                     // viseira cerrada
+  [0,1.02,.219,.2,.018,.015,0x17181c],                    // fenda dos olhos
+  [0,1.02,.232,.12,.018,.012,0xf2c14b],                   // brilho da viseira
+  [0,1.23,-.03,.1,.15,.1,0x8a1212],                        // pluma rubra
+  [0,1.29,-.03,.07,.07,.07,0xb51e24],                     // ponta da pluma
+  [-.31,.78,0,.26,.21,.32,0x697786],                      // ombreiras de aço
+  [.31,.78,0,.26,.21,.32,0x697786],
+  [-.31,.81,.17,.26,.04,.035,0xe3ab28],                   // frisos dourados
+  [.31,.81,.17,.26,.04,.035,0xe3ab28],
+  [0,.57,.155,.34,.32,.055,0x758293],                     // peitoral
+  [0,.57,.193,.2,.27,.03,0x8a1212],                       // tabardo vermelho
+  [-.12,.57,.214,.04,.25,.025,0xe3ab28],                  // debrum do tabardo
+  [.12,.57,.214,.04,.25,.025,0xe3ab28],
+  [0,.64,.218,.09,.09,.025,0xf2c14b],                     // medalhão solar
+  [0,.64,.236,.045,.045,.018,0x990000],                   // centro rubi
+  [0,.37,.16,.45,.1,.32,0x54432e],                        // cinto de couro
+  [0,.37,.326,.16,.09,.045,0xe3ab28],                     // fivela real
+  [0,.44,-.18,.38,.54,.045,0x7a0a0a],                     // capa de veludo
+  [0,.18,-.18,.39,.05,.055,0xf4f0e8],                     // barra de arminho
+  [-.18,.44,-.18,.025,.48,.055,0xe3ab28],                 // bordas da capa
+  [.18,.44,-.18,.025,.48,.055,0xe3ab28],
+  [-.36,.47,.15,.16,.29,.09,0x8a1212],                    // escudo esmaltado
+  [-.36,.47,.201,.12,.23,.025,0xe3ab28],                  // moldura dourada
+  [-.36,.47,.218,.085,.19,.022,0x990000],                 // campo rubro
+  [-.36,.47,.232,.055,.055,.02,0xf2c14b],                 // moeda no escudo
+  [.36,.7,.16,.055,.32,.045,0xc7d2dc],                     // lâmina
+  [.36,.86,.16,.045,.08,.04,0xf2c14b],                    // ponta dourada
+  [.36,.49,.16,.16,.045,.065,0xe3ab28],                   // guarda
+  [.36,.39,.16,.06,.16,.06,0x5b3c23],                     // empunhadura
+  [.36,.29,.16,.08,.06,.08,0xe3ab28],                     // pomo
+  [-.11,.05,.06,.18,.1,.23,0x282828],                     // botas
+  [.11,.05,.06,.18,.1,.23,0x282828],
+  [-.11,.13,.16,.18,.035,.03,0xe3ab28],                   // fivelas das botas
+  [.11,.13,.16,.18,.035,.03,0xe3ab28],
+  [-.3,.43,.1,.17,.12,.18,0x596878],                      // braçadeiras
+  [.3,.43,.1,.17,.12,.18,0x596878]
+]});
+const SOLDIER_GEO=mergeBoxes(SOLDIER_BOXES()),SOLDIER_BODY_GEO=mergeBoxes(SOLDIER_BOXES().slice(2));
 const soldierMat=new THREE.MeshLambertMaterial({vertexColors:true,emissive:new THREE.Color(0x3a2e10),emissiveIntensity:.2});
 // monta o mesh de um minion (sold: soldado real do Midas; senão esqueleto necromante do Necronus)
 function buildMinionMesh(sold){
-  const boxes=sold?humanoid({legs:0x5a4433,body:0x8b95a3,trim:0xf2c14b,skin:0xe0b088,arm:0x8b95a3,eye:0x2a2018},{extra:[[0,1.14,0,.3,.08,.3,0x6d7682],[0,1.22,0,.06,.1,.06,0xf2c14b],[0,.56,.16,.1,.14,.02,0xf2c14b]]}):ENEMY_BOXES['skel']();
   const mm=sold?soldierMat:minMat,g=new THREE.Group();
-  g.add(new THREE.Mesh(mergeBoxes(boxes.slice(2)),mm));                          // corpo sem as pernas
+  g.add(new THREE.Mesh(sold?SOLDIER_BODY_GEO:mergeBoxes(ENEMY_BOXES['skel']().slice(2)),mm)); // corpo sem as pernas animadas
   // esqueleto usa as mesmas pernas finas de osso do inimigo (fêmur/tíbia/pé); soldado mantém bota grossa
   const skelLeg=(typeof ENEMY_DEFS!=='undefined'&&ENEMY_DEFS.skel&&ENEMY_DEFS.skel.leg)||[[0,-.12,0,.055,.17,.055,0x8f8f8f],[0,-.27,0,.05,.14,.05,0x8f8f8f],[0,-.325,.03,.06,.05,.13,0x9b9b9b]];
   const lgeo=mergeBoxes(sold?[[0,-.17,0,.16,.34,.18,0x5a4433]]:skelLeg);         // perna com pivô no quadril
@@ -861,6 +775,7 @@ function newRun(cls){
   Object.assign(player,{cls,x:W/2,z:H/2,y:0,vy:0,r:.32,maxHp:C.hp,hp:C.hp,facing:Math.PI,atkCd:.5,abCd:0,dashCd:0,dashT:0,dvx:0,dvz:0,invuln:1,shieldT:0,spinT:0,spinTick:0,spinAng:0,walk:0,atkAnim:0,flash:0,aimAng:Math.PI,minCap:cls==='necro'?3:0,minDmg:1,orbN:0,
     lvl:1,xp:0,xpNeed:xpNeed(1),weap:Object.fromEntries(Object.keys(WEAPONS).map(k=>[k,0])),
     stats:{dmg:1,atkSpd:1,move:1,cdr:1,ls:C.lsBase||0,crit:C.critBase||.05,armor:C.armor,multi:0,pierce:0,area:1,thorns:0,regen:0,magnet:1,xpMul:1,critDmg:2,pspd:1,kb:1,dashCd:1,chill:0},picks:[],upgIds:{}});
+  player.poisonT=0;player.poisonTick=0;
   applyShop(player);
   if(player.model)scene.remove(player.model.root);
   player.model=buildHero(cls);scene.add(player.model.root);
@@ -969,103 +884,25 @@ function renderPause(){
 function goMenu(to){if(level){scene.remove(level);level=null;fireFx=null;flameMat=null}if(fxGroup){scene.remove(fxGroup);fxGroup=null}if(wGroup){scene.remove(wGroup);wGroup=null}texts.forEach(t=>t.el.remove());texts=[];enemies=[];minions=[];grid=null;WEAPON_RESETS.forEach(f=>f());
   if(player.model)player.model.root.visible=false;scene.add(menuGroup);renderCards();setScreen(to||'menu')}
 
-// caixão de madeira escura com bandas de ferro e cruz dourada — aberto mostra o lençol e um brilho fantasma
-function buildCoffin(open){const g=new THREE.Group();
-  vox(g,0,.13,0,.64,.26,.4,0x3f2d4d);                              // base
-  vox(g,0,.3,0,.56,.1,.34,0x4a3558);                               // meio
-  vox(g,0,.385,0,.46,.08,.28,0x554066);                            // ombros
-  vox(g,0,.13,.208,.66,.05,.07,0x9aa0b0);vox(g,0,.13,-.208,.66,.05,.07,0x9aa0b0); // bandas de ferro
-  const lid=new THREE.Group();lid.position.set(0,.42,-.18);g.add(lid);
-  vox(lid,0,.04,.18,.44,.09,.26,0x5a4270);vox(lid,0,.1,.18,.5,.08,.3,0x4a3558);vox(lid,0,.16,.18,.58,.07,.34,0x3f2d4d); // tampa abaulada
-  vox(lid,0,.21,.06,.07,.26,.07,0xd9a43a);vox(lid,0,.255,.06,.22,.07,.07,0xd9a43a); // cruz dourada
-  if(open){lid.rotation.x=-1.5; // tampa aberta de verdade: ereta, apoiada na borda de trás
-    vox(g,0,.33,0,.42,.05,.24,0xe8e2d0);                            // lençol visível dentro
-    const l=new THREE.PointLight(0x9a7ae8,.8,5,2);l.position.set(0,.85,0);g.add(l)}
-  return g}
-// TARDIS: a cabine azul do Smith (referência Doctor Who) — placa, janelas, portas, lampião
-function buildTardis(){const g=new THREE.Group();const B=0x1542a0,BD=0x0d2f6e;
-  vox(g,0,.05,0,1.08,.1,1.08,BD);vox(g,0,1.05,0,1,1.9,1,B);vox(g,0,2.05,0,1.08,.1,1.08,BD); // base, corpo, teto
-  vox(g,0,2.24,0,1.06,.24,1.06,0x14161c); // faixa lisa do letreiro (sem escrito)
-  for(let s=0;s<4;s++){const f=new THREE.Group();f.rotation.y=s*Math.PI/2;g.add(f); // 4 faces iguais, portas s/0 e s/2
-    for(const t of[-.3,-.1,.1,.3]){const p=vox(f,t,1.78,.555,.16,.3,.05,0xcfe3ef,.15);p.castShadow=false} // mezanino: 4 vidros
-    if(s===0||s===2){vox(f,-.25,.95,.55,.42,1.1,.05,0x123a86);vox(f,.25,.95,.55,.42,1.1,.05,0x123a86); // portas
-      vox(f,-.25,.95,.578,.3,.95,.02,0x0e2f6b);vox(f,.25,.95,.578,.3,.95,.02,0x0e2f6b);
-      vox(f,-.25,.5,.585,.3,.07,.02,0x0a2a66);vox(f,.25,.5,.585,.3,.07,.02,0x0a2a66); // venezianas
-      vox(f,-.06,1.35,.59,.03,.05,.03,0xe8e2d0);vox(f,.06,1.35,.59,.03,.05,.03,0xe8e2d0); // maçanetas
-    }else{vox(f,0,1.0,.555,.5,1.3,.03,0x103684);vox(f,0,.35,.555,.5,.5,.03,0x0e2f6b);vox(f,0,1.7,.57,.07,.07,.03,0xdfe8ee)}} // laterais: painéis + roundel
-  vox(g,0,2.42,0,.14,.12,.14,0xf4f6f8,1.2); // lampião do teto
-  return g}
-// TRONO real do cortejo do Midas — mesma peça no menu e na galeria de modelos
-function buildRoyalThrone(){const thr=new THREE.Group();
-  const GD=0xc9a24a,GLD=0xe8c86a,RED=0x8a1220,WOOD=0x2a1a12;
-  vox(thr,0,.05,0,1.3,.1,1.06,WOOD);vox(thr,0,.11,0,1.24,.03,1,GD);            // base e friso
-  for(const x of [-.44,.44])for(const z of [-.32,.32])vox(thr,x,.24,z,.12,.24,.12,GD); // pés
-  vox(thr,0,.36,0,1,.08,.8,GD);vox(thr,0,.43,0,.9,.08,.7,RED);                  // assento + almofada
-  vox(thr,0,.86,-.33,.92,.86,.1,WOOD);                                          // encosto
-  vox(thr,0,.9,-.28,.84,.7,.05,RED);                                            // veludo do encosto
-  vox(thr,-.42,.9,-.28,.04,.7,.06,GD);vox(thr,.42,.9,-.28,.04,.7,.06,GD);        // colunas douradas
-  vox(thr,0,1.28,-.3,.86,.05,.1,GD);                                            // topo do encosto
-  vox(thr,-.28,1.36,-.3,.09,.1,.09,GD);vox(thr,0,1.42,-.3,.1,.18,.09,GD);vox(thr,.28,1.36,-.3,.09,.1,.09,GD); // coroa
-  vox(thr,0,1.42,-.245,.04,.045,.02,0xd42020,1);                                // gema da coroa
-  vox(thr,-.5,.5,.02,.1,.08,.72,GD);vox(thr,.5,.5,.02,.1,.08,.72,GD);           // braços
-  vox(thr,-.5,.56,.04,.13,.06,.68,RED);vox(thr,.5,.56,.04,.13,.06,.68,RED);     // apoios de veludo
-  vox(thr,-.5,.4,.32,.09,.2,.09,GD);vox(thr,.5,.4,.32,.09,.2,.09,GD);           // colunas da frente
-  vox(thr,-.5,.615,.34,.07,.07,.07,GLD);vox(thr,.5,.615,.34,.07,.07,.07,GLD);   // pinhas
-  return thr}
 /* ================= menu 3D ================= */
 const menuGroup=new THREE.Group();const menuHeroes={};let menuRing,fireGroup,fireLight,flames=[],fireGlow=[],fireRim=[],menuStones={},royalGrp=null,necroG=null,tGref=null,cemeG=null;let smokesM=[];
 const silMat=new THREE.MeshBasicMaterial({color:0x101116});const FIREY=[.34,.5,.66]; // silMat = sombra preta dos heróis travados
 (function buildMenu(){
-  { // chão do título com a MESMA lógica do campo do jogo: blocos grama/terra batida, manchas secas e micro-relevo voxel
-    const gCells=[],dCells=[];
-    for(let x=-14;x<=14;x++)for(let z=-17;z<=5;z++){ // ilha oval, borda irregular
-      if(x*x/200+z*z/290>rand(.9,1.2))continue;
-      (nz(x,z)>1.2?dCells:gCells).push([x,z])}
-    const mkGround=(geo,cells)=>{
-      const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({vertexColors:true}),Math.max(1,cells.length));
-      im.receiveShadow=true;menuGroup.add(im);
-      const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),pp=new THREE.Vector3(),ss=new THREE.Vector3(),col=new THREE.Color();
-      cells.forEach(([x,z],i)=>{ // superfície plana p/ os heróis em pé: só o micro-relevo voxel do jogo
-        m4.compose(pp.set(x,jv(x,z)*.06-.7,z),q,ss.set(1,1.4,1));im.setMatrixAt(i,m4);
-        if(nz2(x,z)>0.98)col.setHex(0xa8a24a).offsetHSL(0,0,rand(-.06,.04)); // manchas de grama seca/amarelada
-        else col.setScalar(1.0+rand(-.08,.08)+((x+z)%2?.03:-.03)); // contraste em tabuleiro como o campo
-        im.setColorAt(i,col)})};
-    mkGround(grassBlockGeo,gCells);mkGround(dirtBlockGeo,dCells)}
-  for(let i=0;i<48;i++){const fx=rand(-11,11),fz=rand(-13,4);if(fx*fx+fz*fz<4)continue;vox(menuGroup,fx,.08,fz,.12,.12,.12,pick([0xf2d24b,0xe86a8a,0xffffff,0xa58bff])).castShadow=false}
-  [[-12,.5,1],[12,-2,3],[-5,-13.5,4],[-4,4.3,2],[2.6,4.4,0]].forEach(([tx,tz,t])=>{ // poucas árvores, estilo o campo do jogo
-    const m=new THREE.Mesh(TREE_GEOS[t],treeMat);m.position.set(tx,jv(tx,tz)*.06,tz);m.rotation.y=rand(0,TAU);m.scale.setScalar(rand(.8,1.1));m.castShadow=true;m.receiveShadow=true;menuGroup.add(m)});
-  const tG=new THREE.Group();tG.position.set(-10.2,0,2.7);tG.rotation.y=1.75;tG.scale.setScalar(.92);menuGroup.add(tG);tG.add(buildTardis());tGref=tG; // a cabine do Smith — só aparece com ele liberado
-  // cemitério com os caixões: morada do Vampiro quando ele está liberado
-  const ceme=new THREE.Group();ceme.position.set(-8.6,0,-11.6);ceme.rotation.y=.55;menuGroup.add(ceme);cemeG=ceme;
-  [[-1.7,.5,'grave'],[.7,-.8,'cross'],[-.6,1.7,'grave'],[1.8,1.0,'cross'],[.2,2.5,'grave']].forEach(([x,z,g])=>{
-    const m=new THREE.Mesh(DECOR_GEO[g],treeMat);m.position.set(x,0,z);m.rotation.y=rand(0,TAU);ceme.add(m)});
-  [[-2.3,2.2],[2.3,-1.5]].forEach(([x,z])=>{const m=new THREE.Mesh(DECOR_GEO.shroom,treeMat);m.position.set(x,0,z);ceme.add(m)});
-  const dTree=new THREE.Mesh(TREE_GEOS[5],treeMat);dTree.position.set(-3,0,-1.8);dTree.scale.setScalar(1.15);ceme.add(dTree); // árvore morta
-  const cofA=buildCoffin(false);cofA.position.set(1.3,0,.4);cofA.rotation.y=-.5;ceme.add(cofA);
-  const cofB=buildCoffin(true);cofB.position.set(-1.4,0,-.7);cofB.rotation.y=.35;ceme.add(cofB);
+  DECORATIONS.buildMenuLandscape(menuGroup,{nz,nz2,jv});
+  tGref=DECORATIONS.buildMenuTardis(menuGroup); // cabine do tempo do Smith
+  cemeG=DECORATIONS.buildMenuCemetery(menuGroup);
   // cortejo real: trono + soldados — só existe quando o Rei é liberado
-  royalGrp=new THREE.Group();menuGroup.add(royalGrp);
-  const thr=buildRoyalThrone();thr.position.set(6.9,0,3.9);thr.rotation.y=-2.5;royalGrp.add(thr);
-  [[7.6,1.6],[8.0,3.6]].forEach(([sx,sz])=>{const sg=new THREE.Mesh(SOLDIER_GEO,soldierMat);sg.position.set(sx,0,sz);sg.scale.setScalar(.86);sg.rotation.y=Math.atan2(-sx,-sz);sg.castShadow=true;royalGrp.add(sg)}); // súditos
+  royalGrp=DECORATIONS.buildMenuRoyalCourt(menuGroup);
   // cemitério do Necromante: ele e sua horda de esqueletos (só quando liberado)
-  necroG=new THREE.Group();menuGroup.add(necroG);
-  [[6.3,-6.5,'grave'],[7.8,-8,'cross'],[6.6,-8.3,'grave']].forEach(([x,z,g])=>{const m=new THREE.Mesh(DECOR_GEO[g],treeMat);m.position.set(x,0,z);m.rotation.y=rand(0,TAU);necroG.add(m)});
+  necroG=DECORATIONS.buildMenuNecroGraves(menuGroup);
   [[6.4,-6.8],[7.7,-7.5],[6.8,-8.4]].forEach(([x,z])=>{const sm=new THREE.Mesh(enemyGeo('skel'),minMat);sm.position.set(x,0,z);sm.scale.setScalar(.82);sm.rotation.y=Math.atan2(7-x,-7.2-z);sm.castShadow=true;necroG.add(sm)});
-  // fogueira no centro da praça: os três principais acampam em volta dela (tela de título)
-  fireGroup=new THREE.Group();menuGroup.add(fireGroup);
-  for(let i=0;i<9;i++){const a=i/9*TAU+rand(-.08,.08);vox(fireGroup,Math.sin(a)*.85,.13+rand(-.02,.02),Math.cos(a)*.85,.26+rand(0,.09),.2+rand(0,.07),.26+rand(0,.09),pick([0x8a857c,0x7d7a72,0x93907f]))} // círculo de pedras
-  vox(fireGroup,0,.07,0,.3,.14,.3,0x3a2a1a); // brasa no centro
-  const lA=vox(fireGroup,0,.13,0,.85,.13,.15,0x5d3f22);lA.rotation.y=.9;
-  const lB=vox(fireGroup,0,.13,0,.85,.13,.15,0x5d3f22);lB.rotation.y=-.9; // lenhas cruzadas
-  flames=[[0,.34,0,.34,.4,.34,0xff7a1f],[0,.5,0,.25,.3,.25,0xffa52a],[0,.66,0,.15,.2,.15,0xffdf6a]].map(a=>{const f=vox(fireGroup,a[0],a[1],a[2],a[3],a[4],a[5],a[6],1);f.castShadow=false;f.userData.b=[a[3],a[4],a[5]];return f}); // chamas em camadas (animadas no update)
-  fireLight=new THREE.PointLight(0xff8a3a,1.6,9,2);fireLight.position.set(0,.85,0);fireGroup.add(fireLight);
-  smokesM=[0,1,2].map(i=>{const m=new THREE.Mesh(boxGeo,new THREE.MeshBasicMaterial({color:0xaab0b8,transparent:true,opacity:0,depthWrite:false}));m.castShadow=false;m.position.y=-2;fireGroup.add(m);return{m,p:i/3}}); // fumaça subindo
+  const campfire=DECORATIONS.buildMenuCampfire(menuGroup);fireGroup=campfire.group;flames=campfire.flames;fireLight=campfire.light;smokesM=campfire.smokes;
   ORDER.forEach((k,i)=>{const h=buildHero(k);h.root.position.set((i-(ORDER.length-1)/2)*1.55,0,0);menuGroup.add(h.root);menuHeroes[k]=h});
   const REST=['tank','chrono','pistol','demon','human'];
 const slotOf=i=>{if(i===9)return[-1.22,7.24];if(i<3)return[[Math.PI/2,Math.PI*1.5,Math.PI][i],2.5];const j=REST.indexOf(ORDER[i]);return[j>=0?1.7+j*.675:Math.PI,4.6]}; // trio na fogueira; Smith junto da TARDIS; demais em arco
-  const mkRef=(k,i)=>{const C=CLASSES[k];const[f,rr]=slotOf(i);const g=new THREE.Group();
+  const mkRef=(k,i)=>{const C=CLASSES[k];const[f,rr]=slotOf(i);const g=DECORATIONS.buildClassPedestal(C.ui);
     g.position.set(Math.sin(f)*(rr+.6),0,Math.cos(f)*(rr+.6));g.rotation.y=f;menuGroup.add(g); // monumento atrás da sombra
-    vox(g,0,.21,0,.3,.42,.2,0x837e74);vox(g,0,.47,0,.36,.08,.24,0x8f8a80);vox(g,0,.56,0,.12,.14,.12,C.ui,1); // pedestal + cristal da cor da classe
+    
     try{const cv=document.createElement('canvas');cv.width=128;cv.height=64;const cx=cv.getContext('2d');
       if(cx&&cx.fillText){cx.fillStyle='#151120';cx.fillRect(0,0,128,64);cx.strokeStyle='#3b3249';cx.strokeRect(2,2,124,60);
         cx.textAlign='center';
@@ -1075,23 +912,10 @@ const slotOf=i=>{if(i===9)return[-1.22,7.24];if(i<3)return[[Math.PI/2,Math.PI*1.
         const pm=new THREE.Mesh(new THREE.PlaneGeometry(.3,.15),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv)}));pm.position.set(0,.2,.105);g.add(pm)}}catch(e){}
     return g};
   ORDER.forEach((k,i)=>{menuStones[k]=mkRef(k,i)});
-  const rg=new THREE.Group();rg.position.y=.03;menuGroup.add(rg);menuRing=rg;
-  // luz do fogo no chão: fogueira estilo Minecraft — labaredas em círculo irregular, manchas alaranjadas translúcidas, sem disco sólido
-  fireGlow=[];fireRim=[];
-  for(let i=0;i<5;i++){const a=rand(0,TAU),r=rand(.05,.55);
-    const bm=flatMesh(new THREE.CircleGeometry(rand(.18,.34),22),pick([0xff8a2a,0xd9571e,0xffa52a]),rand(.1,.2));bm.userData.own=false;
-    bm.position.set(Math.sin(a)*r,rand(0,.02),Math.cos(a)*r);rg.add(bm);fireGlow.push({m:bm,a,r,op:bm.material.opacity,ph:rand(0,TAU)})}
-  const mkFlare=(r,a,sparse)=>{const g=new THREE.Group();
-    const b=vox(g,0,.09,0,.09,.16,.09,pick([0xffb02f,0xff9a1f]),1);b.castShadow=false;
-    const t=vox(g,0,.21,0,.06,.1,.06,0xff4a1a,1);t.castShadow=false;t.rotation.x=rand(-.3,.3);
-    g.position.set(Math.sin(a)*r,0,Math.cos(a)*r);rg.add(g);
-    return{g,ph:rand(0,TAU),base:.8+rand(-.25,.3),sparse:!!sparse,cur:0}};
-  for(let i=0;i<18;i++)fireRim.push(mkFlare(.8+rand(-.14,.14),i/18*TAU+rand(-.08,.08))); // anel de chamas grudado no círculo de pedras
-  for(let i=0;i<7;i++)fireRim.push(mkFlare(rand(.15,.5),rand(0,TAU),true)); // brasas soltas dentro do círculo
+  const fireRing=DECORATIONS.buildMenuFireRing(menuGroup,flatMesh);menuRing=fireRing.group;fireGlow=fireRing.glow;fireRim=fireRing.rim;
   scene.add(menuGroup);
 })();
-let menuT=0,menuAtk=0,mcx=0,mcy=2.1,mcz=6.6,mly=.75,mclx=0,mclz=0,podium=null;
-podium=new THREE.Mesh(new THREE.CircleGeometry(.85,28),new THREE.MeshBasicMaterial({color:0xf2b84b,transparent:true,opacity:.14,depthWrite:false}));podium.rotation.x=-Math.PI/2;podium.position.y=.03;menuGroup.add(podium); // palco do herói no seletor
+let menuT=0,menuAtk=0,mcx=0,mcy=2.1,mcz=6.6,mly=.75,mclx=0,mclz=0,podium=DECORATIONS.buildHeroPodium(menuGroup);
 function updateMenu(dt){
   menuT+=dt;const narrow=camera.aspect<.95;const inMenu=state==='menu';
   const CAMPA=[Math.PI/2,Math.PI*1.5,Math.PI]; // ângulos do trio em volta da fogueira (lado, lado e fundo)
@@ -1280,7 +1104,7 @@ bindCheck('#muteAll',setMuted);bindCheck('#optMuteAll',setMuted);
 /* ================= atualização ================= */
 function update(dt){
   runTime+=dt;updAI(dt);const C=CLASSES[player.cls],st=player.stats;
-  if(!store.get('cv_unlocked',{}).chrono&&runTime>=MISSION.chrono.goal){doUnlock('chrono');toast('⏳ '+CLASSES.chrono.nome+' liberado!','Missão cumprida: 30 minutos sobrevividos')}
+  MISSION_SYSTEM.complete('chrono',runTime);
   // controle estilo Megabonk: direção relativa à câmera; o herói olha pra onde anda
   let ix=0,iz=0;if(keys.KeyW||keys.ArrowUp)iz+=1;if(keys.KeyS||keys.ArrowDown)iz-=1;if(keys.KeyD||keys.ArrowRight)ix+=1;if(keys.KeyA||keys.ArrowLeft)ix-=1;
   ix=clamp(ix+touchMove.x,-1,1);iz=clamp(iz-touchMove.y,-1,1);
@@ -1290,6 +1114,7 @@ function update(dt){
   const moving=il>.1;
   if(moving)player.facing+=angDiff(player.facing,Math.atan2(mx,mz))*Math.min(1,dt*14);
   player.atkCd-=dt;player.abCd=Math.max(0,player.abCd-dt);player.dashCd=Math.max(0,player.dashCd-dt);player.invuln-=dt;player.flash-=dt;player.shieldT=Math.max(0,player.shieldT-dt);
+  updatePoison(dt);
   if(st.regen>0&&player.hp<player.maxHp)healPlayer(st.regen*dt,true);
   if(player.dashT>0){player.dashT-=dt;moveEnt(player,player.dvx*dt,player.dvz*dt);if(Math.random()<.6)burst(player.x,.4+player.y,player.z,C.pal.body,1,{speed:.5,up0:0,up1:.5,grav:0,life:.3,size:.18})}
   else if(moving){let sp=C.speed*st.move;if(player.spinT>0)sp*=1.15;if(player.shieldT>0)sp*=.75;moveEnt(player,mx*sp*dt,mz*sp*dt)}
@@ -1369,10 +1194,25 @@ function updEnemy(e,dt){
       else{mx=ux-uz*w;mz=uz+ux*w}
       if(contact){if(e.cd<=0){hurtPlayer(e.dmg,e,true);e.cd=.8}if(e.dive>0){e.dive=0;e.retreat=.5}}
       break}
-    case'spider':{e.leapCd=(e.leapCd||0)-dt;const w=Math.sin(e.t*11)*.35;mx=ux-uz*w;mz=uz+ux*w; // corre em zigue-zague
-      if(e.leap>0){e.leap-=dt;mx=ux;mz=uz;sp*=2.05} // bote: reto e rápido
-      else if(d<5.2&&e.leapCd<=0){e.leap=.3;e.leapCd=1.7;sp*=2.05;burst(e.x,.12,e.z,0x6a3a7a,5,{speed:2.2,up0:.2,up1:1.2})}
-      if(contact&&e.cd<=0){hurtPlayer(e.dmg,e,true);e.cd=1}break}
+    case'spider':{
+      e.leapCd=e.leapCd==null?rand(.35,.8):e.leapCd-dt;
+      if(e.leap>0){e.leap=Math.max(0,e.leap-dt);mx=e.leapX;mz=e.leapZ;sp*=2.05;e.faceT=Math.atan2(mx,mz)}
+      else{
+        if(e.scuttleT==null){e.scuttleT=rand(.5,.85);e.sideTarget=e.side}
+        e.scuttleT-=dt;if(e.scuttleT<=0){e.sideTarget=-e.sideTarget;e.scuttleT=rand(.75,1.15)}
+        e.side+=(e.sideTarget-e.side)*Math.min(1,dt*4);
+        const sway=e.side*.24;mx=ux-uz*sway;mz=uz+ux*sway;
+        if(d<5.2&&e.leapCd<=0){e.leap=.34;e.leapCd=1.7;e.leapX=ux;e.leapZ=uz;mx=e.leapX;mz=e.leapZ;sp*=2.05;e.faceT=Math.atan2(mx,mz);
+          burst(e.x,.12,e.z,0x6a3a7a,5,{speed:2.2,up0:.2,up1:1.2})}
+        else if(collide(e.x+mx*.65,e.z+mz*.65,e.r)){
+          const turn=e.side>=0?1:-1,sx=-uz*turn,sz=ux*turn;
+          if(!collide(e.x+sx*.8,e.z+sz*.8,e.r)){mx=sx;mz=sz;e.side=e.sideTarget=turn;e.scuttleT=Math.max(e.scuttleT,.45)}
+          else if(!collide(e.x-sx*.8,e.z-sz*.8,e.r)){mx=-sx;mz=-sz;e.side=e.sideTarget=-turn;e.scuttleT=Math.max(e.scuttleT,.45)}
+          else{mx=ux*.25;mz=uz*.25}
+        }
+        if(Math.hypot(mx,mz)>.01)e.faceT=Math.atan2(mx,mz)
+      }
+      if(contact&&e.cd<=0){if(hurtPlayer(e.dmg,e,true))applyPoison(ENEMY_DEFS.spider.poison);e.cd=1}break}
     case'zombie':{const c={d,ux,uz,mx,mz,contact,rnd:Math.random,rand,spawnProj,hurtPlayer};ENEMY_DEFS.zombie.ai(e,dt,c);mx=c.mx;mz=c.mz;break}
     case'skel':{const c={d,ux,uz,mx,mz,contact,rnd:Math.random,rand,spawnProj,hurtPlayer};ENEMY_DEFS.skel.ai(e,dt,c);mx=c.mx;mz=c.mz;break}
     case'brute':if(e.wind>0){e.wind-=dt;mx=mz=0;e.faceT=Math.atan2(e.tx-e.x,e.tz-e.z);if(e.wind<=0){if(Math.hypot(player.x-e.tx,player.z-e.tz)<1.9*e.sc/1.45+player.r&&player.y<.8)hurtPlayer(e.dmg,e,true);ringFX(e.tx,e.tz,1.9,0xffb08a,.3);burst(e.tx,.1,e.tz,0x8b7a66,10,{speed:4});addShake(.12)}}
@@ -1408,12 +1248,19 @@ function updEnemy(e,dt){
     m.position.y=Math.sin(e.t*4)*.08+Math.sin(e.t*flapSpd)*.02;
     m.rotation.z=Math.sin(e.t*8)*.07+(diving?-.18:(retreating?.12:0));
     m.rotation.x=diving?.10:(retreating?-.06:Math.sin(e.t*3)*.03)}
-  else if(e.type==='spider'){ // aranha: corpo balança na passada (as 8 pernas são parte da malha)
+  else if(e.type==='spider'){ // passada suave e salto visível durante o bote
     const spd=Math.hypot(e.mvx||0,e.mvz||0),moving=spd>.2;
-    e.walk+=dt*(moving?16+spd*3:2);
-    m.position.y=moving?Math.abs(Math.sin(e.walk))*.03:0;
-    m.rotation.z=Math.sin(e.walk)*.07;
-    m.rotation.x=Math.sin(e.walk*2)*.02}
+    e.walk+=dt*(moving?10+spd*1.8:1.5);
+    const leapT=e.leap>0?1-clamp(e.leap/.34,0,1):0;
+    m.position.y=(moving?Math.abs(Math.sin(e.walk))*.035:0)+(e.leap>0?Math.sin(leapT*Math.PI)*.22:0);
+    m.rotation.z=Math.sin(e.walk)*.045;
+    m.rotation.x=e.leap>0?.12:Math.sin(e.walk*2)*.02;
+    const jump=e.leap>0?Math.sin(leapT*Math.PI):0;
+    for(const leg of m.userData.spiderLegs||[]){const ph=e.walk+leg.phase,lift=moving?Math.max(0,Math.cos(ph)):0;
+      const stride=moving?Math.sin(ph):Math.sin(ph)*.08;
+      leg.hip.rotation.y=leg.side*stride*.34;
+      leg.hip.rotation.z=leg.side*(.05+lift*.22+jump*.08);
+      leg.knee.rotation.z=-leg.side*(.08+lift*.24+jump*.28)}}
   else{ // pernas: passada alternada conforme a velocidade de movimento
     const spd=Math.hypot(e.mvx||0,e.mvz||0),moving=spd>.2;e.walk+=dt*(moving?6+spd*2.2:0);
     const amp=moving?.7:0;e.legL.rotation.x=Math.sin(e.walk)*amp;e.legR.rotation.x=-Math.sin(e.walk)*amp;
@@ -1467,7 +1314,10 @@ function animHero(dt,moving){
       if(b.bubbleFacets){b.bubbleFacets.rotation.y+=dt*.55;b.bubbleFacets.material.opacity=.12+Math.sin(runTime*6)*.05}
       if(b.bubbleCore)b.bubbleCore.material.opacity=.08+Math.sin(runTime*4)*.03}}
   else if(cls==='mago'||cls==='necro'||cls==='chrono'||cls==='pistol'||cls==='dracula'||cls==='demon'||cls==='future'||cls==='human'||cls==='king'){if(k>0){b.armR.rotation.x=-1.3;b.torso.rotation.y=rel*k}}
-  else if(cls==='arqueiro'){if(k>0){b.armL.rotation.x=-1.5;b.armR.rotation.x=-1.35;b.torso.rotation.y=rel*Math.min(1,k*2)}}
+  else if(cls==='arqueiro'){
+    b.torso.rotation.y=angDiff(player.facing,player.aimAng); // arco acompanha o eixo real das flechas
+    if(k>0){b.armL.rotation.x=-1.5;b.armR.rotation.x=-1.35}
+  }
   applyKeep(b.keep);
   if(b.cape)b.cape.rotation.x=(moving?.07+Math.sin(player.walk)*.04:.015+Math.sin(runTime*1.6)*.012);
   if(cls==='mago'&&b.mageOrb){b.mageOrb.position.y=1.02+Math.sin(runTime*2.4)*.028;b.mageMotes.rotation.y+=dt*1.8}
@@ -1646,7 +1496,7 @@ function renderRecs(){const st=metaStat(),w=$('#recs-list');w.innerHTML='';
  draw();
  $('#recs-sum').textContent=`${st.runs} partidas · ${st.kills} abates no total · ${st.bosses} golens derrotados`;}
 function updateCoins(){$('#coins-n').textContent=coins();$('#coins').hidden=!['title','menu','shop','ach','recs','play','pause','upgrade','dying'].includes(state);
-  if(!store.get('cv_unlocked',{}).king&&coins()>=MISSION.king.goal){doUnlock('king');toast('👑 '+CLASSES.king.nome+' liberado!','Missão cumprida: '+fmtN(MISSION.king.goal)+' de ouro acumulado')}}
+  MISSION_SYSTEM.complete('king',coins())}
 function renderShop(){const w=$('#shop-list');w.innerHTML='';const s=shopLv();
   SHOP.forEach(it=>{const lv=s[it.id]||0,maxed=lv>=it.max,cost=it.cost(lv+1);
     const b=document.createElement('div');b.className='shopit'+(maxed?' max':'');
@@ -1715,6 +1565,7 @@ const CHEAT_HELP=[
 /* ================= galeria / sala de testes (terminal: galeria) ================= */
 let galleryOpen=false,galleryItems=null,galleryIdx=0,galleryObj=null,galScene=null,galGroup=null,galleryUI=null,galNameEl=null,galYaw=0,galSpin=true,galDist=5,galTY=1,galH=2,galDrag=false,galLX=0;
 function buildEnemyDisplay(type){const g=new THREE.Group();
+  if(type==='spider')return buildSpiderModel(vcMat).mesh;
   if(LEGGED[type]||type==='bat'){g.add(new THREE.Mesh(enemyBodyGeo(type),vcMat));
     if(LEGGED[type]){const l=new THREE.Mesh(enemyLegGeo(type),vcMat),r=new THREE.Mesh(enemyLegGeo(type),vcMat);l.position.set(-.11,.34,0);r.position.set(.11,.34,0);g.add(l,r)}
     else{const wl=new THREE.Mesh(batWingGeo(-1),vcMat),wr=new THREE.Mesh(batWingGeo(1),vcMat);wl.position.set(-.15,.95,0);wr.position.set(.15,.95,0);g.add(wl,wr)}}
@@ -1731,37 +1582,22 @@ function buildGalleryItems(){const items=[];
     for(let i=0;i<3;i++){const a=Math.PI*.6+i*Math.PI*.4;const m=buildMinionMesh(false).g;m.position.set(Math.sin(a)*1.35,0,Math.cos(a)*1.35);m.rotation.y=a+Math.PI;g.add(m)}return g}});
   items.push({name:'Midas + Guarda Real · combo',make:()=>{const g=new THREE.Group();g.add(buildHero('king').root);
     for(let i=0;i<4;i++){const a=Math.PI*.5+i*Math.PI*.5;const m=buildMinionMesh(true).g;m.position.set(Math.sin(a)*1.45,0,Math.cos(a)*1.45);m.rotation.y=a+Math.PI;g.add(m)}return g}});
-  items.push({name:'TARDIS · cabine do tempo (Smith)',make:buildTardis});
-  items.push({name:'Trono Real · trono do Midas',make:buildRoyalThrone});
+  items.push({name:'TARDIS · cabine do tempo (Smith)',make:DECORATIONS.buildTardis});
+  items.push({name:'Trono Real · trono do Midas',make:DECORATIONS.buildRoyalThrone});
   items.push({name:'Golem do Campo · chefe',make:()=>buildGolem().root});
   items.push({name:'Ogro Brutamontes · chefe',make:()=>buildOgre().root});
-  const TR=['Carvalho','Pinheiro','Arbusto','Árvore de Outono','Bétula','Árvore Morta'];
-  TREE_GEOS.forEach((g,i)=>items.push({name:(TR[i]||'Árvore '+(i+1))+' · árvore',make:()=>new THREE.Mesh(g,treeMat)}));
-  ROCK_GEOS.forEach((g,i)=>items.push({name:'Pedra '+(i+1)+' · cenário',make:()=>new THREE.Mesh(g,treeMat)}));
+  DECORATIONS.TREE_SYSTEM.names.forEach((name,i)=>items.push({name:name+' · árvore',make:()=>new THREE.Mesh(DECORATIONS.TREE_GEOS[i],DECORATIONS.treeMat)}));
+  DECORATIONS.ROCK_GEOS.forEach((g,i)=>items.push({name:'Pedra '+(i+1)+' · cenário',make:()=>new THREE.Mesh(g,DECORATIONS.treeMat)}));
   // decoração do campo
-  items.push({name:'Fogueira · decoração',make:()=>{const g=new THREE.Group();g.add(new THREE.Mesh(DECOR_GEO.fire,treeMat),new THREE.Mesh(DECOR_GEO.flame,new THREE.MeshBasicMaterial({color:0xff8a2a})));return g}});
-  items.push({name:'Cristal Arcano · decoração',make:()=>new THREE.Mesh(DECOR_GEO.crystal,new THREE.MeshBasicMaterial({vertexColors:true}))});
-  items.push({name:'Cogumelo · decoração',make:()=>new THREE.Mesh(DECOR_GEO.shroom,treeMat)});
-  items.push({name:'Lápide · decoração',make:()=>new THREE.Mesh(DECOR_GEO.grave,treeMat)});
-  items.push({name:'Cruz · decoração',make:()=>new THREE.Mesh(DECOR_GEO.cross,treeMat)});
-  items.push({name:'Toco · decoração',make:()=>new THREE.Mesh(DECOR_GEO.stump,treeMat)});
-  items.push({name:'Baú · tesouro',make:buildChestDisplay});
-  items.push({name:'Caixão · decoração',make:()=>buildCoffin(true)});
+  items.push({name:'Fogueira · decoração',make:()=>{const g=new THREE.Group();g.add(new THREE.Mesh(DECORATIONS.DECOR_GEO.fire,DECORATIONS.treeMat),new THREE.Mesh(DECORATIONS.DECOR_GEO.flame,new THREE.MeshBasicMaterial({color:0xff8a2a})));return g}});
+  items.push({name:'Cristal Arcano · decoração',make:()=>new THREE.Mesh(DECORATIONS.DECOR_GEO.crystal,new THREE.MeshBasicMaterial({vertexColors:true}))});
+  items.push({name:'Cogumelo · decoração',make:()=>new THREE.Mesh(DECORATIONS.DECOR_GEO.shroom,DECORATIONS.treeMat)});
+  items.push({name:'Lápide · decoração',make:()=>new THREE.Mesh(DECORATIONS.DECOR_GEO.grave,DECORATIONS.treeMat)});
+  items.push({name:'Cruz · decoração',make:()=>new THREE.Mesh(DECORATIONS.DECOR_GEO.cross,DECORATIONS.treeMat)});
+  items.push({name:'Toco · decoração',make:()=>new THREE.Mesh(DECORATIONS.DECOR_GEO.stump,DECORATIONS.treeMat)});
+  items.push({name:'Baú · tesouro',make:DECORATIONS.buildChestDisplay});
+  items.push({name:'Caixão · decoração',make:()=>DECORATIONS.buildCoffin(true)});
   return items}
-// totem de íma (uso único): pilar de pedra com íma flutuando. Ao gastar, o íma apaga e sobra uma tampa escura
-function makeTotem(){const g=new THREE.Group();
-  vox(g,0,.11,0,1.05,.22,1.05,0x6f6a63);vox(g,0,.28,0,.82,.14,.82,0x837e74);vox(g,0,.42,0,.6,.1,.6,0x74706a);
-  vox(g,0,.95,0,.46,1,.46,0x8f8a80);vox(g,-.23,.95,0,.1,1,.5,0x7d786f);vox(g,.23,.95,0,.1,1,.5,0x7d786f);
-  vox(g,0,.7,.25,.4,.14,.07,0xd23b2f,.6); // runa vermelha na frente
-  const m=new THREE.Group();m.name='mag';m.position.y=1.95;
-  vox(m,-.13,.06,0,.13,.34,.15,0xd23b2f,.45);vox(m,.13,.06,0,.13,.34,.15,0xd23b2f,.45);vox(m,0,-.11,0,.39,.13,.15,0xd23b2f,.45);
-  vox(m,-.13,.24,0,.13,.1,.16,0xeeeeee,.5);vox(m,.13,.24,0,.13,.1,.16,0xeeeeee,.5);
-  g.add(m);
-  const off=new THREE.Group();off.name='off';off.visible=false;vox(off,0,1.5,0,.3,.22,.3,0x6b665e);g.add(off);
-  return {g,m,off}}
-// O desenho do baú vive em assets/js/environment/chest.js; aqui só conectamos o motor.
-function makeChest(){return window.CHEST_MODEL.create({THREE,mergeBoxes,vcMat,vox})}
-function buildChestDisplay(){const{g,lid}=makeChest();lid.rotation.x=-1.2;return g}
 function ensureGalScene(){if(galScene)return;
   galScene=new THREE.Scene();galScene.background=new THREE.Color(0x14121c);
   galScene.add(new THREE.HemisphereLight(0xffffff,0x3a3a4a,.95));

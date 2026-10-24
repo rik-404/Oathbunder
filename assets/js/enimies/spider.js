@@ -12,6 +12,7 @@
     legged: false,
     fly: false,
     stats: { hp: 18, speed: 4.8, r: .34, dmg: 6, h: .7, color: BODY, xp: 1 },
+    poison: { duration: 3.2, interval: .8, damage: 1.2 },
     boxes: function() {
       const b = [
         // abdômen
@@ -34,15 +35,15 @@
         [-.06, .22, .46, .045, .09, .045, FANG],
         [.06, .22, .46, .045, .09, .045, FANG]
       ];
-      // 4 pares de pernas: fêmur para fora, tíbia para baixo, articulação e pé
-      const zs = [-.34, -.14, .06, .24];
-      for (const sx of [-1, 1]) for (const z of zs) {
-        b.push([sx * .38, .4, z, .4, .055, .055, LEG]);
-        b.push([sx * .58, .17, z, .055, .34, .055, LEG]);
-        b.push([sx * .58, .36, z, .09, .09, .09, JOINT]);
-        b.push([sx * .58, .02, z + .02, .08, .04, .1, 0x0c0712]);
-      }
       return b;
+    },
+    legColors: { leg: LEG, joint: JOINT, foot: 0x0c0712 },
+    // Quatro pares com fases alternadas (marcha de tripod) para articulação independente.
+    legs: function() {
+      const zs = [-.34, -.14, .06, .24], out = [];
+      for (const side of [-1, 1]) for (let pair = 0; pair < zs.length; pair++)
+        out.push({ side, z: zs[pair], phase: (pair % 2 ? Math.PI : 0) + (side > 0 ? Math.PI : 0) });
+      return out;
     },
     // IA base: dano no contato (o bote é tratado no updEnemy)
     ai: function(e, dt, c) {

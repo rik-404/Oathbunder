@@ -24,6 +24,8 @@ const realNow=()=>performance.now();let fakeT=realNow();
 global.performance={now:()=>fakeT};
 global.addEventListener=function(){};
 global.window=global;
+eval(fs.readFileSync('assets/js/tree/trees.js','utf8'));
+eval(fs.readFileSync('assets/js/functions/missions.js','utf8'));
 
 // ---------- THREE ----------
 class V3{constructor(x=0,y=0,z=0){this.x=x;this.y=y;this.z=z}set(x,y,z){this.x=x;this.y=y;this.z=z;return this}setScalar(v){this.x=this.y=this.z=v;return this}project(){this.z=0;return this}}
@@ -55,7 +57,7 @@ global.THREE=THREE;
 
 // ---------- carrega o jogo exposto via __G ----------
 // weapons.js e upgrades.js juntos com o game.js (no navegador são <script>s antes do game.js)
-const cdir='assets/js/class';const csrc=fs.readdirSync(cdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?1:b==='index.js'?-1:a.localeCompare(b)).map(f=>fs.readFileSync(cdir+'/'+f,'utf8')).join('\n')+'\n';const wdir='assets/js/weapons';let src=csrc+fs.readdirSync(wdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?-1:b==='index.js'?1:a.localeCompare(b)).map(f=>fs.readFileSync(wdir+'/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/upgrades.js','utf8')+'\n'+fs.readdirSync('assets/js/enimies').filter(f=>f.endsWith('.js')).sort().map(f=>fs.readFileSync('assets/js/enimies/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/environment/chest.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
+const cdir='assets/js/class';const csrc=fs.readdirSync(cdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?1:b==='index.js'?-1:a.localeCompare(b)).map(f=>fs.readFileSync(cdir+'/'+f,'utf8')).join('\n')+'\n';const wdir='assets/js/weapons';let src=csrc+fs.readdirSync(wdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?-1:b==='index.js'?1:a.localeCompare(b)).map(f=>fs.readFileSync(wdir+'/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/functions/upgrades.js','utf8')+'\n'+fs.readdirSync('assets/js/enimies').filter(f=>f.endsWith('.js')).sort().map(f=>fs.readFileSync('assets/js/enimies/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/environment/chest.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
 const i=src.lastIndexOf('})();');
 const hook=`window.__G={newRun,update,openUpgrade,chooseUpgrade,damageEnemy,gainXP,hurtPlayer,dash,jump,useAbility,spawnBoss,spawnEnemy,killEnemy,S,setMuted,player,keys,setScreen,getBoss:()=>boss,getUps:()=>($('#ups')&&$('#ups')._choice)||null,hs:()=>hitStopT,getState:()=>state,enemies:()=>enemies,projs:()=>projs,mapInfo:()=>({W,H,grid,landPos,chestN:chests.length}),jv:(x,z)=>jv(x,z),relief:(x,z)=>relief(x,z),hills:()=>HILLS.length,runCheat,toggleMap,galNames:()=>{if(!galleryItems)galleryItems=buildGalleryItems();return galleryItems.map(g=>g.name)},galMake:(n)=>{if(!galleryItems)galleryItems=buildGalleryItems();const it=galleryItems.find(g=>g.name===n);return it?it.make():null},skelDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.skel),zombieDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.zombie)};\n})();`;
 src=src.slice(0,i)+hook;
@@ -64,16 +66,40 @@ const G=global.__G;
 const frames=n=>{for(let k=0;k<n;k++){const cb=rafCb;rafCb=null;fakeT+=16.7;cb&&cb(fakeT)}};
 
 try{
+if(process.env.SMOKE_SPIDER_ONLY!=='1'){
 console.log('[1] carregamento / menu');
 ok(G.getState()==='title','estado inicial é título');
+ok(!!window.MISSIONS_MODULE&&typeof window.MISSIONS_MODULE.create==='function','módulo de missões separado carregado');
+{const unlocked=[],notices=[],probe=window.MISSIONS_MODULE.create({isRunActive:()=>true,
+ getMeta:()=>({runs:2,maxDmg:120,skelKills:100,bestTime:80,maxKills:30,batKills:20,bosses:1,bestLvl:8}),
+ getRunDamage:()=>42,getRunSkeletons:()=>5,getRunBats:()=>3,getRunTime:()=>12,getKills:()=>50,getBossKills:()=>2,getPlayerLevel:()=>9,getCoins:()=>87,
+ isUnlocked:k=>unlocked.includes(k),unlock:k=>unlocked.push(k),className:k=>k,toast:(title,subtitle)=>notices.push([title,subtitle]),formatTime:v=>String(v),formatNumber:v=>String(v)});
+ ok(Object.keys(probe.missions).length===10&&probe.missions.tank.prog()===120&&probe.missions.pistol.prog()===50,'dez missões e progresso calculados pelo módulo');
+ const first=probe.complete('pistol',300),repeat=probe.complete('pistol',300);ok(first&&!repeat&&unlocked[0]==='pistol'&&notices.length===1,'conclusão da missão desbloqueia e notifica apenas uma vez')}
 ok(G.skelDef(),'esqueleto registrado via assets/js/enimies/skeleton.js');
 ok(G.zombieDef(),'zumbi registrado via assets/js/enimies/zombie.js');
+{const green=window.ENEMY_DEFS.slime(),blue=window.ENEMY_DEFS.slimeB();
+ ok(green.boxes().length>=18&&blue.boxes().length>=18&&green.stats.hp===22&&blue.stats.hp===30&&green.stats.speed===2.6&&blue.stats.speed===3,'slimes têm modelos voxel detalhados e atributos preservados')}
+{const brute=window.ENEMY_DEFS.brute((P,o)=>o.extra||[]),parts=brute.boxes();
+ ok(parts.length>=30&&brute.stats.hp===120&&brute.stats.speed===1.9&&brute.stats.dmg===16&&brute.leg.length===3,'Brutamontes redesenhado e atributos de combate preservados')}
+{const ogre=window.ENEMY_DEFS.ogre((P,o)=>o.extra||[]),parts=ogre.boxes();
+ ok(parts.length>=35&&ogre.stats.hp===200&&ogre.stats.speed===2&&ogre.stats.dmg===19&&ogre.leg.length===3,'Ogro redesenhado e atributos de combate preservados')}
+{const zombie=window.ENEMY_DEFS.zombie((P,o)=>o.extra||[]),parts=zombie.boxes();
+ ok(parts.length>=35&&zombie.stats.hp===34&&zombie.stats.speed===2.3&&zombie.stats.dmg===9&&zombie.legged&&zombie.leg.length===3,'Zumbi redesenhado e atributos/animação preservados')}
 {const ks=Object.keys(CLASSES);ok(ks.length===12&&ks.every(k=>typeof CLASSES[k].model==='function'),'12 classes com o próprio modelo voxel (CLASSES[k].model)')}
 {const gn=G.galNames();ok(gn.some(n=>n.includes('TARDIS'))&&gn.some(n=>n.includes('Trono')),'galeria de modelos inclui TARDIS e trono ('+gn.length+' itens)');
  const a=G.galMake(gn.find(n=>n.includes('TARDIS'))),b=G.galMake(gn.find(n=>n.includes('Trono')));
- ok(!!a&&!!b&&a.children.length>0&&b.children.length>0,'TARDIS e trono constroem na galeria')}
+ ok(!!a&&!!b&&a.children.length>=20&&b.children.length>0,'cabine do tempo detalhada e trono constroem na galeria')}
+{const n=G.galNames().find(n=>n==='Soldado Real · minion do Midas'),soldier=n&&G.galMake(n),combo=G.galMake('Midas + Guarda Real · combo');
+ ok(!!soldier&&soldier.children.length===3&&soldier.scale.x===.86&&!!combo&&combo.children.length===5,'Soldado Real detalhado e combo do Midas constroem na galeria')}
+{const gn=G.galNames(),n=gn.find(n=>n==='Ogro Brutamontes · chefe'),ogre=n&&G.galMake(n);
+ ok(!!ogre&&ogre.children.length>0,'chefe Ogro constrói o modelo atualizado na galeria')}
 {const chest=G.galMake(G.galNames().find(n=>n.includes('Baú')));ok(!!window.CHEST_MODEL&&!!chest&&chest.children.length>=3,'baú separado carrega e constrói na galeria')}
+{const n=G.galNames().find(n=>n==='Árvore Morta · árvore'),tree=n&&G.galMake(n);ok(!!tree&&!!tree.geometry,'árvore morta carrega do módulo assets/js/tree/trees.js')}
+{const names=G.galNames().filter(n=>n.endsWith(' · árvore')),models=names.map(n=>G.galMake(n));
+ ok(names.length===6&&models.every(m=>m&&m.geometry)&&new Set(models.map(m=>m.geometry)).size===6,'seis árvores da galeria têm geometrias próprias')}
 frames(3);
+if(process.env.SMOKE_STATIC_ONLY==='1'){console.log(fails.length?('\n'+fails.length+' FALHA(S)'):'\nSMOKE_STATIC_OK — módulos e modelos da galeria validados');process.exit(fails.length?1:0)}
 console.log('[2] nova corrida (guerreiro)');
 G.runCheat('unlock all'); // localStorage vazio: libera todas as classes
 G.newRun('guerreiro');
@@ -210,6 +236,21 @@ if(sk){sk.maxHp=sk.hp=1e6; // invulnerável durante o teste: queremos ver a IA, 
     if(G.getState()==='upgrade'){const ch=G.getUps();if(ch&&ch.length===3)G.chooseUpgrade(ch[0])}else G.update(1/60);
     if(G.projs().some(p=>p.kind==='bone'))sawBone=true}
   ok(sawBone,'IA do arquivo separado rodou e jogou osso')}
+}
+console.log('[15] aranha — deslocamento e bote');
+G.runCheat('unlock all');G.newRun('guerreiro');G.enemies().length=0;
+const spider=G.spawnEnemy('spider',G.player.x+7,G.player.z);
+ok(!!spider,'aranha spawna para o teste de movimento');
+if(spider){const legs=spider.mesh.userData.spiderLegs||[];ok(legs.length===8,'aranha tem oito pernas articuladas');
+  let maxLegSwing=0;spider.maxHp=spider.hp=1e6;const sx=spider.x,sz=spider.z;
+  for(let k=0;k<90;k++){G.update(1/60);for(const leg of legs)maxLegSwing=Math.max(maxLegSwing,Math.abs(leg.hip.rotation.y))}
+  ok(Math.hypot(spider.x-sx,spider.z-sz)>1,'aranha se desloca até o jogador sem ficar parada');
+  ok(maxLegSwing>.05,'pernas alternam a passada durante o movimento');
+  ok(Number.isFinite(spider.leapX)&&Number.isFinite(spider.leapZ),'bote mantém uma direção definida');
+  const p=G.player;p.invuln=0;p.poisonT=0;p.poisonTick=0;spider.x=p.x+.1;spider.z=p.z;spider.cd=0;spider.leap=0;spider.leapCd=10;
+  G.update(1/60);ok(p.poisonT>0,'mordida da aranha aplica veneno');const hpAtBite=p.hp;
+  spider.cd=100;spider.x=p.x+10;for(let k=0;k<60;k++)G.update(1/60);
+  ok(p.hp<hpAtBite,'veneno causa dano gradual durante a invulnerabilidade')}
 }catch(e){console.log('ERRO NO TESTE:',e.stack);fails.push('exceção: '+e.message)}
 console.log(fails.length?('\n'+fails.length+' FALHA(S)'):'\nSMOKE_OK — tudo passou');
 process.exit(fails.length?1:0);
