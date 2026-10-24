@@ -15,6 +15,8 @@
         notify:({name,goal})=>['🔫 '+name+' liberado!','Missão cumprida: '+goal+' abates numa corrida']},
       dracula:{goal:1500,label:'morcegos',desc:'Abata 1.500 morcegos no total',prog:()=>Math.min(1500,runtime.getMeta().batKills+(inRun()?runtime.getRunBats():0)),
         notify:({name,goal})=>['🧛 '+name+' liberado!','Missão cumprida: '+goal+' morcegos abatidos']},
+      bruxa:{goal:5000,label:'aranhas',desc:'Abata 5.000 aranhas no total',prog:()=>Math.min(5000,runtime.getMeta().spiderKills+(inRun()?runtime.getRunSpiders():0)),
+        notify:()=>['🧙 Bruxa liberada!','Missão cumprida: 5.000 aranhas abatidas']},
       demon:{goal:5,label:'Golens',desc:'Derrote o Golem 5 vezes no total',prog:()=>Math.min(5,runtime.getMeta().bosses+runtime.getBossKills()),
         notify:({name,goal})=>['😈 '+name+' liberado!','Missão cumprida: '+goal+' Golens derrotados']},
       future:{goal:20,label:'de nível',desc:'Alcance o nível 20 numa única corrida',prog:()=>Math.min(20,Math.max(runtime.getMeta().bestLvl,inRun()?runtime.getPlayerLevel():0)),

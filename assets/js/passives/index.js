@@ -10,6 +10,12 @@ window.PASSIVE_REGISTRY = (() => {
     },
     get(id) { return defs[id] || null; },
     list() { return Object.values(defs); },
+    update(player, dt, ctx) {
+      for (const id of player && player.passives || []) {
+        const def = defs[id];
+        if (def && typeof def.update === 'function') def.update(player, dt, ctx || {});
+      }
+    },
     randomOptions(player) {
       const owned = player.passives || [];
       const max = player.maxPassives || 5;

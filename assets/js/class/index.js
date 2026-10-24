@@ -3,11 +3,12 @@
  * ================================================= */
 
 // Ordem das classes no menu
-window.ORDER = ['mago','arqueiro','guerreiro','tank','necro','chrono','pistol','dracula','demon','future','human','king'];
+window.ORDER = ['mago','bruxa','arqueiro','guerreiro','tank','necro','chrono','pistol','dracula','demon','future','human','king'];
 
 // Tipos de classe para exibição
 window.CLSTIPO = {
   mago: 'Mago',
+  bruxa: 'Bruxa',
   arqueiro: 'Arqueiro',
   guerreiro: 'Guerreiro',
   tank: 'Guardião',
@@ -34,7 +35,8 @@ window.CLSICON = {
   demon: 'assets/images/icons/demon.png?v=4',
   future: 'assets/images/icons/future.png?v=4',
   human: 'assets/images/icons/human.png?v=4',
-  king: 'assets/images/icons/king.png?v=4'
+  king: 'assets/images/icons/king.png?v=4',
+  bruxa: 'assets/images/icons/bruxa.svg?v=1'
 };
 
 // Pré-carregar imagens
@@ -64,7 +66,8 @@ window.MISSION = {
   demon: { goal: 5, label: 'Golens', desc: 'Derrote o Golem 5 vezes no total', prog: () => Math.min(5, metaStat().bosses+(inRun()?bossKills:0)) },
   future: { goal: 20, label: 'de nível', desc: 'Alcance o nível 20 numa única corrida', prog: () => Math.min(20, Math.max(metaStat().bestLvl, inRun()?player.lvl:0)) },
   human: { goal: 3, label: 'corridas', desc: 'Jogue 3 corridas (o Zé insiste em aparecer)', prog: () => Math.min(3, metaStat().runs) },
-  king: { goal: 1000, label: 'de ouro', desc: 'Acumule 1.000 de ouro', prog: () => Math.min(1000, coins()) }
+  king: { goal: 1000, label: 'de ouro', desc: 'Acumule 1.000 de ouro', prog: () => Math.min(1000, coins()) },
+  bruxa: { goal: 5000, label: 'aranhas', desc: 'Abata 5.000 aranhas no total', prog: () => Math.min(5000, metaStat().spiderKills+(inRun()?runSpider:0)) }
 };
 
 // Verifica se uma classe está desbloqueada
