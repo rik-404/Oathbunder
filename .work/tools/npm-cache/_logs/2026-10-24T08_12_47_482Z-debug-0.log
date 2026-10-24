@@ -1,0 +1,35 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Users\ricar\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.21.1
+2 info using node@v24.19.0
+3 silly config load:file:C:\Users\ricar\AppData\Roaming\npm\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\ricar\.npmrc
+5 silly config load:file:C:\Users\ricar\AppData\Roaming\npm\etc\npmrc
+6 verbose title npm install pnpm@10
+7 verbose argv "install" "--global" "--prefix" "C:\\Users\\ricar\\AppData\\Roaming\\npm" "--cache" "C:\\Users\\ricar\\OneDrive\\Área de Trabalho\\jogos\\.work\\tools\\npm-cache" "pnpm@10"
+8 verbose logfile logs-max:10 dir:C:\Users\ricar\OneDrive\Área de Trabalho\jogos\.work\tools\npm-cache\_logs\2026-10-24T08_12_47_482Z-
+9 verbose logfile C:\Users\ricar\OneDrive\Área de Trabalho\jogos\.work\tools\npm-cache\_logs\2026-10-24T08_12_47_482Z-debug-0.log
+10 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+11 silly logfile done cleaning log files
+12 silly idealTree buildDeps
+13 silly fetch manifest pnpm@10
+14 silly packumentCache full:https://registry.npmjs.org/pnpm cache-miss
+15 http fetch GET 200 https://registry.npmjs.org/npm 121ms
+16 http fetch GET 200 https://registry.npmjs.org/pnpm 166ms (cache miss)
+17 silly packumentCache full:https://registry.npmjs.org/pnpm set size:undefined disposed:false
+18 silly placeDep ROOT pnpm@10.34.8 OK for:  want: 10
+19 silly reify moves {}
+20 http cache pnpm@https://registry.npmjs.org/pnpm/-/pnpm-10.34.8.tgz 0ms (cache hit)
+21 silly tarball no local data for pnpm@https://registry.npmjs.org/pnpm/-/pnpm-10.34.8.tgz. Extracting by manifest.
+22 http fetch GET 200 https://registry.npmjs.org/pnpm/-/pnpm-10.34.8.tgz 2875ms (cache miss)
+23 silly ADD node_modules/pnpm
+24 verbose cwd C:\Users\ricar\OneDrive\Área de Trabalho\jogos
+25 verbose os Windows_NT 10.0.26300
+26 verbose node v24.19.0
+27 verbose npm  v11.21.1
+28 notice
+28 notice New major version of npm available! 11.21.1 -> 12.2.1
+28 notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+28 notice To update run: npm install -g npm@12.2.1
+28 notice  { force: true, Symbol(proc-log.meta): true }
+29 verbose exit 0
+30 info ok

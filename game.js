@@ -684,7 +684,7 @@ function disposeFx(f){fxGroup.remove(f.obj);f.obj.traverse(o=>{if(o.isMesh&&o.us
 function flatMesh(geo,color,op){const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:op,depthWrite:false,side:THREE.DoubleSide}));m.rotation.x=-Math.PI/2;m.userData.own=true;return m}
 function ringFX(x,z,R,color,life=.4){const g=new THREE.Group();g.position.set(x,.08,z);const m=flatMesh(ringGeo,color,.8);g.add(m);
   addFx(g,life,k=>{const s=lerp(.3,R,1-Math.pow(1-k,3));g.scale.set(s,1,s);m.material.opacity=.8*(1-k)})}
-/* Glitch da esquiva do Smith: assets/js/dash/smith.js. */
+/* Glitch da esquiva do Smith: assets/js/Dash/smith.js. */
 function arcaneNovaFX(x,z,R){
   ringFX(x,z,R,0x8fe1ff,.58);ringFX(x,z,R*.72,0xb99dff,.46);ringFX(x,z,R*.4,0xf0eaff,.34);
   const seal=new THREE.Group(),glyphs=[];seal.position.set(x,.11,z);
