@@ -518,6 +518,7 @@ const PROJ_GEO={
 /* ================= estado ================= */
 let state='menu',selCls=store.get('cv_cls','guerreiro');if(!CLASSES[selCls])selCls='guerreiro';
 let grid=null,hgt=null,level=null,fxGroup=null,wGroup=null,enemies=[],projs=[],pickups=[],fxs=[],parts=[],texts=[],chests=[],totems=[],landPos=null,crystalMeshes=[],flameMat=null,fireFx=null;
+let characterSelect=null;
 let kills=0,runTime=0,shake=0,boss=null,hurtA=0,deadT=0,hordeN=0,nextHorde=60,nextBoss=180,bossCount=0,spawnAcc=0,pendingUps=0,upSource='lvl',bossKills=0,lastReward=null,runDmg=0,runSkel=0,runBat=0,cheatGod=false,ogreLoose=false;
 // Map state (must be declared before setScreen uses it)
 let mapOpen=false,mapScreen=null,mapCanvas=null;
@@ -1208,47 +1209,17 @@ function updateMenu(dt){
   camera.position.set(mcx,mcy,mcz);camera.lookAt(mclx,mly,mclz)
   sun.position.set(7,9,9); // mesmo sol baixo do jogo (consistência com o menu)sun.target.position.set(0,0,0);heroLight.intensity=0;
 }
-let buyConfirm=''; // classe aguardando confirmação de compra no painel de detalhe
-function renderCards(){
-  buyConfirm='';
-  if(!isUnlocked(selCls))selCls=ORDER.find(isUnlocked)||'guerreiro';
-  const wrap=$('#classes');wrap.innerHTML='';
-  ORDER.forEach((k,i)=>{const C=CLASSES[k];const b=document.createElement('button');b.type='button';b.className='ctile';b.id='cc-'+k;b.style.setProperty('--c',C.ui);b.setAttribute('aria-pressed',String(k===selCls));
-    b.innerHTML=`<span class="cic">${clsImg(k)}</span><span class="cname">${C.nome}</span><span class="ctipo">${CLSTIPO[k]}</span>`;
-    if(i<10){const kb=document.createElement('i');kb.className='kbd';kb.textContent='1234567890'[i];b.appendChild(kb)}
-    b.onclick=()=>selectClass(k);b.ondblclick=()=>newRun(k);
-    if(!isUnlocked(k)){b.classList.add('locked');const lk=document.createElement('div');lk.className='lock';
-      if(MISSION[k]){const M=MISSION[k],pv=M.fmt?M.fmt(M.prog()):fmtN(M.prog()),gv=M.fmt?M.fmt(M.goal):fmtN(M.goal);
-        lk.innerHTML=`<span class="lk">${emIc('🔒')}</span><b>Missão</b><small>${pv} / ${gv} ${M.label}</small>`;}
-      else{lk.innerHTML=`<span class="lk">${emIc('🔒')}</span><b>${emIc('🪙')} ${UNLOCK[k]}</b><small>clique para ver</small>`;}
-      b.appendChild(lk)}
-    wrap.appendChild(b)});
-  renderDetail(selCls);
-}
-function renderDetail(k){const C=CLASSES[k],best=store.get('cv_bestT',{}),det=$('#chardetail'),locked=!isUnlocked(k);
-  det.style.setProperty('--c',C.ui);
-  const passive=window.PASSIVE_REGISTRY&&window.PASSIVE_REGISTRY.get(C.passiveId),runs=metaStat().runs;
-  det.innerHTML=`<div class="cd-top" style="--c:${C.ui}"><span class="cd-ic">${clsImg(k)}</span><div class="cd-id"><h3 style="color:${C.ui}">${C.nome}</h3><span class="cd-tipo">${CLSTIPO[k]}</span></div></div>`+
-    `<div class="cd-meta">${best[k]?'★ Recorde '+fmtT(best[k]):'★ Sem recorde ainda'} · ${runs} corrida${runs===1?'':'s'}</div>`+
-    `<p class="cd-role">${C.role}</p>`+
-    (passive?`<div class="ab"><strong>${upgImg(passive.nome)} ${passive.nome}<small>PASSIVA FIXA</small></strong><span>${passive.desc}</span></div>`:'')+
-    `<div class="pips">${Object.entries(C.stats).map(([n,v])=>`<div class="pip-row" style="--c:${C.ui}"><span>${n}</span><i>${'<b class="on"></b>'.repeat(v)}${'<b></b>'.repeat(5-v)}</i></div>`).join('')}</div>`+
-    (locked&&MISSION[k]?`<div class="rec" style="color:var(--gold)">${emIc('🎯')} ${MISSION[k].desc}<br>Progresso: ${MISSION[k].fmt?MISSION[k].fmt(MISSION[k].prog()):fmtN(MISSION[k].prog())} / ${MISSION[k].fmt?MISSION[k].fmt(MISSION[k].goal):fmtN(MISSION[k].goal)} ${MISSION[k].label}</div>`:'')+
-    (locked
-      ?(MISSION[k]?`<button class="btn" id="startbtn" type="button" disabled style="opacity:.6;cursor:default">${emIc('🔒')} CUMPRA A MISSÃO</button>`
-                  :(buyConfirm===k?`<button class="btn" id="startbtn" type="button" style="border-color:var(--gold)">✓ CONFIRMAR COMPRA · ${emIc('🪙')} ${UNLOCK[k]}</button>`
-                                  :`<button class="btn" id="startbtn" type="button">${emIc('🔓')} DESBLOQUEAR · ${emIc('🪙')} ${UNLOCK[k]}</button>`))
-      :`<button class="btn" id="startbtn" type="button">CONFIRMAR</button>`);
-  const startBtn=det.querySelector('#startbtn');
-  if(startBtn)startBtn.onclick=()=>{
-    if(!locked){newRun(k);return}
-    if(MISSION[k])return;
-    if(buyConfirm!==k){buyConfirm=k;renderDetail(k);return}
-    if(coins()>=UNLOCK[k]){addCoins(-UNLOCK[k]);buyConfirm='';doUnlock(k);renderCards();updateCoins()}
-    else{startBtn.textContent='🪙 Ouro insuficiente';buyConfirm=''}
-  };
-}
-function selectClass(k){selCls=k;menuAtk=1;buyConfirm='';document.querySelectorAll('.ctile').forEach(c=>c.setAttribute('aria-pressed',String(c.id==='cc-'+k)));renderDetail(k)}
+characterSelect=window.CHARACTER_SELECT.create({
+  order:ORDER,classes:CLASSES,classTypes:CLSTIPO,getSelected:()=>selCls,setSelected:k=>{selCls=k},
+  clsImg,upgImg,emIc,isUnlocked,missions:MISSION,unlockCosts:UNLOCK,store,
+  getRunMeta:metaStat,formatTime:fmtT,formatNumber:fmtN,
+  getPassive:id=>window.PASSIVE_REGISTRY&&window.PASSIVE_REGISTRY.get(id),
+  newRun:k=>newRun(k),addCoins:n=>addCoins(n),getCoins:()=>coins(),unlock:k=>doUnlock(k),updateCoins:()=>updateCoins(),setScreen:to=>setScreen(to),
+  onSelect:()=>{menuAtk=1}
+});
+function renderCards(){if(characterSelect)characterSelect.renderCards()}
+function renderDetail(k){if(characterSelect)characterSelect.renderDetail(k)}
+function selectClass(k){if(characterSelect)characterSelect.selectClass(k)}
 renderCards();
 
 /* ================= entrada ================= */
@@ -1264,10 +1235,7 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyT'){e.preventDefault();setMuted(!muted);return} // T: som liga/desliga
   if(state==='title'){if(e.code==='Enter'||e.code==='Space'){e.preventDefault();renderCards();setScreen('menu')}return}
   if(state==='howto'||state==='recs'||state==='shop'||state==='ach'){if(e.code==='Escape')setScreen('title');return}
-  if(state==='menu'){if(e.code==='Escape'){setScreen('title');return}const i=['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'].indexOf(e.code);if(i>=0&&ORDER[i])selectClass(ORDER[i]);
-    const N=ORDER.length;if(e.code==='ArrowRight')selectClass(ORDER[(ORDER.indexOf(selCls)+1)%N]);if(e.code==='ArrowLeft')selectClass(ORDER[(ORDER.indexOf(selCls)+N-1)%N]);
-    if(e.code==='ArrowDown')selectClass(ORDER[(ORDER.indexOf(selCls)+3)%N]);if(e.code==='ArrowUp')selectClass(ORDER[(ORDER.indexOf(selCls)+N-3)%N]);
-    if(e.code==='Enter'&&!(document.activeElement&&document.activeElement.classList.contains('ctile')))newRun(selCls)}
+  if(state==='menu'){characterSelect.handleKey(e,!!(document.activeElement&&document.activeElement.classList.contains('ctile')))}
   else if(state==='play'){
     if(e.code==='KeyM'){toggleMap();return}
     if(mapOpen){if(e.code==='Escape')toggleMap();return} // mapa aberto: ignora o resto
