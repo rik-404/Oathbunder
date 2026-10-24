@@ -10,7 +10,7 @@ const $=s=>document.querySelector(s);
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 // Migração única do balanceamento: remove apenas as melhorias permanentes antigas.
 // Moedas, classes, conquistas e recordes continuam intactos.
-const BALANCE_RESET='balance-reset-2026-10';
+const BALANCE_RESET='balance-reset-2026-10-remove-shop-upgrades';
 if(!store.get(BALANCE_RESET,false)){store.set('cv_shop',{});store.set(BALANCE_RESET,true)}
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isTouch=matchMedia('(pointer: coarse)').matches;
@@ -141,24 +141,7 @@ const RARITY={novo:{t:'NOVO',c:'#f2b84b'},comum:{t:'COMUM',c:'#7fcf5a'},incomum:
 /* ===== meta-progressão (tudo salvo no navegador) ===== */
 const coins=()=>store.get('cv_coins',0);
 const addCoins=n=>store.set('cv_coins',Math.max(0,coins()+n));
-const shopLv=()=>store.get('cv_shop',{});
 const metaStat=()=>Object.assign({kills:0,runs:0,bestTime:0,bestLvl:0,bosses:0,maxDmg:0,skelKills:0,maxKills:0,batKills:0,classes:{}},store.get('cv_stat',{}));
-const SHOP=[
-  {id:'hp',ic:'❤️',nome:'Vitalidade',desc:l=>'+'+(l*15)+' de vida inicial',max:6,cost:l=>40+(l-1)*45},
-  {id:'dmg',ic:'💪',nome:'Poder',desc:l=>'+'+(l*5)+'% de dano',max:6,cost:l=>50+(l-1)*55},
-  {id:'spd',ic:'👟',nome:'Agilidade',desc:l=>'+'+(l*4)+'% de velocidade',max:5,cost:l=>45+(l-1)*50},
-  {id:'crit',ic:'🎯',nome:'Precisão',desc:l=>'+'+(l*4)+'% de crítico',max:5,cost:l=>55+(l-1)*50},
-  {id:'magnet',ic:'🧲',nome:'Magnetismo',desc:l=>'+'+(l*20)+'% de coleta de orbes',max:3,cost:l=>60+(l-1)*60},
-  {id:'greed',ic:'🪙',nome:'Ganância',desc:l=>'+'+(l*15)+'% de ouro ganho',max:5,cost:l=>50+(l-1)*55},
-];
-// a loja vai crescer: skins e outros itens entram na mesma lista SHOP no futuro
-function applyShop(p){const s=shopLv();
-  if(s.hp){p.maxHp+=s.hp*15;p.hp+=s.hp*15}
-  if(s.dmg)p.stats.dmg*=1+s.dmg*.05;
-  if(s.spd)p.stats.move*=1+s.spd*.04;
-  if(s.crit)p.stats.crit+=s.crit*.04;
-  if(s.magnet)p.stats.magnet*=1+s.magnet*.2;
-}
 const ACH=[
   {id:'k100',ic:'💀',nome:'Caçador',desc:'Abata 100 inimigos no total',goal:100,cur:s=>s.kills,rw:30},
   {id:'k1000',ic:'☠️',nome:'Exterminador',desc:'Abata 1000 inimigos no total',goal:1000,cur:s=>s.kills,rw:120},
@@ -175,7 +158,7 @@ function claimAch(){const st=metaStat(),claimed=store.get('cv_ach',{});let bonus
 function recordRun(){const s=metaStat();s.runs++;s.kills+=kills;s.bestTime=Math.max(s.bestTime,Math.floor(runTime));s.bestLvl=Math.max(s.bestLvl,player.lvl);s.bosses+=bossKills;s.maxDmg=Math.max(s.maxDmg,Math.round(runDmg));s.skelKills+=runSkel;s.maxKills=Math.max(s.maxKills,kills);s.batKills+=runBat;s.classes[player.cls]=true;store.set('cv_stat',s);
   let newCls=null;if(MISSION_SYSTEM.complete('arqueiro',s.runs,{silent:true}))newCls='arqueiro';
   if(MISSION_SYSTEM.complete('human',s.runs,{silent:true}))newCls=newCls||'human';
-  const greed=1+(shopLv().greed||0)*.15,earned=Math.max(1,Math.floor((kills*.6+runTime/4)*greed));addCoins(earned);
+  const earned=Math.max(1,Math.floor(kills*.6+runTime/4));addCoins(earned);
   return{earned,bonus:claimAch(),newCls}}
 
 /* ================= motor ================= */
@@ -589,21 +572,13 @@ function buildField(){
 // Escala degrau a degrau POR HORDA. A curva tem teto prático para que partidas longas
 // continuem exigindo boas escolhas, sem transformar cada inimigo em uma esponja de dano.
 // A adaptação é deliberadamente leve: ela ajusta o ritmo, não pune quem está jogando bem.
-let aiSkill=.5,aiHpAvg=1,runDealt=0,aiT=0,moonOn=false,moonT=0,moonCd=0,moonKills=0,moonA=0,moonBudget=0,moonAcc=0;const MOON_RED=new THREE.Color(0x5c0f12);
+let aiSkill=.5,aiHpAvg=1,runDealt=0,aiT=0;
 function updAI(dt){if(!player||cheatGod)return;aiT-=dt;if(aiT>0)return;aiT=.5;
  const kF=clamp(kills/Math.max(runTime/60,.4)/35,0,1); // 35 abates/minuto é uma corrida confortável
  const eF=clamp(runDealt/Math.max(120,runDmg*12),0,1); // dano causado vs dano recebido, sem punir quem ainda não apanhou
  const hF=clamp(player.hp/player.maxHp,0,1);aiHpAvg+=(hF-aiHpAvg)*.2; // vida mantida
  aiSkill=clamp(aiSkill+(.4*kF+.25*eF+.35*aiHpAvg-aiSkill)*.045,.25,.75);
- // LUA DE SANGUE: evento raro, só depois da fase de aprendizado e nunca sobreposto a chefe.
- if(aiSkill<.62)moonKills=Math.max(0,moonKills-1);
- if(moonOn){moonT-=dt;moonAcc+=dt;if(moonAcc>3&&moonBudget>0){moonAcc=0;moonBudget--;const a=rand(0,TAU),d=15+rand(0,7),x=player.x+Math.sin(a)*d,z=player.z+Math.cos(a)*d;if(!collide(x,z,.4))spawnEnemy('zombie',x,z,false,{ms:1.05+Math.random()*.2})}
-  if(moonT<=0){moonOn=false;moonCd=240}}
- else if(moonCd>0)moonCd-=dt;} // adaptação lenta, sem efeito ioiô
-function bloodMoon(){moonOn=true;moonT=35;moonCd=240;moonKills=0;moonBudget=12;moonAcc=3;
- nextHorde=Math.max(nextHorde,runTime+moonT+15);
- for(let i=0;i<16;i++){const a=i/16*TAU,d=15+rand(0,7),x=player.x+Math.sin(a)*d,z=player.z+Math.cos(a)*d;if(!collide(x,z,.5))spawnEnemy('zombie',x,z,false,{ms:1.05+Math.random()*.2})}
- toast('🩸 LUA DE SANGUE','Seu massacre atraiu os mortos — eles vêm grandes e fortes');addShake(.5);S('bossin')}
+ if(aiSkill<.62&&window.BLOOD_MOON)window.BLOOD_MOON.decayKillCounter();}
 function scaleT(){const H=Math.min(22,hordeN),a=clamp((aiSkill-.5)*.4,-.1,.1);return{hp:(1+H*.22+H*H*.018)*(1+a),dmg:(1+H*.055)*(1+a),spd:1+a*.5,extra:Math.max(0,a)}}
 function spawnEnemy(type,x,z,elite,opts){
   const D=ENEMIES[type],S=scaleT(),ms=(opts&&opts.ms)||1;const sc=(D.scale||1)*(elite?1.35:1)*ms;const emat=elite?eliteMat:vcMat;
@@ -648,14 +623,14 @@ function handleBossDeath(e){
   else toast('Golem derrotado!','O próximo vai ser mais forte');
   MISSION_SYSTEM.complete('demon',metaStat().bosses+bossKills);
 }
-function checkBossSpawn(){const t=runTime;if(t>=nextBoss&&!moonOn){nextBoss+=240;if(!boss)spawnBoss()}}
+function checkBossSpawn(){const t=runTime;if(t>=nextBoss&&!window.BLOOD_MOON.isActive()){nextBoss+=240;if(!boss)spawnBoss()}}
 function pickType(){const t=runTime,w=[['slime',5],['bat',t>15?3:0],['spider',t>30?3:0],['zombie',t>40?4:0],['slimeB',t>80?3:0],['skel',t>100?2:0],['brute',t>160?1:0],['ogre',ogreLoose?2:0]];
   let tot=0;for(const x of w)tot+=x[1];let r=Math.random()*tot;for(const x of w){r-=x[1];if(r<=0)return x[0]}return'slime'}
 function spawnPos(dmin,dmax){for(let i=0;i<12;i++){const a=rand(0,TAU),d=rand(dmin,dmax),x=player.x+Math.sin(a)*d,z=player.z+Math.cos(a)*d;if(!collide(x,z,.5))return[x,z]}return null}
 function director(dt){
   const t=runTime,rate=Math.min(8,1.1+t/28),maxAlive=Math.min(isTouch?95:130,32+t*.38);
   spawnAcc+=rate*dt;while(spawnAcc>=1){spawnAcc--;if(enemies.length<maxAlive){const p=spawnPos(18,25);if(p){const el=t>150&&Math.random()<Math.min(.07,(t-150)/2500);spawnEnemy(pickType(),p[0],p[1],el)}}}
-  if(t>=nextHorde&&!moonOn&&!boss){hordeN++;const SA=scaleT();nextHorde+=60;const n0=14+hordeN*5,n=n0+(SA.extra>.03?Math.round(n0*SA.extra):0),tp=pickType();toast('Horda '+hordeN,'Estão te cercando');addShake(.15);
+  if(t>=nextHorde&&!window.BLOOD_MOON.isActive()&&!boss){hordeN++;const SA=scaleT();nextHorde+=60;const n0=14+hordeN*5,n=n0+(SA.extra>.03?Math.round(n0*SA.extra):0),tp=pickType();toast('Horda '+hordeN,'Estão te cercando');addShake(.15);
     for(let i=0;i<n;i++){const a=i/n*TAU,d=15+rand(0,2.5),x=player.x+Math.sin(a)*d,z=player.z+Math.cos(a)*d;if(!collide(x,z,.4))spawnEnemy(i%5===0?pickType():tp,x,z,hordeN>=4&&i%17===0)}}
   checkBossSpawn();
 }
@@ -797,7 +772,7 @@ function damageEnemy(e,amt,crit,kx=0,kz=0,quiet,noBurn=false,noEcho=false){
   if(e.hp<=0)killEnemy(e);
 }
 function killEnemy(e){
-  e.dead=true;if(e.boss)level.remove(e.obj);else level.remove(e.mesh);kills++;if(!moonOn&&!boss&&moonCd<=0&&hordeN>=3&&aiSkill>.62){moonKills++;if(moonKills>=80)bloodMoon()}
+  e.dead=true;if(e.boss)level.remove(e.obj);else level.remove(e.mesh);kills++;if(window.BLOOD_MOON)window.BLOOD_MOON.onKill({boss:!!boss,hordeN,aiSkill,runTime,nextHorde,player,TAU,rand,collide,spawnEnemy,setNextHorde:v=>{nextHorde=v},toast,addShake,S});
   MISSION_SYSTEM.complete('pistol',kills);
   burst(e.x,e.h*.5,e.z,e.color,e.boss?50:7,{speed:e.boss?7:4,size:e.boss?.22:.13,life:.7});
   if(e.boss){handleBossDeath(e);}
@@ -991,11 +966,10 @@ function newRun(cls){
     stats:{dmg:1,atkSpd:1,move:1,ls:weapon.lsBase||0,crit:weapon.critBase||.05,armor:C.armor,multi:0,pierce:0,area:1,thorns:0,regen:0,magnet:1,xpMul:1,critDmg:2,pspd:1,kb:1,dashCd:1,chill:0},picks:[],upgIds:{},passives:[],maxPassives:BUILD_LIMITS.upgrades});
   window.PASSIVE_REGISTRY.applyFixed(player,C);
   player.poisonT=0;player.poisonTick=0;
-  applyShop(player);
   spawnController=null;
   if(player.model)scene.remove(player.model.root);
   player.model=buildHero(cls);scene.add(player.model.root);
-  kills=0;runTime=0;hordeN=0;nextHorde=60;nextBoss=180;bossCount=0;spawnAcc=0;pendingUps=0;boss=null;bossKills=0;runDmg=0;runSkel=0;runBat=0;cheatGod=false;ogreLoose=false;aiSkill=.5;aiHpAvg=1;runDealt=0;aiT=0;moonOn=false;moonT=0;moonCd=0;moonKills=0;moonA=0;moonBudget=0;moonAcc=0;
+  kills=0;runTime=0;hordeN=0;nextHorde=60;nextBoss=180;bossCount=0;spawnAcc=0;pendingUps=0;boss=null;bossKills=0;runDmg=0;runSkel=0;runBat=0;cheatGod=false;ogreLoose=false;aiSkill=.5;aiHpAvg=1;runDealt=0;aiT=0;if(window.BLOOD_MOON)window.BLOOD_MOON.reset();
   scene.remove(menuGroup);
   if(level)scene.remove(level);if(fxGroup)scene.remove(fxGroup);if(wGroup)scene.remove(wGroup);
   enemies=[];projs=[];pickups=[];temporalEchoes.length=0;fxs=[];parts=[];gems=[];texts.forEach(t=>t.el.remove());texts=[];WEAPON_RESETS.forEach(f=>f());minions=[];minSummonT=1;
@@ -1320,7 +1294,7 @@ bindCheck('#muteAll',setMuted);bindCheck('#optMuteAll',setMuted);
 
 /* ================= atualização ================= */
 function update(dt){
-  runTime+=dt;updateCharacterSpawn(dt);updAI(dt);const C=CLASSES[player.cls],weapon=weaponFor(player.cls),st=player.stats;
+  runTime+=dt;updateCharacterSpawn(dt);updAI(dt);if(window.BLOOD_MOON)window.BLOOD_MOON.update(dt,{player,rand,TAU,collide,spawnEnemy});const C=CLASSES[player.cls],weapon=weaponFor(player.cls),st=player.stats;
   MISSION_SYSTEM.complete('chrono',runTime);
   // controle estilo Megabonk: direção relativa à câmera; o herói olha pra onde anda
   let ix=0,iz=0;if(keys.KeyW||keys.ArrowUp)iz+=1;if(keys.KeyS||keys.ArrowDown)iz-=1;if(keys.KeyD||keys.ArrowRight)ix+=1;if(keys.KeyA||keys.ArrowLeft)ix-=1;
@@ -1683,8 +1657,7 @@ function frame(now){
     if(state==='play'&&!mapOpen)update(dt);
     if(state==='dying'){deadT-=dt;if(deadT<=0)showDeath()}
     if((state==='play'&&!mapOpen)||state==='dying')updateFX(dt);
-    setSky(currentSkyFactor());moonA=clamp(moonA+(moonOn?dt:-dt)*.7,0,1);
-if(moonA>.001){scene.background.lerp(MOON_RED,moonA*.85);scene.fog.color.copy(scene.background);scene.fog.far=lerp(scene.fog.far,42,moonA);sun.intensity*=(1-moonA*.5);hemi.intensity*=(1-moonA*.35)}
+    setSky(currentSkyFactor());if(window.BLOOD_MOON)window.BLOOD_MOON.updateVisual(dt,{THREE,scene,sun,hemi,lerp,clamp});
     updFireFx(dt); // fogueiras do campo com a mesma animação da do título
     const tall=camera.aspect<1?1.15:1;shake=Math.max(0,shake-dt*1.6);const sx=(Math.random()-.5)*shake,sz=(Math.random()-.5)*shake;
     const foll=Math.min(1,dt*8);camFx+=(player.x-camFx)*foll;camFz+=(player.z-camFz)*foll;
@@ -1736,12 +1709,7 @@ function renderRecs(){const st=metaStat(),w=$('#recs-list');w.innerHTML='';
  $('#recs-sum').textContent=`${st.runs} partidas · ${st.kills} abates no total · ${st.bosses} golens derrotados`;}
 function updateCoins(){$('#coins-n').textContent=coins();$('#coins').hidden=!['title','menu','shop','ach','recs','play','pause','upgrade','dying'].includes(state);
   MISSION_SYSTEM.complete('king',coins())}
-function renderShop(){const w=$('#shop-list');w.innerHTML='';const s=shopLv();
-  SHOP.forEach(it=>{const lv=s[it.id]||0,maxed=lv>=it.max,cost=it.cost(lv+1);
-    const b=document.createElement('div');b.className='shopit'+(maxed?' max':'');
-    b.innerHTML=`<div class="up-ic">${emIc(it.ic)||it.ic}</div><div class="up-body"><h3>${it.nome}</h3><p>${it.desc(lv+1)}</p></div><button class="buy" ${maxed?'disabled':''}>${maxed?'MÁX':'🪙 '+cost}</button>`;
-    const btn=b.querySelector('.buy');if(!maxed&&btn)btn.onclick=()=>{if(coins()>=cost){addCoins(-cost);s[it.id]=lv+1;store.set('cv_shop',s);renderShop();updateCoins()}else{btn.classList.add('no');btn.textContent='sem ouro';setTimeout(()=>{btn.classList.remove('no');btn.textContent='🪙 '+cost},700)}};
-    w.appendChild(b)})}
+function renderShop(){const w=$('#shop-list');w.innerHTML='<p class="sub" style="text-align:center;padding:22px 10px">A loja está sem melhorias disponíveis no momento. O ouro continua sendo usado para desbloquear heróis.</p>'}
 function renderAch(){const w=$('#ach-list');w.innerHTML='';const st=metaStat();
   ACH.forEach(a=>{const cur=a.cur(st),done=cur>=a.goal,pct=Math.min(1,cur/a.goal)*100;
     const curT=a.time?fmtT(Math.min(cur,a.goal)):Math.min(cur,a.goal),goalT=a.time?fmtT(a.goal):a.goal;
