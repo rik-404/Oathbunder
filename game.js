@@ -872,13 +872,13 @@ function autoAttack(){
 }
 function useAbility(){/* Habilidades Q removidas; passivas serão implementadas separadamente. */}
 function dash(){
-  if(player.dashCd>0||player.dashT>0)return;let dx=moveVec.x,dz=moveVec.z;if(Math.hypot(dx,dz)<.1){dx=Math.sin(player.facing);dz=Math.cos(player.facing)}
+  if(spawnIsActive()||player.dashCd>0||player.dashT>0)return;let dx=moveVec.x,dz=moveVec.z;if(Math.hypot(dx,dz)<.1){dx=Math.sin(player.facing);dz=Math.cos(player.facing)}
   const l=Math.hypot(dx,dz);player.dvx=dx/l*18;player.dvz=dz/l*18;player.dashT=.17;player.dashCd=1.1*player.stats.dashCd;player.invuln=Math.max(player.invuln,.3);
   if(player.cls==='future'){player.glitchT=0;player.glitchFxT=0;glitchDashFX(player.x,.45+player.y,player.z)}
   else if(player.cls==='dracula'){burst(player.x,.65+player.y,player.z,0xb2000a,14,{emi:.7,speed:4.8,up0:.15,up1:1.5,life:.28,size:.085});burst(player.x,.55+player.y,player.z,0x1c0507,8,{speed:3.4,up0:.1,up1:1.1,life:.24,size:.095})}
   else burst(player.x,.3,player.z,0xcfc7b0,8,{speed:2,up0:.2,up1:1.5});S('dash');
 }
-function jump(){if(player.y<=.001&&state==='play'){player.vy=8;burst(player.x,.1,player.z,0xb59a6a,5,{speed:2,up0:.3,up1:1.2});S('jump')}}
+function jump(){if(!spawnIsActive()&&player.y<=.001&&state==='play'){player.vy=8;burst(player.x,.1,player.z,0xb59a6a,5,{speed:2,up0:.3,up1:1.2});S('jump')}}
 // armas: cada arma vive em assets/js/weapons/ e recebe o contexto C do motor
 function updWeapons(dt){
   const C={player,enemies,wGroup,THREE,PROJ_GEO,projMat,roll,damageEnemy,spawnProj,nearest,burst,flatMesh,S,boltFX,rand,pick,vox,runTime,TAU};
@@ -977,6 +977,18 @@ function updateMinions(dt){
 }
 
 /* ================= fluxo ================= */
+let spawnController=null;
+function beginCharacterSpawn(){
+  const create=window.SPAWN_INTROS&&window.SPAWN_INTROS[player.cls];
+  if(typeof create!=='function')return;
+  spawnController=create({player,level,decorations:DECORATIONS,relief,ringFX,burst,THREE,vox});
+}
+function updateCharacterSpawn(dt){
+  if(!spawnController)return;
+  spawnController.update(dt);
+  if(!spawnController.active)spawnController=null;
+}
+function spawnIsActive(){return !!(spawnController&&spawnController.active)}
 function newRun(cls){
   if(!isUnlocked(cls))return;
   setPlayerPoisonTint(false);
@@ -987,6 +999,7 @@ function newRun(cls){
   window.PASSIVE_REGISTRY.applyFixed(player,C);
   player.poisonT=0;player.poisonTick=0;
   applyShop(player);
+  spawnController=null;
   if(player.model)scene.remove(player.model.root);
   player.model=buildHero(cls);scene.add(player.model.root);
   kills=0;runTime=0;hordeN=0;nextHorde=60;nextBoss=180;bossCount=0;spawnAcc=0;pendingUps=0;boss=null;bossKills=0;runDmg=0;runSkel=0;runBat=0;cheatGod=false;ogreLoose=false;aiSkill=.5;aiHpAvg=1;runDealt=0;aiT=0;moonOn=false;moonT=0;moonCd=0;moonKills=0;moonA=0;moonBudget=0;moonAcc=0;
@@ -994,7 +1007,7 @@ function newRun(cls){
   if(level)scene.remove(level);if(fxGroup)scene.remove(fxGroup);if(wGroup)scene.remove(wGroup);
   enemies=[];projs=[];pickups=[];temporalEchoes.length=0;fxs=[];parts=[];gems=[];texts.forEach(t=>t.el.remove());texts=[];WEAPON_RESETS.forEach(f=>f());minions=[];minSummonT=1;
   level=new THREE.Group();fxGroup=new THREE.Group();wGroup=new THREE.Group();scene.add(level,fxGroup,wGroup);
-  buildField();makeGems();
+  buildField();makeGems();beginCharacterSpawn();setSky(currentSkyFactor());
   camYaw=player.facing;camDist=5.4;camFx=player.x;camFz=player.z;
   $('#h-cls').textContent=C.nome;$('#bossbar').hidden=true;
   for(let i=0;i<8;i++){const p=spawnPos(12,18);if(p)spawnEnemy('slime',p[0],p[1])}
@@ -1314,15 +1327,15 @@ bindCheck('#muteAll',setMuted);bindCheck('#optMuteAll',setMuted);
 
 /* ================= atualização ================= */
 function update(dt){
-  runTime+=dt;updAI(dt);const C=CLASSES[player.cls],weapon=weaponFor(player.cls),st=player.stats;
+  runTime+=dt;updateCharacterSpawn(dt);updAI(dt);const C=CLASSES[player.cls],weapon=weaponFor(player.cls),st=player.stats;
   MISSION_SYSTEM.complete('chrono',runTime);
   // controle estilo Megabonk: direção relativa à câmera; o herói olha pra onde anda
   let ix=0,iz=0;if(keys.KeyW||keys.ArrowUp)iz+=1;if(keys.KeyS||keys.ArrowDown)iz-=1;if(keys.KeyD||keys.ArrowRight)ix+=1;if(keys.KeyA||keys.ArrowLeft)ix-=1;
   ix=clamp(ix+touchMove.x,-1,1);iz=clamp(iz-touchMove.y,-1,1);
   let il=Math.hypot(ix,iz);if(il>1){ix/=il;iz/=il;il=1}
   const fX=Math.sin(camYaw),fZ=Math.cos(camYaw),rX=-Math.cos(camYaw),rZ=Math.sin(camYaw);
-  let mx=fX*iz+rX*ix,mz=fZ*iz+rZ*ix;moveVec.x=mx;moveVec.z=mz;
-  const moving=il>.1;
+  let mx=fX*iz+rX*ix,mz=fZ*iz+rZ*ix;if(spawnIsActive()){mx=0;mz=0}moveVec.x=mx;moveVec.z=mz;
+  const moving=il>.1&&!spawnIsActive();
   if(moving)player.facing+=angDiff(player.facing,Math.atan2(mx,mz))*Math.min(1,dt*14);
   player.atkCd-=dt;player.dashCd=Math.max(0,player.dashCd-dt);player.invuln-=dt;player.flash-=dt;player.shieldT=Math.max(0,player.shieldT-dt);
   updatePoison(dt);
@@ -1358,7 +1371,7 @@ function update(dt){
       for(const e of enemies.slice()){if(e.dead)continue;const dx=e.x-cr.x,dz=e.z-cr.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const hit=roll(weapon.dmg*1.5);damageEnemy(e,hit.d,hit.crit,dx/d*8*st.kb,dz/d*8*st.kb)}}
       ringFX(cr.x,cr.z,R,0xb99dff,.4);ringFX(cr.x,cr.z,R*.56,0x8fe1ff,.28);
       burst(cr.x,cy,cr.z,0x8fe1ff,20,{emi:1,speed:4.8,up0:.3,up1:2.4,life:.5,size:.09});burst(cr.x,cy,cr.z,0xb99dff,14,{emi:1,speed:3.8,up0:.6,up1:2.8,life:.6,size:.075});burst(cr.x,cy,cr.z,0xf4f1ff,8,{emi:1,speed:2.5,up0:1,up1:3,life:.36,size:.055});addShake(.16);S('shot','fire')}}
-  autoAttack();
+  if(!spawnIsActive())autoAttack();
   if(player.spinT>0){player.spinT-=dt;player.spinTick-=dt;if(player.spinTick<=0){player.spinTick=.16;const R=2.4*st.area;
     for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(weapon.dmg*.55);damageEnemy(e,r.d,r.crit,dx/d*3*st.kb,dz/d*3*st.kb,true)}}
     swingFX(R,TAU*.42,player.spinAng,0xff3a24);
@@ -1532,7 +1545,8 @@ function bossAI(e,dt,ux,uz,d){
 function applyKeep(keep){for(const kk of keep){kk.g.rotation.x=-kk.arm.rotation.x;kk.g.rotation.z=0;
   if(kk.lean){const w=1-clamp(-kk.arm.rotation.x/1.3,0,1);kk.g.rotation.z=kk.lean*w;kk.g.rotation.x+=(kk.leanX||0)*w}}}
 function animHero(dt,moving){
-  const b=player.model,cls=player.cls;b.root.position.set(player.x,player.y+relief(player.x,player.z),player.z);b.root.rotation.y=player.facing;
+  const b=player.model,cls=player.cls,pose=spawnController&&spawnController.active&&spawnController.pose?spawnController.pose():null;
+  b.root.position.set(player.x,player.y+relief(player.x,player.z)+(pose?pose.offsetY:0),player.z);b.root.rotation.y=player.facing;b.root.rotation.x=pose?pose.rotationX:0;
   if(moving)player.walk+=dt*11;const sw=moving&&player.y<.05?Math.sin(player.walk):0;
   b.legL.rotation.x=player.y>.05?-.5:sw*.7;b.legR.rotation.x=player.y>.05?.3:-sw*.7;b.torso.position.y=.34+(moving?Math.abs(Math.cos(player.walk))*.03:0);
   b.armL.rotation.x=-sw*.6;b.armR.rotation.x=sw*.6;b.torso.rotation.y=0;
@@ -1566,7 +1580,7 @@ function animHero(dt,moving){
   if(cls==='arqueiro'&&b.bowArrow)b.bowArrow.visible=k>.12;
   if(cls==='guerreiro'&&b.plume){b.plume.rotation.z=Math.sin(runTime*2.2)*.04;b.plume.rotation.x=Math.sin(runTime*1.8)*.025}
   setFlash(b.root,player.flash>0);
-  b.root.visible=!(player.invuln>0&&player.dashT<=0&&runTime>1&&Math.floor(runTime*20)%2===0);
+  b.root.visible=pose?pose.visible:!(player.invuln>0&&player.dashT<=0&&runTime>1&&Math.floor(runTime*20)%2===0);
 }
 function updateFX(dt){
   for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=dt;p.vy-=p.grav*dt;p.m.position.x+=p.vx*dt;p.m.position.y+=p.vy*dt;p.m.position.z+=p.vz*dt;
@@ -1650,6 +1664,7 @@ function hud(){
   $('#h-wave').textContent=hordeN?'Horda '+hordeN:'Próxima horda em '+Math.ceil(nextHorde-runTime)+'s';
   $('#h-boss').textContent=boss?'':'Chefe em '+fmtT(Math.max(0,nextBoss-runTime));
 }
+function currentSkyFactor(){return player.cls==='dracula'?1:clamp(runTime/720,0,1)}
 // céu: dia → pôr do sol → noite ao longo de 12 minutos
 function setSky(k){
   if(k<.5)skyC.copy(SKY_DAY).lerp(SKY_DUSK,k*2);else skyC.copy(SKY_DUSK).lerp(SKY_NIGHT,(k-.5)*2);
@@ -1684,7 +1699,7 @@ function frame(now){
     if(state==='play'&&!mapOpen)update(dt);
     if(state==='dying'){deadT-=dt;if(deadT<=0)showDeath()}
     if((state==='play'&&!mapOpen)||state==='dying')updateFX(dt);
-    setSky(clamp(runTime/720,0,1));moonA=clamp(moonA+(moonOn?dt:-dt)*.7,0,1);
+    setSky(currentSkyFactor());moonA=clamp(moonA+(moonOn?dt:-dt)*.7,0,1);
 if(moonA>.001){scene.background.lerp(MOON_RED,moonA*.85);scene.fog.color.copy(scene.background);scene.fog.far=lerp(scene.fog.far,42,moonA);sun.intensity*=(1-moonA*.5);hemi.intensity*=(1-moonA*.35)}
     updFireFx(dt); // fogueiras do campo com a mesma animação da do título
     const tall=camera.aspect<1?1.15:1;shake=Math.max(0,shake-dt*1.6);const sx=(Math.random()-.5)*shake,sz=(Math.random()-.5)*shake;
