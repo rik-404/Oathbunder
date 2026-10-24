@@ -102,6 +102,9 @@ ok(G.zombieDef(),'zumbi registrado via assets/js/enimies/zombie.js');
  ok(names.length===6&&models.every(m=>m&&m.geometry)&&new Set(models.map(m=>m.geometry)).size===6,'seis árvores da galeria têm geometrias próprias')}
 {const names=G.galNames().filter(n=>/^Pedra \d+ · cenário$/.test(n)),models=names.map(n=>G.galMake(n)),geos=models.map(m=>m&&m.geometry);
  ok(names.length===3&&models.every(m=>m&&m.isMesh&&m.material&&m.material.vertexColors)&&new Set(geos).size===3,'três pedras voxel distintas com material de cores constroem na galeria')}
+{const fire=G.galMake('Fogueira · decoração');ok(!!fire&&fire.children.length===2&&fire.children.every(m=>m.isMesh&&m.material&&m.material.vertexColors),'fogueira da galeria tem base voxel e chama em camadas de cor')}
+{const names=['Cristal Arcano · decoração','Cogumelo · decoração','Lápide · decoração','Cruz · decoração','Toco · decoração','Caixão · decoração'],models=names.map(n=>G.galMake(n)),coffin=models[5];let coffinPieces=0;if(coffin)coffin.traverse(o=>{if(o.isMesh)coffinPieces++});
+ ok(models.slice(0,5).every(m=>m&&m.isMesh&&m.geometry&&m.material&&m.material.vertexColors)&&!!coffin&&coffinPieces>=25,'cristal, cogumelo, lápide, cruz e toco voxel e caixão ornamentado constroem na galeria ('+coffinPieces+' peças no caixão)')}
 frames(3);
 if(process.env.SMOKE_STATIC_ONLY==='1'){console.log(fails.length?('\n'+fails.length+' FALHA(S)'):'\nSMOKE_STATIC_OK — módulos e modelos da galeria validados');process.exit(fails.length?1:0)}
 console.log('[2] nova corrida (guerreiro)');

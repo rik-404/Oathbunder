@@ -917,7 +917,7 @@ function goMenu(to){if(level){scene.remove(level);level=null;fireFx=null;flameMa
 
 /* ================= menu 3D ================= */
 const menuGroup=new THREE.Group();const menuHeroes={};let menuRing,fireGroup,fireLight,flames=[],fireGlow=[],fireRim=[],menuStones={},royalGrp=null,necroG=null,tGref=null,cemeG=null;let smokesM=[];
-const silMat=new THREE.MeshBasicMaterial({color:0x101116});const FIREY=[.34,.5,.66]; // silMat = sombra preta dos heróis travados
+const silMat=new THREE.MeshBasicMaterial({color:0x101116});const FIREY=[.24,.39,.54,.69,.83,.96,.41,.48,.61]; // silMat = sombra preta dos heróis travados
 (function buildMenu(){
   DECORATIONS.buildMenuLandscape(menuGroup,{nz,nz2,jv});
   tGref=DECORATIONS.buildMenuTardis(menuGroup); // cabine do tempo do Smith
@@ -1452,7 +1452,7 @@ function setSky(k){
 // fogueiras do campo: mesmo coração da animação do título — chama tremulando, fumaça subindo, luz quente só de perto
 const ffm4=new THREE.Matrix4(),ffq=new THREE.Quaternion(),ffp=new THREE.Vector3(),ffs=new THREE.Vector3(),ffup=new THREE.Vector3(0,1,0);
 function updFireFx(dt){const F=fireFx;if(!F||!F.mesh||!level)return;F.t+=dt;const t=F.t;
-  flameMat.color.setHSL(.07,.95,.5+.13*Math.sin(t*13)+.07*Math.sin(t*41));
+  flameMat.color.setHSL(.07,.95,.84+.08*Math.sin(t*13)+.04*Math.sin(t*41));
   for(let i=0;i<F.base.length;i++){const b=F.base[i],w=Math.sin(t*9+b.ph)+Math.sin(t*13.7+b.ph*1.3); // cada fogueira com fase própria
     ffq.setFromAxisAngle(ffup,b.ry);ffm4.compose(ffp.set(b.x,b.y+w*.03,b.z),ffq,ffs.set(b.sc*(1-w*.09),b.sc*(1+w*.14),b.sc*(1-w*.09)));F.mesh.setMatrixAt(i,ffm4)}
   F.mesh.instanceMatrix.needsUpdate=true;
@@ -1620,7 +1620,7 @@ function buildGalleryItems(){const items=[];
   DECORATIONS.TREE_SYSTEM.names.forEach((name,i)=>items.push({name:name+' · árvore',make:()=>new THREE.Mesh(DECORATIONS.TREE_GEOS[i],DECORATIONS.treeMat)}));
   DECORATIONS.ROCK_GEOS.forEach((g,i)=>items.push({name:'Pedra '+(i+1)+' · cenário',make:()=>new THREE.Mesh(g,DECORATIONS.treeMat)}));
   // decoração do campo
-  items.push({name:'Fogueira · decoração',make:()=>{const g=new THREE.Group();g.add(new THREE.Mesh(DECORATIONS.DECOR_GEO.fire,DECORATIONS.treeMat),new THREE.Mesh(DECORATIONS.DECOR_GEO.flame,new THREE.MeshBasicMaterial({color:0xff8a2a})));return g}});
+  items.push({name:'Fogueira · decoração',make:()=>{const g=new THREE.Group();g.add(new THREE.Mesh(DECORATIONS.DECOR_GEO.fire,DECORATIONS.treeMat));g.add(new THREE.Mesh(DECORATIONS.DECOR_GEO.flame,new THREE.MeshBasicMaterial({color:0xffffff,vertexColors:true})));return g}});
   items.push({name:'Cristal Arcano · decoração',make:()=>new THREE.Mesh(DECORATIONS.DECOR_GEO.crystal,new THREE.MeshBasicMaterial({vertexColors:true}))});
   items.push({name:'Cogumelo · decoração',make:()=>new THREE.Mesh(DECORATIONS.DECOR_GEO.shroom,DECORATIONS.treeMat)});
   items.push({name:'Lápide · decoração',make:()=>new THREE.Mesh(DECORATIONS.DECOR_GEO.grave,DECORATIONS.treeMat)});

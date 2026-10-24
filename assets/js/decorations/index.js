@@ -25,13 +25,57 @@
       mergeBoxes([[0,.13,0,.86,.26,.8,0x454e52],[.02,.34,0,.72,.34,.68,0x5d686b],[-.19,.52,-.04,.54,.34,.58,0x768184],[.16,.57,-.09,.42,.38,.46,0x899294],[-.02,.77,-.1,.3,.22,.34,0x626e72],[-.29,.33,.09,.3,.22,.52,0x4c585c],[.03,.2,.414,.5,.06,.025,0x3a4448],[-.09,.42,.353,.07,.2,.025,0xc2c6bf],[.18,.64,.154,.055,.17,.025,0xd2d3cb],[-.28,.61,.13,.19,.06,.16,0x557044],[.19,.83,-.1,.13,.05,.12,0x6e8246],[.29,.26,-.1,.17,.05,.16,0x747a70]],.085)
     ];
     const DECOR_GEO={
-      grave:mergeBoxes([[0,.08,0,.52,.16,.24,0x7a7a72],[0,.46,0,.42,.68,.16,0x9d9d95],[0,.82,0,.3,.14,.16,0x9d9d95],[0,.9,0,.17,.08,.16,0x9d9d95],[0,.58,.085,.05,.24,.02,0x6c6c66],[0,.62,.085,.17,.05,.02,0x6c6c66]]),
-      cross:mergeBoxes([[0,.37,0,.13,.74,.11,0x94948c],[0,.52,0,.44,.13,.1,0x9a9a92]]),
-      shroom:mergeBoxes([[0,.13,0,.16,.26,.16,0xe8e0c8],[0,.3,0,.44,.14,.44,0xd0402a]]),
-      fire:mergeBoxes([[.46,.15,0,.26,.3,.3,0x7a7a72],[-.46,.15,.06,.26,.3,.3,0x8a8a80],[.08,.15,.46,.3,.3,.26,0x7f7f77],[-.12,.15,-.46,.3,.3,.26,0x8a8a80],[.4,.15,-.38,.24,.28,.24,0x82827a],[0,.14,0,.62,.14,.17,0x6a4a2b],[0,.14,0,.17,.14,.62,0x5a3f26],[-.04,.27,.04,.52,.12,.15,0x7a5230],[.04,.27,-.04,.15,.12,.52,0x6a4a2b],[.31,.14,0,.08,.1,.14,0xc8a878],[-.31,.14,0,.08,.1,.14,0xc8a878],[0,.1,0,.34,.06,.34,0x8a2a0a]]),
-      flame:mergeBoxes([[0,.3,0,.34,.3,.34,0xff7a1a],[0,.54,0,.26,.26,.26,0xff7a1a],[0,.76,0,.17,.24,.17,0xff7a1a],[0,.96,0,.1,.2,.1,0xff7a1a],[0,1.12,0,.05,.14,.05,0xff7a1a],[-.14,.52,.06,.1,.22,.1,0xff7a1a],[.13,.62,-.05,.09,.24,.09,0xff7a1a]]),
-      crystal:mergeBoxes([[0,.11,0,.5,.22,.5,0x241c36],[.17,.2,.1,.22,.14,.22,0x1b1430],[-.14,.17,-.12,.2,.12,.2,0x1b1430],[0,.52,0,.28,.66,.28,0x7a54c8],[.23,.48,.12,.18,.52,.18,0xa888f2],[-.19,.42,-.12,.16,.46,.16,0x5e3fa8],[.03,.86,0,.14,.26,.14,0xd4bcff]]),
-      stump:mergeBoxes([[0,.18,0,.5,.36,.5,0x6b4a2b],[0,.37,0,.4,.05,.4,0xc9a06a]])
+      // Lápide antiga: silhueta em arco, placa gravada, cruz em relevo e musgo nas quinas.
+      grave:mergeBoxes([
+        [0,.08,0,.62,.16,.34,0x454b50],[0,.43,0,.48,.62,.2,0x697276],[0,.74,0,.48,.16,.2,0x7d8585],[0,.85,0,.38,.12,.19,0x616b70],[0,.92,0,.24,.08,.17,0x848a84],
+        [0,.48,.112,.31,.34,.025,0x424a50],[0,.48,.13,.22,.26,.018,0x77736a],[0,.51,.146,.045,.18,.02,0xc0ad7c],[0,.57,.148,.16,.045,.02,0xc0ad7c],
+        [-.09,.38,.151,.045,.045,.02,0xe3d5af],[.09,.38,.151,.045,.045,.02,0xe3d5af],[0,.31,.15,.12,.035,.02,0xd2c299],[0,.24,.15,.08,.035,.02,0xaba185],
+        [-.24,.72,.07,.12,.055,.1,0x526b42],[.24,.66,-.03,.1,.045,.08,0x627a49],[-.2,.19,.18,.11,.05,.04,0x4f6540]
+      ],.045),
+      // Cruz memorial de pedra: base encaixada, braços facetados, rebites e um pequeno sigilo.
+      cross:mergeBoxes([
+        [0,.07,0,.46,.14,.3,0x3d4448],[0,.16,0,.3,.08,.23,0x626a6c],[0,.44,0,.16,.58,.14,0x747c7d],[0,.56,0,.21,.14,.17,0x96968e],
+        [0,.61,0,.57,.14,.15,0x747c7e],[0,.66,0,.62,.07,.14,0x9a998e],[0,.84,0,.23,.13,.16,0x687174],[0,.94,0,.12,.09,.13,0xa7a394],
+        [0,.38,.076,.055,.2,.018,0x454d51],[0,.57,.09,.15,.045,.02,0xd0b567],[0,.58,.105,.065,.065,.018,0x69b8aa],
+        [-.23,.61,.085,.08,.07,.025,0x555f61],[.23,.61,.085,.08,.07,.025,0x555f61],[-.19,.18,.13,.1,.045,.04,0x536b43]
+      ],.04),
+      // Cogumelos em família: chapéus rubi com pintas, lamelas claras e talos de tamanhos variados.
+      shroom:mergeBoxes([
+        [0,.16,0,.12,.3,.12,0xe5dcc7],[0,.31,0,.27,.06,.26,0xf0e7d4],[0,.38,0,.43,.14,.42,0x9c2f25],[0,.45,0,.36,.12,.36,0xd84b3a],[0,.514,0,.25,.025,.26,0xe76650],
+        [-.12,.516,-.08,.06,.025,.06,0xffdfb2],[.09,.516,-.1,.055,.025,.055,0xffdfb2],[.12,.516,.08,.06,.025,.06,0xffdfb2],[-.09,.516,.11,.05,.025,.05,0xffdfb2],[0,.516,.015,.045,.025,.045,0xf5c99b],
+        [-.28,.105,.08,.085,.21,.085,0xe7dfce],[-.28,.21,.08,.2,.045,.2,0xf0e7d4],[-.28,.26,.08,.31,.11,.31,0x9b3028],[-.28,.312,.08,.25,.1,.25,0xe25744],[-.28,.367,.08,.06,.02,.06,0xffdeb0],[.27,.11,-.08,.08,.22,.08,0xddd3bf],
+        [.27,.22,-.08,.18,.04,.18,0xf0e7d4],[.27,.27,-.08,.27,.1,.27,0x832a26],[.27,.322,-.08,.22,.09,.22,0xc94337],[.22,.373,-.08,.05,.02,.05,0xffdeb0],[-.12,.32,.205,.12,.025,.025,0xeee2ca]
+      ],.035),
+      // Fogueira: aro de rochas facetadas, cinza, lenha cruzada e pontos de brasa.
+      fire:mergeBoxes([
+        [0,.14,.5,.3,.22,.28,0x696c66],[.36,.14,.36,.3,.2,.28,0x817c70],[.5,.14,.02,.28,.23,.3,0x555f61],[.35,.14,-.34,.3,.2,.28,0x77786f],
+        [0,.14,-.49,.3,.22,.27,0x626963],[-.36,.14,-.34,.3,.2,.28,0x8a8579],[-.5,.14,.02,.28,.23,.3,0x606966],[-.35,.14,.36,.3,.2,.28,0x74766f],
+        [.02,.25,.51,.18,.045,.12,0x9c9686],[-.37,.24,-.34,.15,.045,.12,0xa59b87],[.5,.25,.02,.12,.05,.16,0x7f847a],
+        [0,.065,0,.55,.09,.5,0x332a24],[0,.115,0,.43,.055,.37,0x514237],
+        [0,.19,0,.76,.12,.13,0x55341d],[0,.205,0,.58,.11,.15,0x704326],[0,.19,0,.13,.12,.76,0x4b301c],[0,.205,0,.15,.11,.58,0x684022],
+        [-.36,.2,0,.07,.105,.16,0xb27d48],[.36,.2,0,.07,.105,.16,0xc39254],[0,.2,-.28,.16,.105,.07,0xb27d48],[0,.2,.28,.16,.105,.07,0xc39254],
+        [-.1,.15,.08,.16,.055,.12,0x9f2f18],[.08,.16,-.08,.14,.065,.13,0xe04a1d],[.02,.19,.04,.09,.055,.08,0xffa52c],[-.2,.19,-.13,.07,.04,.07,0xe85b1e]
+      ],.04),
+      // Silhueta em degraus com núcleo amarelo, língua laranja e ponta quente; cores pintadas por face.
+      flame:mergeBoxes([
+        [0,.2,0,.32,.2,.3,0xb72e14],[.01,.35,0,.34,.23,.31,0xf14b13],[-.035,.5,.025,.27,.27,.25,0xff7018],[.015,.65,.025,.2,.25,.19,0xffa322],
+        [-.015,.8,.02,.14,.22,.14,0xffd34c],[.015,.95,.02,.08,.18,.08,0xffef9a],[-.145,.4,.04,.12,.18,.12,0xff5915],
+        [.155,.49,-.03,.11,.18,.11,0xf24712],[.14,.64,-.02,.075,.15,.075,0xffad25]
+      ],.025),
+      // Geodo arcano: base violeta escura, grupo de cristais facetados e lascas luminosas.
+      crystal:mergeBoxes([
+        [0,.11,0,.62,.22,.54,0x21192f],[0,.22,0,.52,.06,.45,0x38264f],[-.18,.18,.12,.2,.12,.18,0x171326],[.19,.17,-.13,.18,.11,.18,0x171326],
+        [0,.55,0,.23,.68,.22,0x6940b6],[.015,.62,.018,.16,.52,.16,0x875be0],[.23,.43,.1,.17,.53,.17,0x8c67eb],[-.21,.37,-.12,.17,.42,.17,0x50358f],[-.12,.31,.2,.12,.35,.12,0xb18af5],
+        [.08,.35,-.23,.13,.39,.13,0x7149c6],[.22,.74,.1,.075,.24,.075,0xd5bdff],[-.205,.55,-.12,.055,.19,.055,0xc4a5ff],[.02,.88,.018,.07,.18,.07,0xe7d7ff],
+        [.015,.62,.102,.07,.3,.018,0xd1b4ff],[.306,.43,.1,.025,.26,.1,0xd8c1ff],[-.21,.37,-.03,.02,.2,.08,0x8c70d1]
+      ],.035),
+      // Toco recém-cortado: casca estriada, anéis quadrados no topo, raízes e broto de musgo.
+      stump:mergeBoxes([
+        [0,.17,0,.54,.34,.52,0x56351f],[0,.25,0,.48,.2,.47,0x754629],[-.05,.34,.01,.44,.07,.43,0x8c5732],[0,.39,0,.41,.05,.4,0xb77a45],
+        [0,.419,0,.31,.012,.3,0xd7b77f],[0,.428,0,.22,.012,.21,0xb58a58],[0,.437,0,.11,.012,.11,0xe2c996],
+        [-.2,.12,.17,.2,.13,.19,0x5b3922],[.2,.12,.14,.2,.13,.2,0x604027],[.03,.11,-.2,.19,.12,.2,0x54351f],[-.16,.25,.252,.07,.22,.025,0x3e2a1c],[.15,.23,.248,.06,.18,.025,0x9b6136],[-.26,.3,.16,.12,.045,.09,0x536b3d],
+        [.18,.37,-.12,.13,.035,.12,0x69854b],[-.18,.44,.02,.07,.035,.07,0xf0dcb1],[.21,.46,.02,.055,.025,.055,0xf0dcb1]
+      ],.04)
     };
     const GROUND_GEO={
       tuft:mergeBoxes([[-.10,.08,0,.07,.16,.07,0x416f34],[0,.11,.02,.07,.22,.07,0x5b923d],[.10,.07,-.06,.07,.14,.07,0x75a44a],[-.04,.045,.10,.10,.09,.08,0x869e45],[.08,.04,.05,.08,.08,.08,0xa4a34d]],.04),
@@ -43,13 +87,21 @@
       [0,.29,0,.09,.035,.065,petal],[0,.29,0,.065,.035,.09,light],[0,.315,0,.032,.025,.032,center],[-.12,.22,.04,.075,.03,.06,petal],[-.12,.22,.04,.055,.03,.08,light],[-.12,.242,.04,.026,.022,.026,center],[.12,.23,-.035,.075,.03,.06,petal],[.12,.23,-.035,.055,.03,.08,light],[.12,.252,-.035,.026,.022,.026,center]
     ],.08);return[make(0xf0bf48,0xffdf78,0xfff0ad),make(0xe86f91,0xf4a7ba,0xffdc73),make(0x9b80d2,0xc3a9eb,0xffd66f),make(0xe9e4c6,0xfff5dc,0xffbd52)]})();
 
-    function buildCoffin(open){const g=new THREE.Group();
-      vox(g,0,.13,0,.64,.26,.4,0x3f2d4d);vox(g,0,.3,0,.56,.1,.34,0x4a3558);vox(g,0,.385,0,.46,.08,.28,0x554066);
-      vox(g,0,.13,.208,.66,.05,.07,0x9aa0b0);vox(g,0,.13,-.208,.66,.05,.07,0x9aa0b0);
-      const lid=new THREE.Group();lid.position.set(0,.42,-.18);g.add(lid);
-      vox(lid,0,.04,.18,.44,.09,.26,0x5a4270);vox(lid,0,.1,.18,.5,.08,.3,0x4a3558);vox(lid,0,.16,.18,.58,.07,.34,0x3f2d4d);
-      vox(lid,0,.21,.06,.07,.26,.07,0xd9a43a);vox(lid,0,.255,.06,.22,.07,.07,0xd9a43a);
-      if(open){lid.rotation.x=-1.5;vox(g,0,.33,0,.42,.05,.24,0xe8e2d0);const l=new THREE.PointLight(0x9a7ae8,.8,5,2);l.position.set(0,.85,0);g.add(l)}
+    function buildCoffin(open){const g=new THREE.Group(),DARK=0x21182a,PLUM=0x493653,EDGE=0x72577d,GOLD=0xc89a45,WINE=0x78253e;
+      // Corpo afunilado em degraus, com faixas metálicas e puxadores laterais.
+      vox(g,0,.07,0,.66,.14,1.24,DARK);vox(g,0,.15,0,.61,.09,1.18,0x33283b);
+      vox(g,0,.22,-.3,.58,.18,.56,PLUM);vox(g,0,.21,.05,.5,.16,.25,0x584365);vox(g,0,.19,.36,.43,.13,.34,0x40304a);
+      vox(g,0,.31,-.3,.5,.07,.46,EDGE);vox(g,0,.29,.05,.43,.055,.18,0x725b7d);vox(g,0,.26,.36,.36,.04,.27,0x604a6d);
+      for(const z of[-.48,-.08,.27,.51])vox(g,0,.33,z,z>.4?.38:z<-.4?.48:.56,.035,.035,GOLD);
+      for(const x of[-.32,.32])for(const z of[-.23,.31]){vox(g,x,.22,z,.07,.1,.13,GOLD);vox(g,x*1.04,.22,z,.035,.045,.07,0xe4c778)}
+      vox(g,0,.345,.17,.18,.035,.035,0x8ee0cc,1);vox(g,0,.36,.17,.07,.065,.025,GOLD);vox(g,-.11,.34,.17,.035,.04,.025,0x8ee0cc,.7);vox(g,.11,.34,.17,.035,.04,.025,0x8ee0cc,.7);
+      const lid=new THREE.Group();lid.position.set(0,.38,-.5);g.add(lid);
+      // Tampa com moldura dourada, painel ameixa e sigilo turquesa.
+      vox(lid,0,.04,.52,.62,.1,1.08,DARK);vox(lid,0,.105,.52,.58,.08,1.04,PLUM);vox(lid,0,.16,.52,.51,.045,.96,EDGE);
+      vox(lid,0,.19,.52,.42,.035,.82,DARK);vox(lid,0,.215,.52,.34,.03,.68,WINE);
+      for(const x of[-.27,.27])vox(lid,x,.18,.52,.035,.05,.92,GOLD);for(const z of[.08,.96])vox(lid,0,.18,z,.53,.05,.035,GOLD);
+      vox(lid,0,.25,.52,.15,.05,.22,GOLD);vox(lid,0,.28,.52,.075,.055,.14,0x67cbb4,1);vox(lid,-.1,.245,.52,.04,.04,.08,0xc4f4df,.7);vox(lid,.1,.245,.52,.04,.04,.08,0xc4f4df,.7);
+      if(open){lid.rotation.x=-1.5;vox(g,0,.3,0,.4,.035,.88,0xe2d9c5);vox(g,0,.325,.02,.29,.03,.66,WINE);vox(g,0,.345,.02,.12,.02,.48,0xa63a58);const l=new THREE.PointLight(0x9a7ae8,.8,5,2);l.position.set(0,.85,0);g.add(l)}
       return g}
 
     const TARDIS_LABEL_GEO=(()=>{const font={P:['11110','10001','10001','11110','10000'],O:['01110','10001','10001','10001','01110'],L:['10000','10000','10000','10000','11111'],I:['11111','00100','00100','00100','11111'],C:['01111','10000','10000','10000','01111'],E:['11111','10000','11110','10000','11111']},word='POLICE',cell=.018,step=.022,gap=.018,total=word.length*(4*step+cell)+(word.length-1)*gap,boxes=[];
@@ -149,7 +201,7 @@
       decInst(DECOR_GEO.shroom,new THREE.MeshLambertMaterial({vertexColors:true}),shrooms,[.7,1.2]);
       const fires=[];let ft=0;while(fires.length<7&&ft++<300){const x=randi(10,W-11),z=randi(10,H-11);if(!open(x,z,20)||fires.some(a=>Math.hypot(a[0]-x,a[1]-z)<24))continue;fires.push([x,z,rand(0,TAU)])}
       landPos.fire=fires.map(a=>({x:a[0],z:a[1]}));decInst(DECOR_GEO.fire,new THREE.MeshLambertMaterial({vertexColors:true}),fires,[1,1.1]);
-      const flameMat=new THREE.MeshBasicMaterial({color:0xff8a2a}),fireFx={mesh:null,base:[],smokes:[],lights:[],t:rand(0,9)};
+      const flameMat=new THREE.MeshBasicMaterial({color:0xffffff,vertexColors:true}),fireFx={mesh:null,base:[],smokes:[],lights:[],t:rand(0,9)};
       if(fires.length){const fm=new THREE.InstancedMesh(DECOR_GEO.flame,flameMat,fires.length);level.add(fm);fireFx.mesh=fm;
         fires.forEach(([x,z,ry],i)=>{const y=relief(x,z)+jv(x,z)*.06,sc=rand(.85,1.1);q.setFromAxisAngle(up,ry);m4.compose(p.set(x,y,z),q,s.setScalar(sc));fm.setMatrixAt(i,m4);fireFx.base.push({x,z,y,ry,sc,ph:rand(0,TAU)});
           const li=new THREE.PointLight(0xff8a3a,1.5,6,2);li.position.set(x,y+.85,z);li.visible=false;level.add(li);fireFx.lights.push(li);
@@ -192,9 +244,8 @@
     function buildMenuRoyalCourt(menuGroup){const court=new THREE.Group();menuGroup.add(court);const throne=buildRoyalThrone();throne.position.set(6.9,0,3.9);throne.rotation.y=-2.5;court.add(throne);return court}
     function buildMenuNecroGraves(menuGroup){const necro=new THREE.Group();menuGroup.add(necro);[[6.3,-6.5,'grave'],[7.8,-8,'cross'],[6.6,-8.3,'grave']].forEach(([x,z,k])=>{const m=new THREE.Mesh(DECOR_GEO[k],treeMat);m.position.set(x,0,z);m.rotation.y=rand(0,TAU);necro.add(m)});return necro}
     function buildMenuCampfire(menuGroup){const fireGroup=new THREE.Group();menuGroup.add(fireGroup);
-      for(let i=0;i<9;i++){const a=i/9*TAU+rand(-.08,.08);vox(fireGroup,Math.sin(a)*.85,.13+rand(-.02,.02),Math.cos(a)*.85,.26+rand(0,.09),.2+rand(0,.07),.26+rand(0,.09),pick([0x8a857c,0x7d7a72,0x93907f]))}
-      vox(fireGroup,0,.07,0,.3,.14,.3,0x3a2a1a);const lA=vox(fireGroup,0,.13,0,.85,.13,.15,0x5d3f22);lA.rotation.y=.9;const lB=vox(fireGroup,0,.13,0,.85,.13,.15,0x5d3f22);lB.rotation.y=-.9;
-      const flames=[[0,.34,0,.34,.4,.34,0xff7a1f],[0,.5,0,.25,.3,.25,0xffa52a],[0,.66,0,.15,.2,.15,0xffdf6a]].map(a=>{const f=vox(fireGroup,a[0],a[1],a[2],a[3],a[4],a[5],a[6],1);f.castShadow=false;f.userData.b=[a[3],a[4],a[5]];return f});
+      const hearth=new THREE.Mesh(DECOR_GEO.fire,treeMat);hearth.castShadow=true;hearth.receiveShadow=true;fireGroup.add(hearth);
+      const flames=[[0,.24,0,.36,.22,.34,0xd53a12],[0,.39,0,.32,.24,.29,0xff5c15],[-.035,.54,.025,.25,.27,.24,0xff841b],[.015,.69,.03,.19,.24,.18,0xffb52c],[-.015,.83,.02,.13,.21,.13,0xffdc59],[.005,.96,.02,.08,.17,.08,0xffef9a],[-.14,.41,.035,.12,.18,.12,0xff6416],[.15,.48,-.025,.1,.17,.1,0xf94812],[.14,.61,-.03,.07,.16,.08,0xffa323]].map(a=>{const f=vox(fireGroup,a[0],a[1],a[2],a[3],a[4],a[5],a[6],1);f.castShadow=false;f.userData.b=[a[3],a[4],a[5]];return f});
       const light=new THREE.PointLight(0xff8a3a,1.6,9,2);light.position.set(0,.85,0);fireGroup.add(light);
       const smokes=[0,1,2].map(i=>{const m=new THREE.Mesh(boxGeo,new THREE.MeshBasicMaterial({color:0xaab0b8,transparent:true,opacity:0,depthWrite:false}));m.castShadow=false;m.position.y=-2;fireGroup.add(m);return{m,p:i/3}});return{group:fireGroup,flames,light,smokes}}
     function buildMenuFireRing(menuGroup,flatMesh){const group=new THREE.Group();group.position.y=.03;menuGroup.add(group);const glow=[],rim=[];
