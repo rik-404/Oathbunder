@@ -90,6 +90,8 @@ ok(G.zombieDef(),'zumbi registrado via assets/js/enimies/zombie.js');
 {const gn=G.galNames();ok(gn.some(n=>n.includes('TARDIS'))&&gn.some(n=>n.includes('Trono')),'galeria de modelos inclui TARDIS e trono ('+gn.length+' itens)');
  const a=G.galMake(gn.find(n=>n.includes('TARDIS'))),b=G.galMake(gn.find(n=>n.includes('Trono')));
  ok(!!a&&!!b&&a.children.length>=20&&b.children.length>=55,'cabine do tempo detalhada e trono real com mais de 55 peças voxel constroem na galeria')}
+{const name=G.galNames().find(n=>n==='Golem do Campo · chefe'),golem=name&&G.galMake(name);let pieces=0;if(golem)golem.traverse(o=>{if(o.isMesh)pieces++});
+ ok(!!golem&&golem.scale.x===2.6&&pieces>=50,'Golem ancestral com núcleo, placas e cristais constrói em escala original na galeria ('+pieces+' peças)')}
 {const n=G.galNames().find(n=>n==='Soldado Real · minion do Midas'),soldier=n&&G.galMake(n),combo=G.galMake('Midas + Guarda Real · combo');
  ok(!!soldier&&soldier.children.length===3&&soldier.scale.x===.86&&!!combo&&combo.children.length===5,'Soldado Real detalhado e combo do Midas constroem na galeria')}
 {const gn=G.galNames(),n=gn.find(n=>n==='Ogro Brutamontes · chefe'),ogre=n&&G.galMake(n);
@@ -98,6 +100,8 @@ ok(G.zombieDef(),'zumbi registrado via assets/js/enimies/zombie.js');
 {const n=G.galNames().find(n=>n==='Árvore Morta · árvore'),tree=n&&G.galMake(n);ok(!!tree&&!!tree.geometry,'árvore morta carrega do módulo assets/js/decorations/trees.js')}
 {const names=G.galNames().filter(n=>n.endsWith(' · árvore')),models=names.map(n=>G.galMake(n));
  ok(names.length===6&&models.every(m=>m&&m.geometry)&&new Set(models.map(m=>m.geometry)).size===6,'seis árvores da galeria têm geometrias próprias')}
+{const names=G.galNames().filter(n=>/^Pedra \d+ · cenário$/.test(n)),models=names.map(n=>G.galMake(n)),geos=models.map(m=>m&&m.geometry);
+ ok(names.length===3&&models.every(m=>m&&m.isMesh&&m.material&&m.material.vertexColors)&&new Set(geos).size===3,'três pedras voxel distintas com material de cores constroem na galeria')}
 frames(3);
 if(process.env.SMOKE_STATIC_ONLY==='1'){console.log(fails.length?('\n'+fails.length+' FALHA(S)'):'\nSMOKE_STATIC_OK — módulos e modelos da galeria validados');process.exit(fails.length?1:0)}
 console.log('[2] nova corrida (guerreiro)');

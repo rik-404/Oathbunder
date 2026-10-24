@@ -305,10 +305,41 @@ function batWingGeo(side){const k='w'+side;if(_WING[k])return _WING[k];const s=s
     // garra na ponta
     [.68*s,.025,-.02,.07,.04,.06,CLAW]
   ])}
-function buildGolem(){const b=buildBody({body:0x6e6578,trim:0x4a4352,skin:0x7d7488,legs:0x5c5466,arm:0x7d7488,eye:0xff6a2a,eyeE:1.4,boots:0x4a4352});
-  vox(b.torso,0,.25,.15,.16,.16,.04,0xff6a2a,1.4);vox(b.torso,-.12,.4,.145,.12,.06,.02,0x4f7a3a);vox(b.torso,.15,.1,.145,.1,.05,.02,0x4f7a3a);
-  vox(b.torso,-.33,.47,0,.24,.2,.3,0x5c5466);vox(b.torso,.33,.47,0,.24,.2,.3,0x5c5466);vox(b.head,0,.2,0,.2,.08,.2,0x4a4352);
-  vox(b.handL,0,-.05,0,.24,.24,.24,0x6e6578);vox(b.handR,0,-.05,0,.24,.24,.24,0x6e6578);
+function buildGolem(){const STONE=0x697479,SLATE=0x3d494d,LIGHT=0x969486,IRON=0x30393d,MOSS=0x526f3c,EMBER=0xff7133,GOLD=0xd5a64b;
+  const b=buildBody({body:STONE,trim:SLATE,skin:LIGHT,legs:0x505b5d,arm:0x747a70,eye:EMBER,eyeE:1.8,boots:0x383d3d});
+  // Núcleo antigo: aro de rocha partida em volta de uma runa de magma viva.
+  vox(b.torso,0,.22,.16,.31,.34,.07,IRON);vox(b.torso,0,.22,.202,.24,.27,.035,0x351f1a);
+  vox(b.torso,0,.23,.229,.115,.2,.025,EMBER,1.6);vox(b.torso,0,.23,.247,.045,.13,.015,0xffd15c,1.8);
+  vox(b.torso,-.19,.22,.172,.055,.34,.08,LIGHT);vox(b.torso,.19,.22,.172,.055,.34,.08,LIGHT);
+  vox(b.torso,0,.43,.14,.38,.08,.29,SLATE);vox(b.torso,0,.02,.15,.37,.08,.29,SLATE);
+  for(const side of[-1,1]){vox(b.torso,side*.25,.2,.12,.09,.23,.29,STONE);vox(b.torso,side*.29,.2,.205,.035,.15,.025,GOLD);
+    const rune=vox(b.torso,side*.29,.2,.224,.025,.095,.018,EMBER,1.1);rune.rotation.z=side*.18}
+  // Talhos de runa no peito e blocos de minério verde nos ombros.
+  for(const side of[-1,1]){vox(b.torso,side*.13,.47,.03,.27,.2,.32,SLATE);vox(b.torso,side*.13,.51,.205,.16,.08,.035,STONE);
+    vox(b.torso,side*.31,.57,.02,.27,.26,.35,STONE);vox(b.torso,side*.31,.7,.02,.21,.08,.28,LIGHT);
+    vox(b.torso,side*.31,.64,.2,.12,.06,.035,MOSS);vox(b.torso,side*.4,.55,.13,.08,.08,.08,0x72a14a);
+    const shard=vox(b.torso,side*.43,.77,-.01,.12,.25,.13,SLATE);shard.rotation.z=-side*.24}
+  // Cristais de basalto nas costas formam uma silhueta de golem, não um humano de armadura.
+  for(const [x,y,h] of[[-.2,.49,.32],[0,.59,.42],[.2,.49,.32]]){const spine=vox(b.torso,x,y,-.19,.14,h,.16,SLATE);spine.rotation.x=-.16}
+  vox(b.torso,0,.49,-.17,.43,.1,.08,0x77766b);
+  // Elmo talhado na própria pedra, com sobrancelha pesada, olhos de brasa e chifres facetados.
+  vox(b.head,0,.19,-.015,.4,.12,.39,SLATE);vox(b.head,0,.13,.15,.4,.09,.09,IRON);
+  vox(b.head,-.16,-.08,.18,.11,.19,.1,STONE);vox(b.head,.16,-.08,.18,.11,.19,.1,STONE);
+  vox(b.head,0,-.2,.15,.24,.1,.12,LIGHT);vox(b.head,0,-.22,.218,.14,.04,.02,IRON);
+  vox(b.head,-.08,.12,.19,.085,.045,.04,0xffb04a,1.7);vox(b.head,.08,.12,.19,.085,.045,.04,0xffb04a,1.7);
+  for(const side of[-1,1]){const horn=vox(b.head,side*.2,.23,-.015,.12,.28,.13,LIGHT);horn.rotation.z=-side*.42;
+    const tip=vox(b.head,side*.27,.37,-.015,.075,.13,.09,SLATE);tip.rotation.z=-side*.52}
+  vox(b.head,0,.27,.025,.18,.08,.19,GOLD);vox(b.head,0,.31,.13,.1,.1,.045,EMBER,1.1);
+  // Ombros, braçadeiras e nós dos dedos acompanham os pivôs da animação do corpo.
+  for(const [arm,hand,side] of[[b.armL,b.handL,-1],[b.armR,b.handR,1]]){
+    vox(arm,0,-.13,.035,.2,.19,.2,STONE);vox(arm,0,-.19,.12,.17,.08,.045,SLATE);
+    vox(arm,0,-.29,.025,.18,.08,.18,IRON);vox(arm,side*.035,-.29,.13,.05,.05,.025,GOLD);
+    vox(hand,0,-.05,.025,.25,.24,.23,STONE);vox(hand,0,-.02,.145,.2,.11,.055,LIGHT);
+    for(const x of[-.065,.065])vox(hand,x,-.11,.15,.06,.07,.045,SLATE)
+  }
+  // Grevas em camadas, dedos de pedra e marcas de musgo nos pés.
+  for(const [leg,side] of[[b.legL,-1],[b.legR,1]]){vox(leg,0,-.1,.105,.17,.19,.06,SLATE);vox(leg,0,-.13,.145,.1,.1,.025,GOLD);
+    vox(leg,0,-.28,.105,.2,.06,.04,IRON);vox(leg,side*.045,-.025,.08,.045,.05,.035,MOSS)}
   b.root.scale.setScalar(2.6);collect(b.root);return b}
 function buildOgre(){const b=buildBody({body:0x6a5a3a,trim:0x4a3a28,skin:0x7aa84a,legs:0x5a4a2e,arm:0x7aa84a,eye:0xffd24a,eyeE:.6,boots:0x3a2a1a});
   vox(b.torso,0,.06,.13,.54,.44,.24,0x7aa84a);                                              // barrigão
