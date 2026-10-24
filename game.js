@@ -709,9 +709,7 @@ function disposeFx(f){fxGroup.remove(f.obj);f.obj.traverse(o=>{if(o.isMesh&&o.us
 function flatMesh(geo,color,op){const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:op,depthWrite:false,side:THREE.DoubleSide}));m.rotation.x=-Math.PI/2;m.userData.own=true;return m}
 function ringFX(x,z,R,color,life=.4){const g=new THREE.Group();g.position.set(x,.08,z);const m=flatMesh(ringGeo,color,.8);g.add(m);
   addFx(g,life,k=>{const s=lerp(.3,R,1-Math.pow(1-k,3));g.scale.set(s,1,s);m.material.opacity=.8*(1-k)})}
-function glitchDashFX(x,y,z){ringFX(x,z,.92,0x3bf0d0,.2);ringFX(x,z,.6,0xf247d7,.16);
-  burst(x,y,z,0x3bf0d0,7,{emi:1,speed:4.8,up0:.15,up1:1.6,life:.24,size:.07});
-  burst(x,y,z,0xf247d7,6,{emi:1,speed:4.2,up0:.1,up1:1.3,life:.22,size:.065})}
+/* Glitch da esquiva do Smith: assets/js/dash/smith.js. */
 function arcaneNovaFX(x,z,R){
   ringFX(x,z,R,0x8fe1ff,.58);ringFX(x,z,R*.72,0xb99dff,.46);ringFX(x,z,R*.4,0xf0eaff,.34);
   const seal=new THREE.Group(),glyphs=[];seal.position.set(x,.11,z);
@@ -871,13 +869,7 @@ function autoAttack(){
     addShake(.12);S('melee');hitStop(.03)}
 }
 function useAbility(){/* Habilidades Q removidas; passivas serão implementadas separadamente. */}
-function dash(){
-  if(spawnIsActive()||player.dashCd>0||player.dashT>0)return;let dx=moveVec.x,dz=moveVec.z;if(Math.hypot(dx,dz)<.1){dx=Math.sin(player.facing);dz=Math.cos(player.facing)}
-  const l=Math.hypot(dx,dz);player.dvx=dx/l*18;player.dvz=dz/l*18;player.dashT=.17;player.dashCd=1.1*player.stats.dashCd;player.invuln=Math.max(player.invuln,.3);
-  if(player.cls==='future'){player.glitchT=0;player.glitchFxT=0;glitchDashFX(player.x,.45+player.y,player.z)}
-  else if(player.cls==='dracula'){burst(player.x,.65+player.y,player.z,0xb2000a,14,{emi:.7,speed:4.8,up0:.15,up1:1.5,life:.28,size:.085});burst(player.x,.55+player.y,player.z,0x1c0507,8,{speed:3.4,up0:.1,up1:1.1,life:.24,size:.095})}
-  else burst(player.x,.3,player.z,0xcfc7b0,8,{speed:2,up0:.2,up1:1.5});S('dash');
-}
+function dash(){if(window.DASH_SYSTEM)window.DASH_SYSTEM.start({player,moveVec,blocked:spawnIsActive(),burst,ringFX,S,THREE,fxGroup,buildMinionMesh,buildHero,relief})}
 function jump(){if(!spawnIsActive()&&player.y<=.001&&state==='play'){player.vy=8;burst(player.x,.1,player.z,0xb59a6a,5,{speed:2,up0:.3,up1:1.2});S('jump')}}
 // armas: cada arma vive em assets/js/weapons/ e recebe o contexto C do motor
 function updWeapons(dt){
@@ -991,6 +983,7 @@ function updateCharacterSpawn(dt){
 function spawnIsActive(){return !!(spawnController&&spawnController.active)}
 function newRun(cls){
   if(!isUnlocked(cls))return;
+  if(window.DASH_SYSTEM)window.DASH_SYSTEM.reset({player,fxGroup});
   setPlayerPoisonTint(false);
   const C=CLASSES[cls],weapon=weaponFor(cls);selCls=cls;store.set('cv_cls',cls);
   Object.assign(player,{cls,weaponId:weapon.id,ownedWeaponIds:[weapon.id],maxWeapons:BUILD_LIMITS.weapons,x:W/2,z:H/2,y:0,vy:0,r:.32,maxHp:C.hp,hp:C.hp,facing:Math.PI,atkCd:.5,dashCd:0,dashT:0,dvx:0,dvz:0,invuln:1,shieldT:0,spinT:0,spinTick:0,spinAng:0,walk:0,atkAnim:0,flash:0,aimAng:Math.PI,minCap:cls==='necro'?3:0,minDmg:1,orbN:0,
@@ -1105,7 +1098,7 @@ function renderPause(){
       `<div class="pbar"><i style="width:${pct}%"></i></div></div>`;
   }).join('');
 }
-function goMenu(to){if(level){scene.remove(level);level=null;fireFx=null;flameMat=null}if(fxGroup){scene.remove(fxGroup);fxGroup=null}if(wGroup){scene.remove(wGroup);wGroup=null}texts.forEach(t=>t.el.remove());texts=[];enemies=[];minions=[];grid=null;WEAPON_RESETS.forEach(f=>f());
+function goMenu(to){if(window.DASH_SYSTEM)window.DASH_SYSTEM.reset({player,fxGroup});if(level){scene.remove(level);level=null;fireFx=null;flameMat=null}if(fxGroup){scene.remove(fxGroup);fxGroup=null}if(wGroup){scene.remove(wGroup);wGroup=null}texts.forEach(t=>t.el.remove());texts=[];enemies=[];minions=[];grid=null;WEAPON_RESETS.forEach(f=>f());
   if(player.model)player.model.root.visible=false;scene.add(menuGroup);renderCards();setScreen(to||'menu')}
 
 /* ================= menu 3D ================= */
@@ -1337,19 +1330,13 @@ function update(dt){
   let mx=fX*iz+rX*ix,mz=fZ*iz+rZ*ix;if(spawnIsActive()){mx=0;mz=0}moveVec.x=mx;moveVec.z=mz;
   const moving=il>.1&&!spawnIsActive();
   if(moving)player.facing+=angDiff(player.facing,Math.atan2(mx,mz))*Math.min(1,dt*14);
-  player.atkCd-=dt;player.dashCd=Math.max(0,player.dashCd-dt);player.invuln-=dt;player.flash-=dt;player.shieldT=Math.max(0,player.shieldT-dt);
+  player.atkCd-=dt;player.invuln-=dt;player.flash-=dt;player.shieldT=Math.max(0,player.shieldT-dt);
   updatePoison(dt);
   updateBurning(dt);
   updateTemporalEchoes(dt);
   if(st.regen>0&&player.hp<player.maxHp)healPlayer(st.regen*dt,true);
-  if(player.dashT>0){player.dashT-=dt;moveEnt(player,player.dvx*dt,player.dvz*dt);
-    if(player.cls==='future'){player.glitchT=(player.glitchT||0)+dt;player.glitchFxT=(player.glitchFxT||0)-dt;
-      if(player.glitchFxT<=0){player.glitchFxT=.045;glitchDashFX(player.x,.4+player.y,player.z)}
-      if(player.model)player.model.root.visible=Math.floor(player.glitchT*52)%6!==0;
-    }else if(Math.random()<.6)burst(player.x,.4+player.y,player.z,C.pal.body,1,{speed:.5,up0:0,up1:.5,grav:0,life:.3,size:.18});
-    if(player.cls==='future'&&player.dashT<=0&&player.model)player.model.root.visible=true}
-  else if(moving){let sp=C.speed*st.move;if(player.spinT>0)sp*=1.15;if(player.shieldT>0)sp*=.75;moveEnt(player,mx*sp*dt,mz*sp*dt)}
-  if(player.cls==='future'&&player.dashT<=0&&player.model)player.model.root.visible=true;
+  const dashHandled=window.DASH_SYSTEM&&window.DASH_SYSTEM.update({player,dt,moveEnt,burst,ringFX,heroClass:C,moving});
+  if(!dashHandled&&moving){let sp=C.speed*st.move;if(player.spinT>0)sp*=1.15;if(player.shieldT>0)sp*=.75;moveEnt(player,mx*sp*dt,mz*sp*dt)}
   player.vy-=24*dt;player.y+=player.vy*dt;if(player.y<0){if(player.vy<-6)burst(player.x,.05,player.z,0xb59a6a,4,{speed:2,up0:.2,up1:1});player.y=0;player.vy=0}
   // Fogueiras: o calor machuca as outras classes; Castiel absorve a chama e a detona uma vez.
   if(landPos&&landPos.fire&&player.y<.5){player.fireCd=(player.fireCd||0)-dt;
@@ -1569,10 +1556,6 @@ function animHero(dt,moving){
     b.torso.rotation.y=angDiff(player.facing,player.aimAng); // arco acompanha o eixo real das flechas
     if(k>0){b.armL.rotation.x=-1.5;b.armR.rotation.x=-1.35}
   }
-  if(cls==='dracula'&&b.dashBat){const transforming=player.dashT>0;b.dashBat.visible=transforming;b.torso.visible=!transforming;b.legL.visible=!transforming;b.legR.visible=!transforming;
-    if(transforming){const flap=Math.sin(runTime*42)*.82;b.dashBatWings[0].rotation.z=-flap;b.dashBatWings[1].rotation.z=flap;
-      b.dashBat.rotation.y=angDiff(player.facing,Math.atan2(player.dvx,player.dvz));b.dashBat.rotation.x=-.12;b.dashBat.rotation.z=Math.sin(runTime*32)*.06;b.dashBat.position.y=.025+Math.sin(runTime*42)*.025}
-    else{b.dashBat.rotation.set(0,0,0);b.dashBat.position.y=0;b.dashBatWings[0].rotation.z=0;b.dashBatWings[1].rotation.z=0}}
   applyKeep(b.keep);
   if(b.cape)b.cape.rotation.x=(moving?.07+Math.sin(player.walk)*.04:.015+Math.sin(runTime*1.6)*.012);
   if(cls==='mago'&&b.mageOrb){b.mageOrb.position.y=1.02+Math.sin(runTime*2.4)*.028;b.mageMotes.rotation.y+=dt*1.8}
@@ -1581,6 +1564,7 @@ function animHero(dt,moving){
   if(cls==='guerreiro'&&b.plume){b.plume.rotation.z=Math.sin(runTime*2.2)*.04;b.plume.rotation.x=Math.sin(runTime*1.8)*.025}
   setFlash(b.root,player.flash>0);
   b.root.visible=pose?pose.visible:!(player.invuln>0&&player.dashT<=0&&runTime>1&&Math.floor(runTime*20)%2===0);
+  if(window.DASH_SYSTEM)window.DASH_SYSTEM.render({player,runTime,THREE,fxGroup,buildMinionMesh,buildHero,relief,ringFX,burst});
 }
 function updateFX(dt){
   for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=dt;p.vy-=p.grav*dt;p.m.position.x+=p.vx*dt;p.m.position.y+=p.vy*dt;p.m.position.z+=p.vz*dt;
