@@ -103,7 +103,7 @@ const WEAPONS=window.WEAPONS||{},WEAPON_UPDATERS=window.WEAPON_UPDATERS||{},WEAP
 // melhorias de nível em assets/js/upgrades/ (STAT_UPS agregado pelo index.js antes deste arquivo)
 // símbolos pra reconhecer cada poder e classe de relance
 const ICONS={
-  'Orbes Giratórios':'🔮','Raio Celeste':'🌩️','Aura de Brasa':'🔥','Canhão de Estilhaços':'💥','Eco do Futuro':'⌛',
+  'Orbes Giratórios':'🔮','Raio Celeste':'🌩️','Aura de Brasa':'🔥','Canhão de Estilhaços':'💥','Eco do Futuro':'⌛','Bumerangue':'🪃',
   'Força':'💪','Mãos Rápidas':'⚡','Botas Leves':'👟','Coração de Pedra':'❤️','Olho Certeiro':'🎯','Vampirismo':'🦷','Placas de Ferro':'🧱','Regeneração':'💚','Ímã':'🧲','Sabedoria':'📖','Alcance Maior':'💥','Foco':'⏳','Poção Grande':'🧪',
   'Projétil Extra':'✨','Perfuração':'➡️','Espinhos':'🌵','Horda Óssea':'🦴','Ossos Afiados':'⚰️',
   'Punho Fatal':'💢','Velocidade de Tiro':'🚀','Empurrão':'🫱','Reflexo Relâmpago':'💨','Pulso Congelante':'❄️','Garrafa de Cerveja':'🍺',
@@ -1546,9 +1546,9 @@ function applyKeep(keep){for(const kk of keep){kk.g.rotation.x=-kk.arm.rotation.
   if(kk.lean){const w=1-clamp(-kk.arm.rotation.x/1.3,0,1);kk.g.rotation.z=kk.lean*w;kk.g.rotation.x+=(kk.leanX||0)*w}}}
 function animHero(dt,moving){
   const b=player.model,cls=player.cls,pose=spawnController&&spawnController.active&&spawnController.pose?spawnController.pose():null;
-  b.root.position.set(player.x,player.y+relief(player.x,player.z)+(pose?pose.offsetY:0),player.z);b.root.rotation.y=player.facing;b.root.rotation.x=pose?pose.rotationX:0;
+  const poseZ=pose&&pose.offsetZ||0,sit=pose&&pose.sit||0;b.root.position.set(player.x,player.y+relief(player.x,player.z)+(pose?pose.offsetY:0),player.z+poseZ);b.root.rotation.y=player.facing;b.root.rotation.x=pose?pose.rotationX:0;
   if(moving)player.walk+=dt*11;const sw=moving&&player.y<.05?Math.sin(player.walk):0;
-  b.legL.rotation.x=player.y>.05?-.5:sw*.7;b.legR.rotation.x=player.y>.05?.3:-sw*.7;b.torso.position.y=.34+(moving?Math.abs(Math.cos(player.walk))*.03:0);
+  b.legL.rotation.x=player.y>.05?-.5:sw*.7+sit*.7;b.legR.rotation.x=player.y>.05?.3:-sw*.7+sit*.7;b.torso.position.y=.34+(moving?Math.abs(Math.cos(player.walk))*.03:0)-sit*.035;
   b.armL.rotation.x=-sw*.6;b.armR.rotation.x=sw*.6;b.torso.rotation.y=0;
   if(cls==='guerreiro'&&b.sword){b.sword.rotation.x=0;b.sword.rotation.z=0;if(b.swordHold)b.swordHold.rotation.z=-.75}
   player.atkAnim=Math.max(0,player.atkAnim-dt*(cls==='tank'?3.5:5));const k=player.atkAnim,t=1-k,ez=1-Math.pow(1-t,3);
@@ -1800,6 +1800,7 @@ function toggleCheat(){
 const CHEAT_HELP=[
   'help · lista os comandos',
   'galeria · abre a sala de testes (ver todos os modelos em 360°)',
+  'weapons · abre o arsenal 3D (somente armas)',
   'arte · abre a galeria de imagens (rostos, skins) e emoticons',
   'god · liga/desliga invencibilidade',
   'heal · cura total',
@@ -1818,7 +1819,7 @@ const CHEAT_HELP=[
   'clear · limpa o terminal',
 ];
 /* ================= galeria / sala de testes (terminal: galeria) ================= */
-let galleryOpen=false,galleryItems=null,galleryIdx=0,galleryObj=null,galScene=null,galGroup=null,galleryUI=null,galNameEl=null,galYaw=0,galSpin=true,galDist=5,galTY=1,galH=2,galDrag=false,galLX=0;
+let galleryOpen=false,galleryItems=null,galleryIdx=0,galleryObj=null,galScene=null,galGroup=null,galleryUI=null,galNameEl=null,galTitleEl=null,galYaw=0,galSpin=true,galDist=5,galTY=1,galH=2,galDrag=false,galLX=0,galleryMode='all';
 function buildEnemyDisplay(type){const g=new THREE.Group();
   if(type==='spider')return buildSpiderModel(vcMat).mesh;
   if(LEGGED[type]||type==='bat'){g.add(new THREE.Mesh(enemyBodyGeo(type),vcMat));
@@ -1854,6 +1855,34 @@ function buildGalleryItems(){const items=[];
   items.push({name:'Baú · tesouro',make:DECORATIONS.buildChestDisplay});
   items.push({name:'Caixão · decoração',make:()=>DECORATIONS.buildCoffin(true)});
   return items}
+function weaponPreviewContext(){return{THREE,PROJ_GEO,projMat,vox,flatMesh,TAU}}
+function buildClassWeaponPreview(w){
+  if(w.kind==='summon')return buildMinionMesh(true).g;
+  let held=null;
+  if(w.kind==='melee'||w.kind==='slam'||w.classId==='arqueiro'){
+    const hero=buildHero(w.classId);held=w.kind==='melee'?(hero.swordHold||hero.sword):w.kind==='slam'?hero.hammer:hero.bow;
+    if(held&&held.parent)held.parent.remove(held)
+  }
+  const geo=PROJ_GEO[w.proj],g=new THREE.Group();
+  if(held){held.position.set(geo?-.62:0,.46,0);g.add(held)}
+  if(geo){const m=new THREE.Mesh(geo,projMat);m.scale.setScalar(w.proj==='arrow'?1.1:1.35);m.position.set(held?.65:0,.46,0);g.add(m)}
+  if(g.children.length)return g;
+  vox(g,0,.14,0,.26,.28,.22,0xd99d44,.5);vox(g,0,.34,0,.12,.12,.12,0xffdb7a,.8);return g
+}
+function buildGeneralWeaponPreview(key){
+  const C=weaponPreviewContext(),custom=(window.WEAPON_PREVIEW_BUILDERS||{})[key];if(custom)return custom(C);
+  const g=new THREE.Group();
+  if(key==='shot'){const rock=new THREE.Mesh(PROJ_GEO.rock,projMat);rock.scale.setScalar(1.45);g.add(rock);vox(g,-.22,.2,.08,.10,.10,.10,0x9a9a94);return g}
+  if(key==='bolt'){for(let i=0;i<7;i++){const x=(i%2?-.105:.105),y=.48-i*.15,p=vox(g,x,y,0,.16,.22,.16,i%2?0x9defff:0x54bfe9,.85);p.rotation.z=i%2?-.22:.22}vox(g,0,.48,0,.07,.13,.18,0xf7fcff,1);return g}
+  if(key==='aura'){for(let i=0;i<12;i++){const a=i*Math.PI/6,r=.88,x=Math.cos(a)*r,z=Math.sin(a)*r,c=i%3===0?0xffd15c:i%2?0xff6a2a:0xd63220;vox(g,x,.025,z,.21,.06,.21,0x74291b,.25);vox(g,x,.16,z,.13,.23,.13,c,.8);vox(g,x+Math.cos(a)*.04,.31,z+Math.sin(a)*.04,.075,.14,.075,i%2?0xffbd45:0xff421f,.95)}return g}
+  vox(g,0,.12,0,.28,.24,.24,0xe4a945,.5);return g
+}
+function buildWeaponGalleryItems(){const items=[];
+  Object.keys(CLASS_WEAPONS).forEach(id=>{const w=CLASS_WEAPONS[id];items.push({name:w.nome+' · '+(CLSTIPO[w.classId]||'arma de classe'),make:()=>buildClassWeaponPreview(w)})});
+  Object.keys(WEAPONS).forEach(key=>items.push({name:WEAPONS[key].nome+' · arma geral',make:()=>buildGeneralWeaponPreview(key)}));
+  return items
+}
+function openWeaponsGallery(){ensureGalScene();if(!galleryUI)buildGalleryUI();galleryMode='weapons';galleryItems=buildWeaponGalleryItems();galleryIdx=0;if(galTitleEl)galTitleEl.textContent='▚ ARSENAL DE ARMAS';if(galleryOpen){galleryShow(0);if(cheatOpen)toggleCheat()}else toggleGallery()}
 function ensureGalScene(){if(galScene)return;
   galScene=new THREE.Scene();galScene.background=new THREE.Color(0x14121c);
   galScene.add(new THREE.HemisphereLight(0xffffff,0x3a3a4a,.95));
@@ -1867,14 +1896,15 @@ function galleryShow(i){galleryIdx=(i+galleryItems.length)%galleryItems.length;
   while(galGroup.children.length)galGroup.remove(galGroup.children[0]);
   const it=galleryItems[galleryIdx];galleryObj=it.make();galGroup.add(galleryObj);galYaw=0;galSpin=true;
   const box=new THREE.Box3().setFromObject(galleryObj),sz=new THREE.Vector3(),ctr=new THREE.Vector3();box.getSize(sz);box.getCenter(ctr);
-  galleryObj.position.x-=ctr.x;galleryObj.position.z-=ctr.z; // centraliza na plataforma
-  const m=Math.max(sz.x,sz.y,sz.z,.6);galDist=m*1.9+1.3;galTY=ctr.y;galH=ctr.y+m*.4;
+  const lift=galleryMode==='weapons'?Math.max(0,.38-box.min.y):0;
+  galleryObj.position.x-=ctr.x;galleryObj.position.z-=ctr.z;galleryObj.position.y+=lift; // centraliza e eleva armas acima do pedestal
+  const m=Math.max(sz.x,sz.y,sz.z,.6);galDist=m*1.9+1.3;galTY=ctr.y+lift;galH=galTY+m*.4;
   if(galNameEl)galNameEl.textContent=(galleryIdx+1)+' / '+galleryItems.length+' · '+it.name}
 function galleryStep(d){galleryShow(galleryIdx+d)}
 function buildGalleryUI(){galleryUI=document.createElement('div');
   galleryUI.style.cssText='position:fixed;inset:0;z-index:45;display:none;pointer-events:none';
   const bar=document.createElement('div');bar.style.cssText='position:absolute;left:0;right:0;top:0;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;background:linear-gradient(rgba(8,6,12,.85),transparent);pointer-events:auto';
-  bar.innerHTML='<span style="font-family:var(--display,monospace);color:var(--arcane,#62b8ff);font-size:14px;letter-spacing:.06em">▚ SALA DE TESTES</span><span style="font-family:var(--body);color:var(--dust,#a99db8);font-size:12px">← → troca · arraste pra girar · ESC fecha</span>';
+  bar.innerHTML='<span id="gallery-title" style="font-family:var(--display,monospace);color:var(--arcane,#62b8ff);font-size:14px;letter-spacing:.06em">▚ SALA DE TESTES</span><span style="font-family:var(--body);color:var(--dust,#a99db8);font-size:12px">← → troca · arraste pra girar · ESC fecha</span>';galTitleEl=bar.querySelector('#gallery-title');
   const foot=document.createElement('div');foot.style.cssText='position:absolute;left:0;right:0;bottom:24px;display:flex;justify-content:center;align-items:center;gap:14px;pointer-events:auto';
   const bst='font-family:var(--display,monospace);font-size:20px;background:var(--stone,#191521);color:var(--bone,#efe6d6);border:2px solid var(--edge,#3b3249);box-shadow:3px 3px 0 #000;width:46px;height:46px;cursor:pointer';
   const prev=document.createElement('button');prev.style.cssText=bst;prev.textContent='◀';prev.onclick=()=>galleryStep(-1);
@@ -1892,7 +1922,7 @@ function toggleGallery(){ensureGalScene();if(!galleryItems)galleryItems=buildGal
     uis.forEach(s=>{const el=$(s);if(el)el.hidden=true});
     document.querySelectorAll('.screen').forEach(s=>s.style.visibility='hidden');
     galleryShow(galleryIdx)}
-  else{document.querySelectorAll('.screen').forEach(s=>s.style.visibility='');setScreen(state)}}
+  else{document.querySelectorAll('.screen').forEach(s=>s.style.visibility='');setScreen(state);if(galleryMode==='weapons'){galleryItems=null;galleryMode='all';galleryIdx=0;if(galTitleEl)galTitleEl.textContent='▚ SALA DE TESTES'}}}
 function updateGallery(dt){if(galSpin)galYaw+=dt*.5;if(galGroup)galGroup.rotation.y=galYaw;
   camera.position.set(0,galH,galDist);camera.lookAt(0,galTY,0);
   const fov=camera.aspect<1?58:46;if(camera.fov!==fov){camera.fov=fov;camera.updateProjectionMatrix()}}
@@ -1972,6 +2002,7 @@ function runCheat(line){
     case'time':if(!playing())break;if(isNaN(num)){clog('uso: time SEG','#f2b84b');break}runTime=num;clog('cronômetro = '+fmtT(num),'#7fe0a8');break;
     case'unlock':{if(a1==='all'||!a1){ORDER.forEach(doUnlock);clog('todas as classes liberadas 🔓','#7fe0a8')}else if(CLASSES[a1]){doUnlock(a1);clog(CLASSES[a1].nome+' liberado 🔓','#7fe0a8')}else clog('classe: '+ORDER.join(', '),'#f2b84b');if(state==='menu')renderCards()}break;
     case'galeria':case'gallery':case'dev':toggleGallery();clog('🏛️ sala de testes '+(galleryOpen?'aberta — ← → troca, arraste gira, ESC fecha':'fechada'),'#7fe0a8');break;
+    case'weapons':case'weapon':openWeaponsGallery();clog('⚔️ arsenal 3D aberto — ← → troca, arraste gira, ESC fecha','#7fe0a8');break;
 case'arte':case'midia':case'midias':case'media':case'imagens':case'emojis':toggleMedia();clog('🖼️ galeria de mídias '+(mediaOpen?'aberta — ESC fecha':'fechada'),'#7fe0a8');break;
     case'clear':cheatLog.innerHTML='';break;
     default:clog('comando desconhecido: '+cmd+' (digite "help")','#e5473c');

@@ -47,6 +47,8 @@
     return g;
   }
 
+  (window.WEAPON_PREVIEW_BUILDERS = window.WEAPON_PREVIEW_BUILDERS || {}).orbit = buildOrb;
+
   (window.WEAPON_UPDATERS = window.WEAPON_UPDATERS || {}).orbit = function (dt, C) {
     const Wp = C.player.weap, st = C.player.stats;
     const n = Math.min(6, 1 + Wp.orbit);
