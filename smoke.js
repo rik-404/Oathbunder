@@ -37,6 +37,7 @@ class Grp extends Mesh{constructor(){super(undefined,undefined)}}
 class Ins extends Mesh{constructor(g,m,n){super(g,m);this.count=n;this.instanceMatrix={needsUpdate:false}}setMatrixAt(){}setColorAt(){}}
 function geoBox(){const n=24;return{attributes:{position:{count:n,array:new Float32Array(n*3)},normal:{array:new Float32Array(n*3)}},index:{array:Array.from({length:n},(_,i)=>i)},setAttribute(){},translate(){},dispose(){},computeBoundingSphere(){}}}
 const plain=o=>Object.assign({},o,{dispose(){}});
+function fakeMaterial(o){const m=Object.assign({},o,{dispose(){}});if(typeof m.color==='number')m.color=new Color(m.color);if(typeof m.emissive==='number')m.emissive=new Color(m.emissive);m.clone=()=>{const c=fakeMaterial(m);if(m.color&&typeof m.color.copy==='function')c.color=new Color().copy(m.color);if(m.emissive&&typeof m.emissive.copy==='function')c.emissive=new Color().copy(m.emissive);return c};return m}
 const THREE={
   PCFSoftShadowMap:1,
   WebGLRenderer:function(){return{domElement:fakeEl(),setPixelRatio(){},setSize(){},render(){},clearColor(){},shadowMap:{enabled:false,type:0}}},
@@ -50,7 +51,7 @@ const THREE={
   BoxGeometry:geoBox,RingGeometry:geoBox,CircleGeometry:geoBox,IcosahedronGeometry:geoBox,
   BufferGeometry:function(){return{setAttribute(){},setIndex(){},computeBoundingSphere(){},dispose(){}}},
   Float32BufferAttribute:function(a,n){return{array:a,itemSize:n}},
-  MeshLambertMaterial:function(o){const m=Object.assign({},o,{dispose(){}});if(typeof m.color==='number')m.color=new Color(m.color);return m},MeshBasicMaterial:function(o){const m=Object.assign({},o,{dispose(){}});if(typeof m.color==='number')m.color=new Color(m.color);return m},
+  MeshLambertMaterial:fakeMaterial,MeshBasicMaterial:fakeMaterial,
   Mesh,Group:Grp,InstancedMesh:Ins,
 };
 global.THREE=THREE;
@@ -60,7 +61,7 @@ global.THREE=THREE;
 const cdir='assets/js/class';const csrc=fs.readdirSync(cdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?1:b==='index.js'?-1:a.localeCompare(b)).map(f=>fs.readFileSync(cdir+'/'+f,'utf8')).join('\n')+'\n';const wdir='assets/js/weapons';let src=csrc+fs.readdirSync(wdir).filter(f=>f.endsWith('.js')).sort((a,b)=>a==='index.js'?-1:b==='index.js'?1:a.localeCompare(b)).map(f=>fs.readFileSync(wdir+'/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/functions/upgrades.js','utf8')+'\n'+fs.readdirSync('assets/js/enimies').filter(f=>f.endsWith('.js')).sort().map(f=>fs.readFileSync('assets/js/enimies/'+f,'utf8')).join('\n')+'\n'+fs.readFileSync('assets/js/decorations/chest.js','utf8')+'\n'+fs.readFileSync('assets/js/decorations/index.js','utf8')+'\n'+fs.readFileSync('game.js','utf8');
 const i=src.lastIndexOf('})();');
 const hook=`window.__G={newRun,update,openUpgrade,chooseUpgrade,damageEnemy,gainXP,hurtPlayer,dash,jump,useAbility,spawnBoss,spawnEnemy,killEnemy,S,setMuted,player,keys,setScreen,getBoss:()=>boss,getUps:()=>($('#ups')&&$('#ups')._choice)||null,hs:()=>hitStopT,getState:()=>state,enemies:()=>enemies,projs:()=>projs,mapInfo:()=>({W,H,grid,landPos,chestN:chests.length}),jv:(x,z)=>jv(x,z),relief:(x,z)=>relief(x,z),hills:()=>HILLS.length,runCheat,toggleMap,galNames:()=>{if(!galleryItems)galleryItems=buildGalleryItems();return galleryItems.map(g=>g.name)},galMake:(n)=>{if(!galleryItems)galleryItems=buildGalleryItems();const it=galleryItems.find(g=>g.name===n);return it?it.make():null},skelDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.skel),zombieDef:()=>(window.ENEMY_DEFS&&!!window.ENEMY_DEFS.zombie)};\n})();`;
-src=src.slice(0,i)+hook;
+src=src.slice(0,i)+hook.replace('projs:()=>projs,','projs:()=>projs,weaponGroup:()=>wGroup,');
 try{eval(src)}catch(e){console.log('ERRO AO CARREGAR:',e.stack);process.exit(1)}
 const G=global.__G;
 const frames=n=>{for(let k=0;k<n;k++){const cb=rafCb;rafCb=null;fakeT+=16.7;cb&&cb(fakeT)}};
@@ -87,6 +88,8 @@ ok(G.zombieDef(),'zumbi registrado via assets/js/enimies/zombie.js');
 {const zombie=window.ENEMY_DEFS.zombie((P,o)=>o.extra||[]),parts=zombie.boxes();
  ok(parts.length>=35&&zombie.stats.hp===34&&zombie.stats.speed===2.3&&zombie.stats.dmg===9&&zombie.legged&&zombie.leg.length===3,'Zumbi redesenhado e atributos/animação preservados')}
 {const ks=Object.keys(CLASSES);ok(ks.length===12&&ks.every(k=>typeof CLASSES[k].model==='function'),'12 classes com o próprio modelo voxel (CLASSES[k].model)')}
+{const name=G.galNames().find(n=>n.startsWith('Darian ·')),hero=name&&G.galMake(name);let hold=null,sword=null;if(hero)hero.traverse(o=>{if(o.name==='swordHold')hold=o;if(o.name==='sword')sword=o});
+ ok(!!hold&&Math.abs(hold.rotation.z+.75)<1e-6&&!!sword&&sword.children.length>=15,'Guerreiro segura a espada pela empunhadura na pose de repouso')}
 {const gn=G.galNames();ok(gn.some(n=>n.includes('TARDIS'))&&gn.some(n=>n.includes('Trono')),'galeria de modelos inclui TARDIS e trono ('+gn.length+' itens)');
  const a=G.galMake(gn.find(n=>n.includes('TARDIS'))),b=G.galMake(gn.find(n=>n.includes('Trono')));
  ok(!!a&&!!b&&a.children.length>=20&&b.children.length>=55,'cabine do tempo detalhada e trono real com mais de 55 peças voxel constroem na galeria')}
@@ -103,6 +106,8 @@ ok(G.zombieDef(),'zumbi registrado via assets/js/enimies/zombie.js');
 {const names=G.galNames().filter(n=>/^Pedra \d+ · cenário$/.test(n)),models=names.map(n=>G.galMake(n)),geos=models.map(m=>m&&m.geometry);
  ok(names.length===3&&models.every(m=>m&&m.isMesh&&m.material&&m.material.vertexColors)&&new Set(geos).size===3,'três pedras voxel distintas com material de cores constroem na galeria')}
 {const fire=G.galMake('Fogueira · decoração');ok(!!fire&&fire.children.length===2&&fire.children.every(m=>m.isMesh&&m.material&&m.material.vertexColors),'fogueira da galeria tem base voxel e chama em camadas de cor')}
+{const totem=G.galMake('Totem de Ímã · decoração'),mag=totem&&totem.children.find(c=>c.name==='mag'),off=totem&&totem.children.find(c=>c.name==='off');let pieces=0;if(totem)totem.traverse(o=>{if(o.isMesh&&o.geometry)pieces++});
+ ok(!!totem&&pieces>=35&&!!mag&&mag.children.length>=15&&!!off&&!off.visible,'totem de ímã voxel detalhado aparece na visualização de desenvolvimento ('+pieces+' peças)')}
 {const names=['Cristal Arcano · decoração','Cogumelo · decoração','Lápide · decoração','Cruz · decoração','Toco · decoração','Caixão · decoração'],models=names.map(n=>G.galMake(n)),coffin=models[5];let coffinPieces=0;if(coffin)coffin.traverse(o=>{if(o.isMesh)coffinPieces++});
  ok(models.slice(0,5).every(m=>m&&m.isMesh&&m.geometry&&m.material&&m.material.vertexColors)&&!!coffin&&coffinPieces>=25,'cristal, cogumelo, lápide, cruz e toco voxel e caixão ornamentado constroem na galeria ('+coffinPieces+' peças no caixão)')}
 frames(3);
@@ -112,6 +117,12 @@ G.runCheat('unlock all'); // localStorage vazio: libera todas as classes
 G.newRun('guerreiro');
 ok(G.getState()==='play','partida iniciada');
 ok(G.enemies().length===8,'8 slimes iniciais');
+{G.enemies().length=0;G.player.weap.orbit=2;G.update(1/60);const orbs=G.weaponGroup().children.filter(m=>m.name==='orbitOrb'),first=orbs[0],core=first&&first.userData.orbitCore;
+ ok(orbs.length===3&&!!core&&first.children.length>=20&&first.scale.x===.78,'Orbes Giratórios constroem três relicários voxel detalhados sem alterar o nível da arma')}
+G.newRun('guerreiro');
+{G.runCheat('time 179.8');G.update(.1);const before=G.getBoss();G.runCheat('time 180');G.update(1/60);const first=G.getBoss();
+ ok(!before&&!!first,'primeiro chefe invocado ao atingir 3 minutos, não antes')}
+G.newRun('guerreiro'); // isola os testes seguintes do salto de tempo da verificação
 console.log('[3] combate automático + upgrades');
 G.keys.KeyW=true;
 let steps=0;
@@ -164,6 +175,11 @@ G.update(1/60);
 const pr=G.projs();
 ok(pr.length>0,'mago atirou ('+pr.length+' projéteis)');
 if(pr.length)ok(Math.abs(pr[0].speed-28)<0.01,'velocidade do orbe = projSpeed*pspd (esperado 28, veio '+pr[0].speed+')');
+for(let k=0;k<3;k++){G.player.atkCd=0;G.update(1/60)}
+const bigOrb=G.projs().find(q=>q.big);
+ok(!!bigOrb&&bigOrb.kind==='fire'&&bigOrb.r===.4&&bigOrb.mScale===1.55&&!!bigOrb.g.geometry,'quarto disparo do Mago cria o orbe arcano maior com o modelo facetado');
+G.newRun('mago');const mage=G.player;G.spawnEnemy('brute',mage.x+1,mage.z,false);const target=G.enemies().find(e=>e.type==='brute'),hpBefore=target.hp;G.useAbility();
+ok(target.hp<hpBefore&&target.slowT>=2&&target.slowF===.55&&(Math.abs(target.kx)+Math.abs(target.kz))>0&&mage.abCd>0,'Nova Arcana conserva dano, empurrão, lentidão e recarga');
 console.log('[9] upgrade por XP em lote');
 G.gainXP(9999);
 let guard=0;
@@ -198,6 +214,13 @@ const sl=G.enemies().find(e=>e.type==='slime');
 G.damageEnemy(sl,1,false);
 const cf=1-.2*G.player.stats.chill;
 ok(sl.slowT>0&&sl.slowF<=cf+1e-9,'Pulso Congelante lentifica o alvo (slowF='+sl.slowF+' slowT='+sl.slowT.toFixed(2)+')');
+console.log('[11.5] cristais arcanos exclusivos do Mago');
+G.newRun('mago');let crystal=G.mapInfo().landPos.cry[0];G.player.x=crystal.x;G.player.z=crystal.z;G.player.y=0;G.player.atkCd=30;
+G.spawnEnemy('brute',crystal.x+1,crystal.z,false);let crystalTarget=G.enemies().find(e=>e.type==='brute'),crystalHp=crystalTarget.hp;G.update(1/60);
+ok(crystal.used&&crystalTarget.hp<crystalHp,'Mago detona e consome o cristal, causando dano em área');
+G.newRun('guerreiro');crystal=G.mapInfo().landPos.cry[0];G.player.x=crystal.x;G.player.z=crystal.z;G.player.y=0;G.player.atkCd=30;
+G.spawnEnemy('brute',crystal.x+1,crystal.z,false);crystalTarget=G.enemies().find(e=>e.type==='brute');crystalHp=crystalTarget.hp;G.update(1/60);
+ok(!crystal.used&&crystalTarget.hp===crystalHp,'outras classes passam pelo cristal sem ativá-lo nem causar dano');
 console.log('[12] mapa diversificado e jogável');
 {
   const m=G.mapInfo(),{W,H,grid}=m;
@@ -248,16 +271,17 @@ console.log('[15] aranha — deslocamento e bote');
 G.runCheat('unlock all');G.newRun('guerreiro');G.enemies().length=0;
 const spider=G.spawnEnemy('spider',G.player.x+7,G.player.z);
 ok(!!spider,'aranha spawna para o teste de movimento');
-if(spider){const legs=spider.mesh.userData.spiderLegs||[];ok(legs.length===8,'aranha tem oito pernas articuladas');
+if(spider){spider.cd=100;const legs=spider.mesh.userData.spiderLegs||[];ok(legs.length===8,'aranha tem oito pernas articuladas');
   let maxLegSwing=0;spider.maxHp=spider.hp=1e6;const sx=spider.x,sz=spider.z;
   for(let k=0;k<90;k++){G.update(1/60);for(const leg of legs)maxLegSwing=Math.max(maxLegSwing,Math.abs(leg.hip.rotation.y))}
   ok(Math.hypot(spider.x-sx,spider.z-sz)>1,'aranha se desloca até o jogador sem ficar parada');
   ok(maxLegSwing>.05,'pernas alternam a passada durante o movimento');
   ok(Number.isFinite(spider.leapX)&&Number.isFinite(spider.leapZ),'bote mantém uma direção definida');
-  const p=G.player;p.invuln=0;p.poisonT=0;p.poisonTick=0;spider.x=p.x+.1;spider.z=p.z;spider.cd=0;spider.leap=0;spider.leapCd=10;
-  G.update(1/60);ok(p.poisonT>0,'mordida da aranha aplica veneno');const hpAtBite=p.hp;
+  const p=G.player;p.invuln=0;p.poisonT=0;p.poisonTick=0;const poisonPart=p.model.root.userData.meshes.find(it=>it.mat&&it.mat.color),normalMat=poisonPart.mat,normalGreen=normalMat.color.g;spider.x=p.x+.1;spider.z=p.z;spider.cd=0;spider.leap=0;spider.leapCd=10;
+  G.update(1/60);ok(p.poisonT>0&&p.model.root.userData.poisonTintOn&&poisonPart.mat!==normalMat&&poisonPart.mat.color.g>normalGreen,'mordida da aranha deixa o personagem esverdeado (t='+p.poisonT.toFixed(2)+', tint='+p.model.root.userData.poisonTintOn+', materialAlterado='+(poisonPart.mat!==normalMat)+', verde='+poisonPart.mat.color.g.toFixed(3)+'/'+normalGreen.toFixed(3)+')');const hpAtBite=p.hp;
   spider.cd=100;spider.x=p.x+10;for(let k=0;k<60;k++)G.update(1/60);
-  ok(p.hp<hpAtBite,'veneno causa dano gradual durante a invulnerabilidade')}
+  ok(p.hp<hpAtBite,'veneno causa dano gradual durante a invulnerabilidade');G.enemies().length=0;for(let k=0;k<150;k++)G.update(1/60);
+  ok(p.poisonT===0&&!p.model.root.userData.poisonTintOn&&poisonPart.mat===normalMat,'personagem recupera as cores originais (t='+p.poisonT.toFixed(2)+', tint='+p.model.root.userData.poisonTintOn+', materialOriginal='+(poisonPart.mat===normalMat)+')')}
 }catch(e){console.log('ERRO NO TESTE:',e.stack);fails.push('exceção: '+e.message)}
 console.log(fails.length?('\n'+fails.length+' FALHA(S)'):'\nSMOKE_OK — tudo passou');
 process.exit(fails.length?1:0);

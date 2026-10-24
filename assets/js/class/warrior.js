@@ -178,13 +178,14 @@ window.CLASSES.guerreiro.model=function(b,P,vox,makeBow,boxGeo){
     }
 
     /* ---------------- espada longa ---------------- */
-    const sw=new THREE.Group();b.handR.add(sw);b.sword=sw;
+    const hold=new THREE.Group();hold.name='swordHold';hold.rotation.z=-.75;b.handR.add(hold);b.swordHold=hold;
+    const sw=new THREE.Group();sw.name='sword';hold.add(sw);b.sword=sw;
     sw.position.set(0,-.035,.05);
-    // punho de couro, pomo e guarda
-    vox(sw,0,-.085,0,.058,.18,.058,Ld);
-    vox(sw,0,-.085,0,.066,.018,.066,Lb);
-    vox(sw,0,-.18,0,.075,.045,.075,GOLDD);
-    vox(sw,0,-.207,0,.05,.022,.05,GOLD,.15);
+    // Punho e pomo elevados para a manopla fechar ao redor da empunhadura.
+    vox(sw,0,.035,0,.058,.18,.058,Ld);
+    vox(sw,0,.035,0,.066,.018,.066,Lb);
+    vox(sw,0,-.06,0,.075,.045,.075,GOLDD);
+    vox(sw,0,-.087,0,.05,.022,.05,GOLD,.15);
     vox(sw,0,.135,0,.34,.055,.08,HB);
     vox(sw,-.17,.135,0,.055,.05,.09,HL);
     vox(sw,.17,.135,0,.055,.05,.09,HL);

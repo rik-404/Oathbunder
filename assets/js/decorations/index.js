@@ -162,9 +162,32 @@
       return thr}
 
     function makeTotem(){const g=new THREE.Group();
-      vox(g,0,.11,0,1.05,.22,1.05,0x6f6a63);vox(g,0,.28,0,.82,.14,.82,0x837e74);vox(g,0,.42,0,.6,.1,.6,0x74706a);vox(g,0,.95,0,.46,1,.46,0x8f8a80);vox(g,-.23,.95,0,.1,1,.5,0x7d786f);vox(g,.23,.95,0,.1,1,.5,0x7d786f);vox(g,0,.7,.25,.4,.14,.07,0xd23b2f,.6);
-      const m=new THREE.Group();m.name='mag';m.position.y=1.95;vox(m,-.13,.06,0,.13,.34,.15,0xd23b2f,.45);vox(m,.13,.06,0,.13,.34,.15,0xd23b2f,.45);vox(m,0,-.11,0,.39,.13,.15,0xd23b2f,.45);vox(m,-.13,.24,0,.13,.1,.16,0xeeeeee,.5);vox(m,.13,.24,0,.13,.1,.16,0xeeeeee,.5);g.add(m);
-      const off=new THREE.Group();off.name='off';off.visible=false;vox(off,0,1.5,0,.3,.22,.3,0x6b665e);g.add(off);return{g,m,off}}
+      const dark=0x272a34,stone=0x60656a,edge=0x899096,gold=0xc69b4d,teal=0x68d4d2;
+      // Pedestal em degraus: basalto, frisos de bronze e rebites nos quatro cantos.
+      vox(g,0,.08,0,1.12,.16,1.12,0x292b31);vox(g,0,.17,0,1,.08,1,0x77766e);vox(g,0,.225,0,.91,.045,.91,gold);
+      vox(g,0,.29,0,.84,.11,.84,0x454a50);vox(g,0,.36,0,.72,.08,.72,0x77796f);vox(g,0,.415,0,.66,.035,.66,0x282b32);
+      for(const x of[-.43,.43])for(const z of[-.43,.43]){vox(g,x,.14,z,.14,.13,.14,0x4d5156);vox(g,x,.215,z,.085,.035,.085,0xe2bd68);vox(g,x,.24,z,.035,.025,.035,0xf5e2a8)}
+      // Coluna reforçada com placas laterais e um sigilo de magnetita na face frontal.
+      vox(g,0,.91,0,.53,1,.53,stone);vox(g,0,.91,0,.39,.91,.4,dark);
+      for(const x of[-.24,.24]){vox(g,x,.91,0,.075,.88,.54,edge);vox(g,x*1.08,.91,0,.025,.62,.55,0x454b54)}
+      vox(g,0,.46,0,.65,.1,.65,0x343941);vox(g,0,1.39,0,.71,.13,.71,0x353941);vox(g,0,1.465,0,.61,.045,.61,gold);vox(g,0,1.51,0,.48,.045,.48,0x30333b);
+      vox(g,0,.91,.207,.29,.45,.035,0x20232d);vox(g,0,.91,.23,.19,.33,.025,0x8e293e,.15);vox(g,0,.93,.247,.055,.22,.018,gold,.2);
+      for(const x of[-.085,.085])vox(g,x,.91,.25,.025,.12,.018,teal,.7);
+      for(const side of[-1,1]){vox(g,side*.27,.88,0,.035,.32,.2,0x303640);vox(g,side*.292,.88,0,.018,.18,.08,teal,.55)}
+      // Oito placas suspensas formam o campo magnético sob o artefato.
+      for(let i=0;i<8;i++){const a=i*Math.PI/4,r=.36,chip=vox(g,Math.cos(a)*r,1.59,Math.sin(a)*r,.12,.065,.12,i%2?teal:gold,i%2?.45:.12);chip.rotation.y=a}
+      // Ímã ferradura, com núcleo vermelho, contorno escuro, pontas prateadas e faíscas pixeladas.
+      const m=new THREE.Group();m.name='mag';m.position.y=1.95;
+      vox(m,-.16,.075,0,.19,.39,.21,0x451521);vox(m,.16,.075,0,.19,.39,.21,0x451521);vox(m,0,-.105,0,.51,.18,.21,0x451521);
+      vox(m,-.16,.085,.018,.135,.33,.18,0xc32d45,.35);vox(m,.16,.085,.018,.135,.33,.18,0xc32d45,.35);vox(m,0,-.105,.018,.43,.12,.18,0xc32d45,.35);
+      vox(m,-.19,.12,.115,.045,.23,.025,0xf1767f,.18);vox(m,.13,.12,.115,.045,.23,.025,0xf1767f,.18);vox(m,-.025,-.085,.115,.25,.035,.025,0xf1767f,.12);
+      for(const x of[-.16,.16]){vox(m,x,.285,0,.18,.105,.23,0x666d76);vox(m,x,.3,.018,.13,.075,.19,0xe1e5e7,.35);vox(m,x,.31,.12,.075,.045,.025,0xffffff,.5)}
+      for(const x of[-.08,.08])vox(m,x,-.1,.13,.035,.045,.02,gold,.3);
+      for(const [x,y,z,c] of[[-.36,.03,0,teal],[.36,.03,0,gold],[0,.37,0,teal],[0,-.22,.12,0x8ceaf0]]){const shard=vox(m,x,y,z,.075,.075,.075,c,.6);shard.rotation.y=Math.PI/4}
+      g.add(m);
+      // Quando consumido, o ímã some e revela o encaixe de energia apagado.
+      const off=new THREE.Group();off.name='off';off.visible=false;vox(off,0,1.49,0,.52,.09,.52,0x25232c);vox(off,0,1.545,0,.38,.035,.38,0x514443);vox(off,0,1.57,0,.22,.025,.22,0x632538,.35);
+      for(const [x,z] of[[-.16,0],[.16,0],[0,-.16],[0,.16]]){const shard=vox(off,x,1.62,z,.07,.08,.07,0x59404b);shard.rotation.y=Math.PI/4}g.add(off);return{g,m,off}}
     function makeChest(){return window.CHEST_MODEL.create({THREE,mergeBoxes,vcMat,vox})}
     function buildChestDisplay(){const{g,lid}=makeChest();lid.rotation.x=-1.2;return g}
 
@@ -189,7 +212,7 @@
       const rb=ROCK_GEOS.map(()=>[]);rocks.forEach(t=>rb[(Math.random()*ROCK_GEOS.length)|0].push(t));
       ROCK_GEOS.forEach((geo,bi)=>{const list=rb[bi];if(!list.length)return;const im=new THREE.InstancedMesh(geo,treeMat,list.length);im.castShadow=true;im.receiveShadow=true;
         list.forEach(([x,z],i)=>{q.setFromAxisAngle(up,rand(0,TAU));m4.compose(p.set(x,relief(x,z)+jv(x,z)*.06,z),q,s.setScalar(rand(.75,1.1)));im.setMatrixAt(i,m4);col.setScalar(1+rand(-.06,.05));im.setColorAt(i,col)});level.add(im)});
-      const landPos={fire:[],cry:[],grave:[]};
+      const landPos={fire:[],cry:[],grave:[]},crystalMeshes=[];
       const decInst=(geo,matl,list,sc)=>{if(!list.length)return;const im=new THREE.InstancedMesh(geo,matl,list.length);im.castShadow=true;im.receiveShadow=true;level.add(im);
         list.forEach((it,i)=>{q.setFromAxisAngle(up,it[2]!=null?it[2]:rand(0,TAU));const k=sc?sc[0]+Math.random()*(sc[1]-sc[0]):1;m4.compose(p.set(it[0],relief(it[0],it[1])+jv(it[0],it[1])*.06,it[1]),q,s.setScalar(k));im.setMatrixAt(i,m4);col.setScalar(1+rand(-.08,.05));im.setColorAt(i,col)});return im};
       const open=(x,z,dC=12)=>x>4&&z>4&&x<W-5&&z<H-5&&!isWall(x,z)&&Math.hypot(x-W/2,z-H/2)>dC&&relief(x,z)<2;
@@ -207,8 +230,8 @@
           const li=new THREE.PointLight(0xff8a3a,1.5,6,2);li.position.set(x,y+.85,z);li.visible=false;level.add(li);fireFx.lights.push(li);
           for(let k=0;k<3;k++){const sm=new THREE.Mesh(boxGeo,new THREE.MeshBasicMaterial({color:0xaab0b8,transparent:true,opacity:0,depthWrite:false}));sm.position.set(x,y-1.5,z);level.add(sm);fireFx.smokes.push({m:sm,x,y,z,ph:k/3})}})}
       const crys=[];let yt=0;while(crys.length<8&&yt++<300){const x=randi(8,W-9),z=randi(8,H-9);if(!open(x,z,16)||crys.some(a=>Math.hypot(a[0]-x,a[1]-z)<22))continue;crys.push([x,z,rand(0,TAU)])}
-      landPos.cry=crys.map(a=>({x:a[0],z:a[1]}));
-      if(crys.length){const cm=new THREE.InstancedMesh(DECOR_GEO.crystal,new THREE.MeshBasicMaterial({vertexColors:true}),crys.length);level.add(cm);crys.forEach(([x,z,ry],i)=>{q.setFromAxisAngle(up,ry);m4.compose(p.set(x,relief(x,z)+jv(x,z)*.06,z),q,s.setScalar(rand(.9,1.4)));cm.setMatrixAt(i,m4);col.setScalar(1+rand(-.06,.08));cm.setColorAt(i,col)})}
+      landPos.cry=crys.map(([x,z])=>({x,z,used:false}));
+      if(crys.length){const crystalMat=new THREE.MeshBasicMaterial({vertexColors:true});crys.forEach(([x,z,ry],i)=>{const cm=new THREE.Mesh(DECOR_GEO.crystal,crystalMat);cm.position.set(x,relief(x,z)+jv(x,z)*.06,z);cm.rotation.y=ry;cm.scale.setScalar(rand(.9,1.4));cm.castShadow=true;cm.receiveShadow=true;level.add(cm);crystalMeshes[i]=cm})}
       const stumps=[];for(let i=0;i<26;i++){const x=randi(5,W-6),z=randi(5,H-6);if(open(x,z,10))stumps.push([x,z,rand(0,TAU)])}
       decInst(DECOR_GEO.stump,new THREE.MeshLambertMaterial({vertexColors:true}),stumps,[.8,1.2]);
       const chests=[];let tries=0;while(chests.length<20&&tries++<800){const x=randi(6,W-7),z=randi(6,H-7);if(isWall(x,z)||Math.hypot(x-W/2,z-H/2)<14||chests.some(c=>Math.hypot(c.x-x,c.z-z)<10))continue;
@@ -224,7 +247,7 @@
       const blooms=FIELD_FLOWERS.map(()=>[]),reserved=[...landPos.fire,...landPos.cry,...landPos.grave,...chests,...totems];let bt=0,placedBlooms=0;
       while(placedBlooms<300&&bt++<1800){const x=randi(4,W-5),z=randi(4,H-5);if(isWall(x,z)||relief(x,z)>1.5||Math.hypot(x-W/2,z-H/2)<4.7||reserved.some(o=>Math.hypot(o.x-x,o.z-z)<1.8))continue;blooms[(Math.random()*blooms.length)|0].push([x,z]);placedBlooms++}
       FIELD_FLOWERS.forEach((geo,bi)=>{const list=blooms[bi];if(!list.length)return;const im=new THREE.InstancedMesh(geo,treeMat,list.length);im.castShadow=false;im.receiveShadow=false;list.forEach(([x,z],i)=>{q.setFromAxisAngle(up,rand(0,TAU));m4.compose(p.set(x,relief(x,z)+jv(x,z)*.06,z),q,s.setScalar(rand(.78,1.18)));im.setMatrixAt(i,m4);col.setScalar(1+rand(-.05,.06));im.setColorAt(i,col)});im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;level.add(im)});
-      return{landPos,chests,totems,flameMat,fireFx}
+      return{landPos,chests,totems,flameMat,fireFx,crystalMeshes}
     }
 
     function buildMenuLandscape(menuGroup,{nz,nz2,jv}){
@@ -255,6 +278,6 @@
     function buildClassPedestal(color){const g=new THREE.Group();vox(g,0,.21,0,.3,.42,.2,0x837e74);vox(g,0,.47,0,.36,.08,.24,0x8f8a80);vox(g,0,.56,0,.12,.14,.12,color,1);return g}
     function buildHeroPodium(menuGroup){const podium=new THREE.Mesh(new THREE.CircleGeometry(.85,28),new THREE.MeshBasicMaterial({color:0xf2b84b,transparent:true,opacity:.14,depthWrite:false}));podium.rotation.x=-Math.PI/2;podium.position.y=.03;menuGroup.add(podium);return podium}
 
-    return{grassBlockGeo,dryBlockGeo,mossBlockGeo,dirtBlockGeo,TREE_SYSTEM,TREE_GEOS,treeMat,ROCK_GEOS,DECOR_GEO,GROUND_GEO,FIELD_FLOWERS,buildField,buildCoffin,buildTardis,buildRoyalThrone,buildChestDisplay,buildMenuLandscape,buildMenuTardis,buildMenuCemetery,buildMenuRoyalCourt,buildMenuNecroGraves,buildMenuCampfire,buildMenuFireRing,buildClassPedestal,buildHeroPodium}
+    return{grassBlockGeo,dryBlockGeo,mossBlockGeo,dirtBlockGeo,TREE_SYSTEM,TREE_GEOS,treeMat,ROCK_GEOS,DECOR_GEO,GROUND_GEO,FIELD_FLOWERS,buildField,buildCoffin,buildTardis,buildRoyalThrone,buildTotem:()=>makeTotem().g,buildChestDisplay,buildMenuLandscape,buildMenuTardis,buildMenuCemetery,buildMenuRoyalCourt,buildMenuNecroGraves,buildMenuCampfire,buildMenuFireRing,buildClassPedestal,buildHeroPodium}
   };
 })();

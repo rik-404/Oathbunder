@@ -206,6 +206,14 @@ const projMat=new THREE.MeshBasicMaterial({vertexColors:true});
 function vox(p,x,y,z,w,h,d,c,e,t){const m=new THREE.Mesh(boxGeo,mat(c,e,t));m.position.set(x,y,z);m.scale.set(w,h,d);m.castShadow=true;p.add(m);return m}
 function collect(g){const a=[];g.traverse(o=>{if(o.isMesh)a.push({m:o,mat:o.material})});g.userData.meshes=a;return g}
 function setFlash(g,on){if(g.userData.flashOn===on)return;g.userData.flashOn=on;for(const it of g.userData.meshes)it.m.material=on?flashMat:it.mat}
+const poisonTintColor=new THREE.Color(0x91d64b);
+function setPlayerPoisonTint(on){const root=player.model&&player.model.root;if(!root)return;const meshes=root.userData.meshes||[];
+  if(on){if(root.userData.poisonTintOn)return;const tintedByBase=new Map(),owned=[];
+    const tint=m=>{if(!m||!m.color||typeof m.clone!=='function')return m;if(tintedByBase.has(m))return tintedByBase.get(m);const clone=m.clone();clone.color.copy(m.color).lerp(poisonTintColor,.38);tintedByBase.set(m,clone);owned.push(clone);return clone};
+    for(const it of meshes){it.poisonBase=it.mat;it.mat=Array.isArray(it.mat)?it.mat.map(tint):tint(it.mat);if(!root.userData.flashOn)it.m.material=it.mat}
+    root.userData.poisonTintMats=owned;root.userData.poisonTintOn=true;
+  }else{if(!root.userData.poisonTintOn)return;for(const it of meshes){if(!Object.prototype.hasOwnProperty.call(it,'poisonBase'))continue;it.mat=it.poisonBase;delete it.poisonBase;if(!root.userData.flashOn)it.m.material=it.mat}
+    for(const m of root.userData.poisonTintMats||[])m.dispose();root.userData.poisonTintMats=[];root.userData.poisonTintOn=false}}
 // junta várias caixas numa geometria só (1 chamada de desenho por inimigo)
 function mergeBoxes(boxes,amp=0){const pos=[],nor=[],col=[],idx=[];let off=0;const c=new THREE.Color();
   for(const b of boxes){const sd=amp>0?2:1; // amp>0: 2 subdivisões por eixo + speckle em 3 tons (textura de pixel procedural)
@@ -364,10 +372,16 @@ function buildOgre(){const b=buildBody({body:0x6a5a3a,trim:0x4a3a28,skin:0x7aa84
   vox(club,0,.55,.01,.15,.09,.15,0xb58b4a);vox(club,0,.72,.01,.15,.09,.15,0xb58b4a); // amarrações
   vox(club,.21,1.1,0,.11,.15,.11,0x9a9a90);vox(club,-.19,.92,.13,.11,.15,.11,0x9a9a90);vox(club,.1,1.2,-.1,.1,.13,.1,0x9a9a90);
   vox(club,0,1.32,0,.12,.14,.12,0x493521);vox(club,0,.78,0,.12,.14,.12,0x493521); // espinhos
-  b.root.scale.setScalar(2.4);collect(b.root);return b}
+b.root.scale.setScalar(2.4);collect(b.root);return b}
 
 const PROJ_GEO={
-  fire:mergeBoxes([[0,0,0,.26,.26,.26,0x8fe1ff],[0,0,-.13,.14,.14,.3,0xd6f3ff]]),
+  fire:mergeBoxes([
+    [0,0,0,.2,.2,.2,0x5539a8],[0,0,.015,.145,.145,.145,0x54bfe9],[0,0,.035,.085,.085,.085,0xeafaff],
+    [0,.14,0,.105,.09,.105,0x8fe1ff],[0,-.14,0,.105,.09,.105,0x8060e2],[.14,0,0,.09,.105,.105,0xbfa8ff],[-.14,0,0,.09,.105,.105,0x65c9f4],
+    [0,0,.145,.105,.105,.09,0xa4efff],[0,0,-.145,.105,.105,.09,0x6950c5],
+    [.13,.12,0,.055,.055,.055,0xf2d27a],[-.13,-.12,0,.055,.055,.055,0xf2d27a],[.12,-.13,0,.05,.05,.05,0xd2c0ff],[-.12,.13,0,.05,.05,.05,0xd2c0ff],
+    [0,0,-.235,.075,.075,.14,0x5541ad],[0,0,-.31,.045,.045,.065,0xb8a8ff]
+  ],.035),
   arrow:mergeBoxes([[0,0,0,.045,.045,.52,0x8a6a42],[0,0,.28,.075,.075,.1,0xcfd6dd],[0,0,.345,.035,.035,.05,0xe8eef2],[0,0,-.20,.11,.018,.13,0x7fcf5a],[0,0,-.20,.018,.11,.13,0xeee7da],[0,0,-.28,.05,.05,.02,0x2a4a3a]]),
   bone:mergeBoxes([[0,0,0,.3,.07,.07,0xe6dfca],[.15,0,0,.09,.12,.12,0xe6dfca],[-.15,0,0,.09,.12,.12,0xe6dfca]]),
   orb:mergeBoxes([[0,0,0,.36,.36,.36,0xff6a2a],[0,0,0,.2,.44,.2,0xffb070]]),
@@ -383,8 +397,8 @@ const PROJ_GEO={
 
 /* ================= estado ================= */
 let state='menu',selCls=store.get('cv_cls','guerreiro');if(!CLASSES[selCls])selCls='guerreiro';
-let grid=null,hgt=null,level=null,fxGroup=null,wGroup=null,enemies=[],projs=[],pickups=[],fxs=[],parts=[],texts=[],chests=[],totems=[],landPos=null,flameMat=null,fireFx=null;
-let kills=0,runTime=0,shake=0,boss=null,hurtA=0,deadT=0,hordeN=0,nextHorde=60,nextBoss=240,bossCount=0,spawnAcc=0,pendingUps=0,upSource='lvl',bossKills=0,lastReward=null,runDmg=0,runSkel=0,runBat=0,cheatGod=false,ogreLoose=false;
+let grid=null,hgt=null,level=null,fxGroup=null,wGroup=null,enemies=[],projs=[],pickups=[],fxs=[],parts=[],texts=[],chests=[],totems=[],landPos=null,crystalMeshes=[],flameMat=null,fireFx=null;
+let kills=0,runTime=0,shake=0,boss=null,hurtA=0,deadT=0,hordeN=0,nextHorde=60,nextBoss=180,bossCount=0,spawnAcc=0,pendingUps=0,upSource='lvl',bossKills=0,lastReward=null,runDmg=0,runSkel=0,runBat=0,cheatGod=false,ogreLoose=false;
 // Map state (must be declared before setScreen uses it)
 let mapOpen=false,mapScreen=null,mapCanvas=null;
 // Boss state moved to BOSS module
@@ -431,7 +445,7 @@ function genField(){
 function buildField(){
   const{trees,rocks}=genField();
   const field=DECORATIONS.buildField({level,trees,rocks,grid,hgt,W,H,relief,jv,nz,nz2,isWall});
-  landPos=field.landPos;chests=field.chests;totems=field.totems;flameMat=field.flameMat;fireFx=field.fireFx;
+  landPos=field.landPos;chests=field.chests;totems=field.totems;flameMat=field.flameMat;fireFx=field.fireFx;crystalMeshes=field.crystalMeshes||[];
 }
 
 /* ================= entidades ================= */
@@ -552,6 +566,19 @@ function disposeFx(f){fxGroup.remove(f.obj);f.obj.traverse(o=>{if(o.isMesh&&o.us
 function flatMesh(geo,color,op){const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:op,depthWrite:false,side:THREE.DoubleSide}));m.rotation.x=-Math.PI/2;m.userData.own=true;return m}
 function ringFX(x,z,R,color,life=.4){const g=new THREE.Group();g.position.set(x,.08,z);const m=flatMesh(ringGeo,color,.8);g.add(m);
   addFx(g,life,k=>{const s=lerp(.3,R,1-Math.pow(1-k,3));g.scale.set(s,1,s);m.material.opacity=.8*(1-k)})}
+function arcaneNovaFX(x,z,R){
+  ringFX(x,z,R,0x8fe1ff,.58);ringFX(x,z,R*.72,0xb99dff,.46);ringFX(x,z,R*.4,0xf0eaff,.34);
+  const seal=new THREE.Group(),glyphs=[];seal.position.set(x,.11,z);
+  for(let i=0;i<12;i++){const a=i/12*TAU,color=i%3===0?0xe9d8ff:0x8fe1ff;
+    const bar=new THREE.Mesh(boxGeo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:.9,depthWrite:false}));bar.userData.own=true;
+    bar.position.set(Math.sin(a)*R*.49,.025,Math.cos(a)*R*.49);bar.rotation.y=a+Math.PI/2;bar.scale.set(.075,.035,.22);seal.add(bar);glyphs.push(bar);
+    if(i%3===0){const tick=new THREE.Mesh(boxGeo,new THREE.MeshBasicMaterial({color:0xf4d77b,transparent:true,opacity:.9,depthWrite:false}));tick.userData.own=true;
+      tick.position.set(Math.sin(a)*R*.49,.045,Math.cos(a)*R*.49);tick.rotation.y=a;tick.scale.set(.045,.03,.11);seal.add(tick);glyphs.push(tick)}}
+  addFx(seal,.62,k=>{const s=.78+.45*k;seal.scale.set(s,1,s);seal.rotation.y=k*.35;glyphs.forEach((m,i)=>{m.material.opacity=.9*(1-k);m.position.y=.025+Math.sin(k*TAU+i)*.025})});
+  burst(x,.55,z,0x8fe1ff,24,{emi:1,speed:7.5,up0:.4,up1:2.8,life:.55,size:.075});
+  burst(x,.65,z,0xbfa8ff,16,{emi:.9,speed:5.5,up0:.7,up1:3,life:.65,size:.065});
+  burst(x,.7,z,0xf4f1ff,8,{emi:1,speed:3.2,up0:1,up1:3.2,life:.38,size:.055})
+}
 function swingFX(range,arc,a,color){const g=new THREE.Group();g.position.set(player.x,.55+player.y,player.z);g.rotation.y=a;
   const inner=Math.max(.45,range*.86);
   const geo=new THREE.RingGeometry(inner,range,28,1,-Math.PI/2-arc/2,arc);const m=flatMesh(geo,color,.7);m.userData.ownGeo=true;g.add(m);
@@ -622,14 +649,15 @@ function hurtPlayer(amt,src,contact,bypassIFrames){
   return true;
 }
 function applyPoison(effect){const fresh=player.poisonT<=0;player.poisonT=Math.max(player.poisonT||0,effect.duration);
-  if(fresh){player.poisonTick=effect.interval;toast('ENVENENADO','A picada da aranha causa dano por '+effect.duration.toFixed(1)+'s')}
+  if(fresh){setPlayerPoisonTint(true);player.poisonTick=effect.interval;toast('ENVENENADO','A picada da aranha causa dano por '+effect.duration.toFixed(1)+'s')}
   else if(player.poisonTick<=0)player.poisonTick=effect.interval;
   burst(player.x,.65+player.y,player.z,0x91d64b,9,{emi:.65,speed:2,up0:.2,up1:1.5,life:.45,size:.08});
 }
-function updatePoison(dt){if(player.poisonT<=0)return;const effect=ENEMY_DEFS.spider.poison;
+function updatePoison(dt){if(player.poisonT<=0){setPlayerPoisonTint(false);return}const effect=ENEMY_DEFS.spider.poison;
   player.poisonT=Math.max(0,player.poisonT-dt);player.poisonTick-=dt;
   if(player.poisonTick<=0){player.poisonTick+=effect.interval;
     if(hurtPlayer(effect.damage,null,false,true))burst(player.x,.75+player.y,player.z,0x8bdc65,4,{emi:.55,speed:1.5,up0:.1,up1:1.1,life:.35,size:.07})}
+  if(player.poisonT<=0)setPlayerPoisonTint(false);
 }
 function gainXP(v){player.xp+=v*player.stats.xpMul;while(player.xp>=player.xpNeed){player.xp-=player.xpNeed;player.lvl++;player.xpNeed=xpNeed(player.lvl);pendingUps++;S('level')}
   MISSION_SYSTEM.complete('future',player.lvl);
@@ -658,7 +686,7 @@ function autoAttack(){
 function useAbility(){
   if(state!=='play'||player.abCd>0)return;const C=CLASSES[player.cls],st=player.stats;player.abCd=C.ab.cd*st.cdr;player.atkAnim=1;S('ability');
   if(player.cls==='mago'){const R=4.5*st.area;for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(C.dmg*2.5);damageEnemy(e,r.d,r.crit,dx/d*13*st.kb,dz/d*13*st.kb);e.slowT=Math.max(e.slowT||0,2);e.slowF=.55}}
-    ringFX(player.x,player.z,R,0x8fe1ff,.5);ringFX(player.x,player.z,R*.7,0xd6f3ff,.4);ringFX(player.x,player.z,R*.4,0xbfa8ff,.3);burst(player.x,.6,player.z,0x8fe1ff,36,{emi:1,speed:7.5,up0:.5,up1:3});burst(player.x,.6,player.z,0xd6f3ff,14,{emi:1,speed:4,up0:1,up1:3});addShake(.3)}
+    arcaneNovaFX(player.x,player.z,R);addShake(.3)}
   else if(player.cls==='arqueiro'){const t=nearest(18);const a0=t?Math.atan2(t.x-player.x,t.z-player.z):player.facing;player.aimAng=a0;
     for(let i=0;i<9;i++){const aa=a0+(i-4)*.12;const r=roll(C.dmg*1.2);spawnProj({x:player.x+Math.sin(aa)*.45,z:player.z+Math.cos(aa)*.45,y:.7+player.y,a:aa,speed:C.projSpeed*st.pspd,dmg:r.d,crit:r.crit,owner:'p',kind:'arrow',pierce:3+st.pierce,life:.8})}
     ringFX(player.x,player.z,1.55,0x7fcf5a,.24);
@@ -802,6 +830,7 @@ function updateMinions(dt){
 /* ================= fluxo ================= */
 function newRun(cls){
   if(!isUnlocked(cls))return;
+  setPlayerPoisonTint(false);
   const C=CLASSES[cls];selCls=cls;store.set('cv_cls',cls);
   Object.assign(player,{cls,x:W/2,z:H/2,y:0,vy:0,r:.32,maxHp:C.hp,hp:C.hp,facing:Math.PI,atkCd:.5,abCd:0,dashCd:0,dashT:0,dvx:0,dvz:0,invuln:1,shieldT:0,spinT:0,spinTick:0,spinAng:0,walk:0,atkAnim:0,flash:0,aimAng:Math.PI,minCap:cls==='necro'?3:0,minDmg:1,orbN:0,
     lvl:1,xp:0,xpNeed:xpNeed(1),weap:Object.fromEntries(Object.keys(WEAPONS).map(k=>[k,0])),
@@ -810,7 +839,7 @@ function newRun(cls){
   applyShop(player);
   if(player.model)scene.remove(player.model.root);
   player.model=buildHero(cls);scene.add(player.model.root);
-  kills=0;runTime=0;hordeN=0;nextHorde=60;nextBoss=240;bossCount=0;spawnAcc=0;pendingUps=0;boss=null;bossKills=0;runDmg=0;runSkel=0;runBat=0;cheatGod=false;ogreLoose=false;aiSkill=.5;aiHpAvg=1;runDealt=0;aiT=0;moonOn=false;moonT=0;moonCd=0;moonKills=0;moonA=0;moonBudget=0;moonAcc=0;
+  kills=0;runTime=0;hordeN=0;nextHorde=60;nextBoss=180;bossCount=0;spawnAcc=0;pendingUps=0;boss=null;bossKills=0;runDmg=0;runSkel=0;runBat=0;cheatGod=false;ogreLoose=false;aiSkill=.5;aiHpAvg=1;runDealt=0;aiT=0;moonOn=false;moonT=0;moonCd=0;moonKills=0;moonA=0;moonBudget=0;moonAcc=0;
   scene.remove(menuGroup);
   if(level)scene.remove(level);if(fxGroup)scene.remove(fxGroup);if(wGroup)scene.remove(wGroup);
   enemies=[];projs=[];pickups=[];fxs=[];parts=[];gems=[];texts.forEach(t=>t.el.remove());texts=[];WEAPON_RESETS.forEach(f=>f());minions=[];minSummonT=1;
@@ -968,10 +997,10 @@ function updateMenu(dt){
     h.root.rotation.y=lerp(h.root.rotation.y,ty,Math.min(1,dt*5));
     h.torso.position.y=.34+(sel?Math.abs(Math.sin(menuT*3))*.05:0);
     const ax=Math.sin(menuT*2+i)*.08;h.armR.rotation.x=ax;h.armL.rotation.x=-ax;h.torso.rotation.y=0;
-    if(k==='guerreiro'&&h.sword){h.sword.rotation.x=0;h.sword.rotation.z=0}
+    if(k==='guerreiro'&&h.sword){h.sword.rotation.x=0;h.sword.rotation.z=0;if(h.swordHold)h.swordHold.rotation.z=-.75}
     if(sel&&menuAtk>0){const t=1-menuAtk,e=1-Math.pow(1-t,3);
       if(k==='guerreiro'){h.armR.rotation.x=lerp(-1.15,-.35,e);h.torso.rotation.y=lerp(.9,-.9,e);
-        if(h.sword){h.sword.rotation.x=Math.PI/2*Math.min(1,menuAtk*4);h.sword.rotation.z=-.65*Math.min(1,menuAtk*3)}}
+        if(h.sword){if(h.swordHold)h.swordHold.rotation.z=0;h.sword.rotation.x=Math.PI/2*Math.min(1,menuAtk*4);h.sword.rotation.z=-.65*Math.min(1,menuAtk*3)}}
       else if(k==='tank'){h.armR.rotation.x=lerp(-3,-.8,e);h.armL.rotation.x=-1.4}
       else if(k==='mago'||k==='chrono'||k==='pistol'||k==='dracula'||k==='demon'||k==='future'||k==='human'||k==='king'){h.armR.rotation.x=-1.3}else{h.armL.rotation.x=-1.5;h.armR.rotation.x=-1.3}}
     applyKeep(h.keep);
@@ -1154,6 +1183,13 @@ function update(dt){
   if(landPos&&landPos.fire&&player.y<.5){player.fireCd=(player.fireCd||0)-dt;
     const onFire=landPos.fire.some(f=>Math.hypot(player.x-f.x,player.z-f.z)<.85);
     if(onFire&&player.fireCd<=0){player.fireCd=.5;hurtPlayer(player.cls==='demon'?3:12,null,false);burst(player.x,.4,player.z,0xff7a1a,6,{emi:.7,speed:2.5,up0:.5,up1:2})}}
+  // Só o Mago desperta os cristais arcanos ao tocá-los; cada cristal explode uma única vez.
+  if(player.cls==='mago'&&landPos&&landPos.cry&&player.y<1.3){for(let i=0;i<landPos.cry.length;i++){const cr=landPos.cry[i];if(cr.used||Math.hypot(player.x-cr.x,player.z-cr.z)>=.9)continue;
+      cr.used=true;const mesh=crystalMeshes[i];if(mesh){level.remove(mesh);crystalMeshes[i]=null}
+      const R=3.25*st.area,cy=mesh?mesh.position.y+.62:relief(cr.x,cr.z)+.62;
+      for(const e of enemies.slice()){if(e.dead)continue;const dx=e.x-cr.x,dz=e.z-cr.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const hit=roll(C.dmg*1.5);damageEnemy(e,hit.d,hit.crit,dx/d*8*st.kb,dz/d*8*st.kb)}}
+      ringFX(cr.x,cr.z,R,0xb99dff,.4);ringFX(cr.x,cr.z,R*.56,0x8fe1ff,.28);
+      burst(cr.x,cy,cr.z,0x8fe1ff,20,{emi:1,speed:4.8,up0:.3,up1:2.4,life:.5,size:.09});burst(cr.x,cy,cr.z,0xb99dff,14,{emi:1,speed:3.8,up0:.6,up1:2.8,life:.6,size:.075});burst(cr.x,cy,cr.z,0xf4f1ff,8,{emi:1,speed:2.5,up0:1,up1:3,life:.36,size:.055});addShake(.16);S('shot','fire')}}
   autoAttack();
   if(player.spinT>0){player.spinT-=dt;player.spinTick-=dt;if(player.spinTick<=0){player.spinTick=.16;const R=2.4*st.area;
     for(const e of enemies.slice()){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||.01;if(d<R+e.r){const r=roll(C.dmg*.55);damageEnemy(e,r.d,r.crit,dx/d*3*st.kb,dz/d*3*st.kb,true)}}
@@ -1171,7 +1207,8 @@ function update(dt){
   // projéteis
   for(let i=projs.length-1;i>=0;i--){const p=projs[i];p.x+=p.vx*dt;p.z+=p.vz*dt;p.life-=dt;p.g.position.set(p.x,p.y,p.z);
     if(p.kind==='arrow'&&p.owner==='p'&&Math.random()<.16)burst(p.x,p.y,p.z,0x7fcf5a,1,{emi:.4,speed:.25,up0:0,up1:.25,grav:0,life:.16,size:.045});
-    if(p.kind==='bone'||p.kind==='orb')p.g.rotation.y+=dt*12;if(p.kind==='fire'&&Math.random()<.35)burst(p.x,p.y,p.z,p.big?0xc9b4ff:0x8fe1ff,1,{emi:1,speed:.4,up0:0,up1:.6,grav:0,life:.25,size:p.big?.14:.1});
+    if(p.kind==='bone'||p.kind==='orb')p.g.rotation.y+=dt*12;if(p.kind==='fire'){p.g.rotation.x+=dt*(p.big?5:7);p.g.rotation.z+=dt*(p.big?-4:5);
+      if(p.big)p.g.scale.setScalar(p.mScale*(1+Math.sin(runTime*12+p.a)*.05));if(Math.random()<.35)burst(p.x,p.y,p.z,p.big?0xc9b4ff:0x8fe1ff,1,{emi:1,speed:.4,up0:0,up1:.6,grav:0,life:.25,size:p.big?.14:.1})}
     let dead=p.life<=0;
     if(!dead&&wallH(p.x,p.z)>p.y){dead=true;burst(p.x,p.y,p.z,p.kind==='fire'?(p.big?0xc9b4ff:0x8fe1ff):0xcfc7b0,p.kind==='fire'?(p.big?14:6):3,{emi:p.kind==='fire'?1:0,speed:2.5})}
     if(!dead&&p.owner==='p'){for(const e of enemies){if(e.dead||p.hit.has(e))continue;if(Math.hypot(e.x-p.x,e.z-p.z)<e.r+p.r){p.hit.add(e);const kx=p.vx/p.speed,kz=p.vz/p.speed;damageEnemy(e,p.dmg,p.crit,kx*(p.kind==='fire'?(p.big?4.5:3):2)*st.kb,kz*(p.kind==='fire'?(p.big?4.5:3):2)*st.kb);
@@ -1330,12 +1367,12 @@ function animHero(dt,moving){
   if(moving)player.walk+=dt*11;const sw=moving&&player.y<.05?Math.sin(player.walk):0;
   b.legL.rotation.x=player.y>.05?-.5:sw*.7;b.legR.rotation.x=player.y>.05?.3:-sw*.7;b.torso.position.y=.34+(moving?Math.abs(Math.cos(player.walk))*.03:0);
   b.armL.rotation.x=-sw*.6;b.armR.rotation.x=sw*.6;b.torso.rotation.y=0;
-  if(cls==='guerreiro'&&b.sword){b.sword.rotation.x=0;b.sword.rotation.z=0}
+  if(cls==='guerreiro'&&b.sword){b.sword.rotation.x=0;b.sword.rotation.z=0;if(b.swordHold)b.swordHold.rotation.z=-.75}
   player.atkAnim=Math.max(0,player.atkAnim-dt*(cls==='tank'?3.5:5));const k=player.atkAnim,t=1-k,ez=1-Math.pow(1-t,3);
   const rel=clamp(angDiff(player.facing,player.aimAng),-1.3,1.3);
-  if(cls==='guerreiro'){if(player.spinT>0){player.spinAng+=dt*24;b.torso.rotation.y=player.spinAng-player.facing;b.armR.rotation.x=-1.5;b.armL.rotation.x=-1.2;if(b.sword)b.sword.rotation.x=Math.PI/2}
+  if(cls==='guerreiro'){if(player.spinT>0){player.spinAng+=dt*24;b.torso.rotation.y=player.spinAng-player.facing;b.armR.rotation.x=-1.5;b.armL.rotation.x=-1.2;if(b.swordHold)b.swordHold.rotation.z=0;if(b.sword)b.sword.rotation.x=Math.PI/2}
     else if(k>0){b.armR.rotation.x=lerp(-1.15,-.35,ez);b.torso.rotation.y=rel+lerp(.9,-.9,ez);
-      if(b.sword){b.sword.rotation.x=Math.PI/2*Math.min(1,k*3);b.sword.rotation.z=lerp(0,-.65,ez)}}}
+      if(b.sword){if(b.swordHold)b.swordHold.rotation.z=0;b.sword.rotation.x=Math.PI/2*Math.min(1,k*3);b.sword.rotation.z=lerp(0,-.65,ez)}}}
   else if(cls==='tank'){
     if(k>0)b.armR.rotation.x=lerp(-3,-.7,ez);
     if(b.hammer)b.hammer.rotation.x=-b.armR.rotation.x+(k>0?lerp(-1.2,2.15,ez):.07); // o martelo mantém a cabeça legível no idle e desce no golpe
@@ -1379,7 +1416,7 @@ function drawMini(){
   x.fillStyle='#f2b84b';for(const ch of chests)if(!ch.open){const[a,b]=P(ch.x,ch.z);x.fillRect(a-3,b-3,6,6)}
   x.fillStyle='#d23b2f';for(const T of totems)if(!T.used){const[a,b]=P(T.x,T.z);x.fillRect(a-3,b-3,6,6)}
   if(landPos){x.fillStyle='#ff8a3a';for(const f of landPos.fire){const[a,b]=P(f.x,f.z);x.fillRect(a-2,b-2,4,4)}
-    x.fillStyle='#b08aff';for(const cr of landPos.cry){const[a,b]=P(cr.x,cr.z);x.fillRect(a-1.5,b-1.5,3,3)}}
+    x.fillStyle='#b08aff';for(const cr of landPos.cry)if(!cr.used){const[a,b]=P(cr.x,cr.z);x.fillRect(a-1.5,b-1.5,3,3)}}
   x.fillStyle='#e5473c';for(const e of enemies){const[a,b]=P(e.x,e.z);if(e.boss){x.fillStyle='#ff8a4a';x.fillRect(a-5,b-5,10,10);x.fillStyle='#e5473c'}else x.fillRect(a-1.5,b-1.5,3,3)}
   x.restore();
   const m=c.width/2;x.fillStyle='#fff';x.strokeStyle='#fff';x.lineWidth=2;x.beginPath();x.moveTo(m,m);x.lineTo(m+Math.sin(player.facing)*12,m+Math.cos(player.facing)*12);x.stroke();x.fillRect(m-3,m-3,6,6);
@@ -1408,7 +1445,7 @@ function drawMap(){
     else{x.fillStyle='#f2b84b';x.beginPath();x.moveTo(a,b-6);x.lineTo(a+6,b);x.lineTo(a,b+6);x.lineTo(a-6,b);x.closePath();x.fill();x.strokeStyle='#fff6d0';x.lineWidth=1.5;x.stroke()}}
   // marcos do campo
   if(landPos){x.fillStyle='#ff8a3a';for(const f of landPos.fire)x.fillRect(f.x*S-2,f.z*S-2,4,4);
-    x.fillStyle='#b08aff';for(const cr of landPos.cry)x.fillRect(cr.x*S-2,cr.z*S-2,4,4);
+    x.fillStyle='#b08aff';for(const cr of landPos.cry)if(!cr.used)x.fillRect(cr.x*S-2,cr.z*S-2,4,4);
     x.fillStyle='#8a8a80';for(const g of landPos.grave)x.fillRect(g.x*S-1,g.z*S-1,2,2)}
   // totens de íma
   for(const T of totems){const a=T.x*S,b=T.z*S;if(!T.used){x.fillStyle='#ffd9d0';x.fillRect(a-4,b-4,8,8)}x.fillStyle=T.used?'#5c4a40':'#e5473c';x.fillRect(a-3,b-3,6,6)}
@@ -1620,6 +1657,7 @@ function buildGalleryItems(){const items=[];
   DECORATIONS.TREE_SYSTEM.names.forEach((name,i)=>items.push({name:name+' · árvore',make:()=>new THREE.Mesh(DECORATIONS.TREE_GEOS[i],DECORATIONS.treeMat)}));
   DECORATIONS.ROCK_GEOS.forEach((g,i)=>items.push({name:'Pedra '+(i+1)+' · cenário',make:()=>new THREE.Mesh(g,DECORATIONS.treeMat)}));
   // decoração do campo
+  items.push({name:'Totem de Ímã · decoração',make:DECORATIONS.buildTotem});
   items.push({name:'Fogueira · decoração',make:()=>{const g=new THREE.Group();g.add(new THREE.Mesh(DECORATIONS.DECOR_GEO.fire,DECORATIONS.treeMat));g.add(new THREE.Mesh(DECORATIONS.DECOR_GEO.flame,new THREE.MeshBasicMaterial({color:0xffffff,vertexColors:true})));return g}});
   items.push({name:'Cristal Arcano · decoração',make:()=>new THREE.Mesh(DECORATIONS.DECOR_GEO.crystal,new THREE.MeshBasicMaterial({vertexColors:true}))});
   items.push({name:'Cogumelo · decoração',make:()=>new THREE.Mesh(DECORATIONS.DECOR_GEO.shroom,DECORATIONS.treeMat)});
