@@ -1076,19 +1076,39 @@ function goMenu(to){if(window.DASH_SYSTEM)window.DASH_SYSTEM.reset({player,fxGro
   if(player.model)player.model.root.visible=false;scene.add(menuGroup);renderCards();setScreen(to||'menu')}
 
 /* ================= menu 3D ================= */
-const menuGroup=new THREE.Group();const menuHeroes={};let menuRing,fireGroup,fireLight,flames=[],fireGlow=[],fireRim=[],menuStones={},royalGrp=null,necroG=null,tGref=null,cemeG=null;let smokesM=[];
+const MENU_DEMON_X=10.8,MENU_DEMON_Z=-12.2,MENU_ZE_X=-1.45,MENU_ZE_Z=-11.2,MENU_BAR_X=-.48,MENU_BAR_Z=-11.2;
+const menuGroup=new THREE.Group();const menuHeroes={};let menuRing,fireGroup,fireLight,flames=[],fireGlow=[],fireRim=[],menuStones={},royalGrp=null,necroG=null,tGref=null,cemeG=null,demonRitual=null,menuBar=null;let smokesM=[];
 const silMat=new THREE.MeshBasicMaterial({color:0x101116});const FIREY=[.24,.39,.54,.69,.83,.96,.41,.48,.61]; // silMat = sombra preta dos heróis travados
+function buildMenuHumanSeatedLegs(h){
+  h.legL.visible=false;h.legR.visible=false;
+  const legs=new THREE.Group();legs.name='zeSeatedLegs';h.root.add(legs);const P=CLASSES.human.pal;
+  const waistPatch=vox(h.torso,0,-.07,.28,.24,.14,.08,P.legs);waistPatch.name='zeMenuWaistPatch';h.waistPatch=waistPatch;
+  for(const side of [-1,1]){
+    const leg=new THREE.Group();leg.name=side<0?'zeSeatedLegLeft':'zeSeatedLegRight';
+    vox(leg,side*.11,.52,.08,.16,.12,.3,P.legs); // coxa encontra a cintura e apoia no assento
+    vox(leg,side*.11,.44,.23,.16,.14,.17,P.legs); // joelho sobreposto à coxa e à canela
+    vox(leg,side*.11,.31,.26,.16,.22,.16,P.legs); // canela curta pendente, mesma largura da perna padrão
+    vox(leg,side*.11,.2,.34,.18,.1,.23,P.boots); // bota sobreposta à canela, suspensa do chão
+    leg.userData.partCount=leg.children.length;leg.children.forEach(m=>{m.castShadow=true;m.receiveShadow=true});legs.add(leg);
+  }
+  h.seatedLegs=legs;return legs
+}
 (function buildMenu(){
-  DECORATIONS.buildMenuLandscape(menuGroup,{nz,nz2,jv});
+  DECORATIONS.buildMenuLandscape(menuGroup,{nz,nz2,jv,ritualX:MENU_DEMON_X,ritualZ:MENU_DEMON_Z,barX:MENU_ZE_X,barZ:MENU_ZE_Z,barTableX:MENU_BAR_X,barTableZ:MENU_BAR_Z});
+  demonRitual=DECORATIONS.buildMenuDemonRitual(menuGroup,MENU_DEMON_X,MENU_DEMON_Z);
+  menuBar=DECORATIONS.buildMenuBarSet(menuGroup,MENU_ZE_X,MENU_ZE_Z,MENU_BAR_X,MENU_BAR_Z);
   tGref=DECORATIONS.buildMenuTardis(menuGroup); // cabine do tempo do Smith
   cemeG=DECORATIONS.buildMenuCemetery(menuGroup);
   // cortejo real: trono + soldados — só existe quando o Rei é liberado
   royalGrp=DECORATIONS.buildMenuRoyalCourt(menuGroup);
   // cemitério do Necromante: ele e sua horda de esqueletos (só quando liberado)
   necroG=DECORATIONS.buildMenuNecroGraves(menuGroup);
-  [[6.4,-6.8],[7.7,-7.5],[6.8,-8.4]].forEach(([x,z])=>{const sm=new THREE.Mesh(enemyGeo('skel'),minMat);sm.position.set(x,0,z);sm.scale.setScalar(.82);sm.rotation.y=Math.atan2(7-x,-7.2-z);sm.castShadow=true;necroG.add(sm)});
+  [[8.2,-6.85],[7.7,-7.5],[6.8,-8.4]].forEach(([x,z],i)=>{const sm=new THREE.Mesh(enemyGeo('skel'),minMat);sm.name=i===0?'necroSideMinion':'necroMenuMinion'+i;sm.position.set(x,0,z);sm.scale.setScalar(.82);sm.rotation.y=Math.atan2(7-x,-7.2-z);sm.castShadow=true;necroG.add(sm)});
   const campfire=DECORATIONS.buildMenuCampfire(menuGroup);fireGroup=campfire.group;flames=campfire.flames;fireLight=campfire.light;smokesM=campfire.smokes;
   ORDER.forEach((k,i)=>{const h=buildHero(k);h.root.position.set((i-(ORDER.length-1)/2)*1.55,0,0);menuGroup.add(h.root);menuHeroes[k]=h});
+  menuHeroes.demon.root.position.set(MENU_DEMON_X,0,MENU_DEMON_Z);
+  menuHeroes.human.root.position.set(MENU_ZE_X,0,MENU_ZE_Z);menuHeroes.human.root.rotation.y=0;
+  buildMenuHumanSeatedLegs(menuHeroes.human);
   const REST=['tank','chrono','pistol','demon','human'];
 const slotOf=i=>{if(i===9)return[-1.22,7.24];if(i<3)return[[Math.PI/2,Math.PI*1.5,Math.PI][i],2.5];const j=REST.indexOf(ORDER[i]);return[j>=0?1.7+j*.675:Math.PI,4.6]}; // trio na fogueira; Smith junto da TARDIS; demais em arco
   const mkRef=(k,i)=>{const C=CLASSES[k];const[f,rr]=slotOf(i);const g=DECORATIONS.buildClassPedestal(C.ui);
@@ -1113,7 +1133,9 @@ function updateMenu(dt){
   ORDER.forEach((k,i)=>{const h=menuHeroes[k];const sel=k===selCls;
     // cada herói vive no seu lugar (trono, caixão, cemitério, acampamento) — visível em qualquer tela, mesmo de longe
     let tx,tz,ty;
-    if(k==='dracula'&&isUnlocked(k)){tx=-10.6;tz=-10.3;ty=Math.atan2(-tx,-tz)} // vampiro mora na área do caixão aberto
+    if(k==='human'){tx=MENU_ZE_X;tz=MENU_ZE_Z;ty=0} // Zé fica sentado no conjunto amarelo e de frente para a câmera
+    else if(k==='demon'){tx=MENU_DEMON_X;tz=MENU_DEMON_Z;ty=Math.atan2(-tx,-tz)} // demônio isolado no centro do ritual
+    else if(k==='dracula'&&isUnlocked(k)){tx=-10.6;tz=-10.3;ty=Math.atan2(-tx,-tz)} // vampiro mora na área do caixão aberto
     else if(k==='necro'&&isUnlocked(k)){tx=7;tz=-7.2;ty=Math.atan2(-tx,-tz)} // necromante dentro do cemitério
     else if(k==='king'&&isUnlocked(k)){tx=5.6;tz=3.2;ty=Math.atan2(-tx,-tz)} // rei à frente do trono (dentro da moldura)
     else if(k==='future'&&isUnlocked(k)){tx=-6.8;tz=2.4;ty=Math.atan2(-tx,-tz)} // Smith mora do lado da TARDIS
@@ -1123,11 +1145,15 @@ function updateMenu(dt){
       const f=j>=0?1.7+j*.675:Math.PI;tx=Math.sin(f)*4.6;tz=Math.cos(f)*4.6;ty=Math.atan2(-tx,-tz)}
     h.root.position.x=lerp(h.root.position.x,tx,Math.min(1,dt*8));
     h.root.position.z=lerp(h.root.position.z,tz,Math.min(1,dt*8));
-    h.root.visible=inMenu?sel:isUnlocked(k); // seletor: só o escolhido (travado vira sombra); título: só os liberados
-    {const on=!isUnlocked(k);if(on!==h.root.userData.silOn){h.root.userData.silOn=on;h.root.traverse(o=>{if(o.isMesh){if(o.userData.silM===undefined)o.userData.silM=o.material;o.material=on?silMat:o.userData.silM}})}}
+    const showTitleFeature=(k==='demon'||k==='human')&&state==='title';
+    h.root.visible=inMenu?sel:(isUnlocked(k)||showTitleFeature); // Zé e o demônio compõem a arte do título mesmo antes de desbloquear
+    {const on=!isUnlocked(k)&&!showTitleFeature;if(on!==h.root.userData.silOn){h.root.userData.silOn=on;h.root.traverse(o=>{if(o.isMesh){if(o.userData.silM===undefined)o.userData.silM=o.material;o.material=on?silMat:o.userData.silM}})}}
     h.root.rotation.y=lerp(h.root.rotation.y,ty,Math.min(1,dt*5));
     h.torso.position.y=.34+(sel?Math.abs(Math.sin(menuT*3))*.05:0);
     const ax=Math.sin(menuT*2+i)*.08;h.armR.rotation.x=ax;h.armL.rotation.x=-ax;h.torso.rotation.y=0;
+    if(k==='human'){
+      h.torso.position.y=.51+(sel?Math.abs(Math.sin(menuT*2.4))*.006:0);h.armL.rotation.x=-.38;h.armR.rotation.x=-.82;
+    }
     if(k==='guerreiro'&&h.sword){h.sword.rotation.x=0;h.sword.rotation.z=0;if(h.swordHold)h.swordHold.rotation.z=-.75}
     if(sel&&menuAtk>0){const t=1-menuAtk,e=1-Math.pow(1-t,3);
       if(k==='guerreiro'){h.armR.rotation.x=lerp(-1.15,-.35,e);h.torso.rotation.y=lerp(.9,-.9,e);
@@ -1142,15 +1168,17 @@ function updateMenu(dt){
     if(k==='arqueiro'&&h.bowArrow)h.bowArrow.visible=sel&&menuAtk>0;
     if(k==='guerreiro'&&h.plume){h.plume.rotation.z=Math.sin(menuT*2+i)*.045;h.plume.rotation.x=Math.sin(menuT*1.7+i)*.03}
   });
-  for(const k in menuStones)menuStones[k].visible=!isUnlocked(k); // placa no lugar dos que ainda descansam no caixão
+  for(const k in menuStones)menuStones[k].visible=!isUnlocked(k)&&k!=='demon'&&k!=='human'; // os palcos próprios substituem as placas do Zé e do demônio
   if(royalGrp)royalGrp.visible=isUnlocked('king');
   if(necroG)necroG.visible=isUnlocked('necro');
   if(tGref)tGref.visible=isUnlocked('future');
   if(cemeG)cemeG.visible=isUnlocked('dracula'); // cada cenário só existe com o dono dele
+  if(demonRitual)demonRitual.visible=state==='title'||(inMenu&&selCls==='demon');
+  if(menuBar)menuBar.group.visible=state==='title'||(inMenu&&selCls==='human');
   menuRing.position.x=0;
   const selP=menuHeroes[selCls]?menuHeroes[selCls].root.position:null;
   if(selP){podium.position.x=lerp(podium.position.x,selP.x,Math.min(1,dt*6));podium.position.z=lerp(podium.position.z,selP.z,Math.min(1,dt*6))} // palco desliza até o herói
-  podium.visible=inMenu;if(inMenu&&podium.material.color.set){podium.material.color.set(CLASSES[selCls].ui);podium.material.opacity=.1+.05*Math.sin(menuT*2.2)}
+  podium.visible=inMenu&&selCls!=='demon';if(inMenu&&selCls!=='demon'&&podium.material.color.set){podium.material.color.set(CLASSES[selCls].ui);podium.material.opacity=.1+.05*Math.sin(menuT*2.2)}
   menuAtk=Math.max(0,menuAtk-dt*2.2);if(menuT%3<dt)menuAtk=1;
   menuRing.rotation.y+=dt*.06;const rp=1+Math.sin(menuT*2.2)*.025;menuRing.scale.set(rp,1,rp); // anel quase parado, só ondula
   for(const gb of fireGlow){const nr=gb.r*(1+Math.sin(menuT*1.3+gb.ph)*.15); // luz do chão suave

@@ -250,12 +250,12 @@
       return{landPos,chests,totems,flameMat,fireFx,crystalMeshes}
     }
 
-    function buildMenuLandscape(menuGroup,{nz,nz2,jv}){
+    function buildMenuLandscape(menuGroup,{nz,nz2,jv,ritualX=10.8,ritualZ=-12.2,barX=-1.45,barZ=-11.2,barTableX=-.48,barTableZ=-11.2}){
       const gCells=[],dCells=[];for(let x=-14;x<=14;x++)for(let z=-17;z<=5;z++){if(x*x/200+z*z/290>rand(.9,1.2))continue;(nz(x,z)>1.2?dCells:gCells).push([x,z])}
       const mkGround=(geo,cells)=>{const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({vertexColors:true}),Math.max(1,cells.length));im.receiveShadow=true;menuGroup.add(im);const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),pp=new THREE.Vector3(),ss=new THREE.Vector3(),col=new THREE.Color();
         cells.forEach(([x,z],i)=>{m4.compose(pp.set(x,jv(x,z)*.06-.7,z),q,ss.set(1,1.4,1));im.setMatrixAt(i,m4);if(nz2(x,z)>.98)col.setHex(0xa8a24a).offsetHSL(0,0,rand(-.06,.04));else col.setScalar(1+rand(-.08,.08)+((x+z)%2?.03:-.03));im.setColorAt(i,col)})};
       mkGround(grassBlockGeo,gCells);mkGround(dirtBlockGeo,dCells);
-      for(let i=0;i<48;i++){const fx=rand(-11,11),fz=rand(-13,4);if(fx*fx+fz*fz<4)continue;const flower=vox(menuGroup,fx,.08,fz,.12,.12,.12,pick([0xf2d24b,0xe86a8a,0xffffff,0xa58bff]));flower.castShadow=false}
+      for(let i=0;i<48;i++){const fx=rand(-11,11),fz=rand(-13,4);if(fx*fx+fz*fz<4||Math.hypot(fx-ritualX,fz-ritualZ)<3.1||Math.hypot(fx-barX,fz-barZ)<2.2||Math.hypot(fx-barTableX,fz-barTableZ)<1.7)continue;const flower=vox(menuGroup,fx,.08,fz,.12,.12,.12,pick([0xf2d24b,0xe86a8a,0xffffff,0xa58bff]));flower.castShadow=false}
       [[-12,.5,1],[12,-2,3],[-5,-13.5,4],[-4,4.3,2],[2.6,4.4,0]].forEach(([tx,tz,t])=>{const m=new THREE.Mesh(TREE_GEOS[t],treeMat);m.position.set(tx,jv(tx,tz)*.06,tz);m.rotation.y=rand(0,TAU);m.scale.setScalar(rand(.8,1.1));m.castShadow=true;m.receiveShadow=true;menuGroup.add(m)})
     }
     function buildMenuTardis(menuGroup){const tG=new THREE.Group();tG.position.set(-10.2,0,2.7);tG.rotation.y=1.75;tG.scale.setScalar(.92);menuGroup.add(tG);tG.add(buildTardis());return tG}
@@ -265,7 +265,7 @@
       const deadTree=new THREE.Mesh(TREE_GEOS[5],treeMat);deadTree.position.set(-3,0,-1.8);deadTree.scale.setScalar(1.15);ceme.add(deadTree);
       const cofA=buildCoffin(false);cofA.position.set(1.3,0,.4);cofA.rotation.y=-.5;ceme.add(cofA);const cofB=buildCoffin(true);cofB.position.set(-1.4,0,-.7);cofB.rotation.y=.35;ceme.add(cofB);return ceme}
     function buildMenuRoyalCourt(menuGroup){const court=new THREE.Group();menuGroup.add(court);const throne=buildRoyalThrone();throne.position.set(6.9,0,3.9);throne.rotation.y=-2.5;court.add(throne);return court}
-    function buildMenuNecroGraves(menuGroup){const necro=new THREE.Group();menuGroup.add(necro);[[6.3,-6.5,'grave'],[7.8,-8,'cross'],[6.6,-8.3,'grave']].forEach(([x,z,k])=>{const m=new THREE.Mesh(DECOR_GEO[k],treeMat);m.position.set(x,0,z);m.rotation.y=rand(0,TAU);necro.add(m)});return necro}
+    function buildMenuNecroGraves(menuGroup){const necro=new THREE.Group();menuGroup.add(necro);[[8.35,-6.55,'grave'],[7.8,-8,'cross'],[6.6,-8.3,'grave']].forEach(([x,z,k],i)=>{const m=new THREE.Mesh(DECOR_GEO[k],treeMat);m.name=i===0?'necroSideTombstone':'necroGrave'+i;m.position.set(x,0,z);m.rotation.y=rand(0,TAU);necro.add(m)});return necro}
     function buildMenuCampfire(menuGroup){const fireGroup=new THREE.Group();menuGroup.add(fireGroup);
       const hearth=new THREE.Mesh(DECOR_GEO.fire,treeMat);hearth.castShadow=true;hearth.receiveShadow=true;fireGroup.add(hearth);
       const flames=[[0,.24,0,.36,.22,.34,0xd53a12],[0,.39,0,.32,.24,.29,0xff5c15],[-.035,.54,.025,.25,.27,.24,0xff841b],[.015,.69,.03,.19,.24,.18,0xffb52c],[-.015,.83,.02,.13,.21,.13,0xffdc59],[.005,.96,.02,.08,.17,.08,0xffef9a],[-.14,.41,.035,.12,.18,.12,0xff6416],[.15,.48,-.025,.1,.17,.1,0xf94812],[.14,.61,-.03,.07,.16,.08,0xffa323]].map(a=>{const f=vox(fireGroup,a[0],a[1],a[2],a[3],a[4],a[5],a[6],1);f.castShadow=false;f.userData.b=[a[3],a[4],a[5]];return f});
@@ -276,8 +276,41 @@
       const mkFlare=(r,a,sparse)=>{const g=new THREE.Group(),b=vox(g,0,.09,0,.09,.16,.09,pick([0xffb02f,0xff9a1f]),1);b.castShadow=false;const t=vox(g,0,.21,0,.06,.1,.06,0xff4a1a,1);t.castShadow=false;t.rotation.x=rand(-.3,.3);g.position.set(Math.sin(a)*r,0,Math.cos(a)*r);group.add(g);return{g,ph:rand(0,TAU),base:.8+rand(-.25,.3),sparse:!!sparse,cur:0}};
       for(let i=0;i<18;i++)rim.push(mkFlare(.8+rand(-.14,.14),i/18*TAU+rand(-.08,.08)));for(let i=0;i<7;i++)rim.push(mkFlare(rand(.15,.5),rand(0,TAU),true));return{group,glow,rim}}
     function buildClassPedestal(color){const g=new THREE.Group();vox(g,0,.21,0,.3,.42,.2,0x837e74);vox(g,0,.47,0,.36,.08,.24,0x8f8a80);vox(g,0,.56,0,.12,.14,.12,color,1);return g}
+    function buildMenuDemonRitual(menuGroup,x=10.8,z=-12.2){
+      const altar=new THREE.Group();altar.name='demonMenuRitual';altar.position.set(x,0,z);menuGroup.add(altar);
+      const stoneColors=[0x28202a,0x39303a,0x44333a,0x33262e];
+      for(let i=0;i<10;i++){const a=i/10*TAU,slab=vox(altar,Math.sin(a)*1.92,.045,Math.cos(a)*1.92,.66,.13,.58,stoneColors[i%stoneColors.length]);slab.rotation.y=a}
+      const points=Array.from({length:5},(_,i)=>{const a=-Math.PI/2+i*TAU/5;return{x:Math.cos(a)*1.28,z:Math.sin(a)*1.28}});
+      const stroke=(a,b,width,height,color,glow,y=.145)=>{const dx=b.x-a.x,dz=b.z-a.z,m=vox(altar,(a.x+b.x)/2,y,(a.z+b.z)/2,width,height,Math.hypot(dx,dz),color,glow);m.rotation.y=Math.atan2(dx,dz);return m};
+      for(let i=0;i<5;i++)stroke(points[i],points[(i+1)%5],.085,.045,0x611421,.45);
+      const star=[0,2,4,1,3,0];for(let i=0;i<5;i++)stroke(points[star[i]],points[star[i+1]],.075,.055,0xf12d45,1.1);
+      for(let i=0;i<5;i++){
+        const a=i/5*TAU-Math.PI/2,px=Math.cos(a)*1.72,pz=Math.sin(a)*1.72;
+        vox(altar,px,.14,pz,.16,.18,.16,0x761b2b,.35);vox(altar,px,.245,pz,.095,.11,.095,0xff483d,1.15);
+        const rune=vox(altar,Math.cos(a)*.74,.17,Math.sin(a)*.74,.16,.035,.055,i%2?0xff6044:0xd72d69,.9);rune.rotation.y=a;
+      }
+      vox(altar,0,.16,0,.19,.06,.19,0xffb153,1.2);
+      const flameLight=new THREE.PointLight(0xb51d3d,.85,4.5,2);flameLight.position.set(0,.8,0);altar.add(flameLight);
+      return altar
+    }
+    function buildMenuBarSet(menuGroup,chairX=-1.45,chairZ=-11.2,tableX=-.48,tableZ=-11.2){
+      const group=new THREE.Group();group.name='zeBarCorner';menuGroup.add(group);
+      const yellow=0xffcf19,light=0xffe34a,shade=0xe4a900;
+      const chair=new THREE.Group();chair.name='yellowBarChair';chair.position.set(chairX,0,chairZ);chair.rotation.y=0;chair.scale.set(.58,.6,.58);group.add(chair);
+      for(const sx of [-1,1])for(const sz of [-1,1])vox(chair,sx*.27,.36,sz*.24,.09,.72,.09,yellow);
+      vox(chair,0,.73,0,.74,.12,.66,yellow);vox(chair,0,.80,.015,.62,.025,.53,light);
+      vox(chair,0,1.15,-.28,.72,.78,.11,yellow);
+      vox(chair,0,.34,-.25,.59,.07,.07,shade);vox(chair,0,.34,.25,.59,.07,.07,shade);
+      vox(chair,-.27,.34,0,.07,.07,.5,shade);vox(chair,.27,.34,0,.07,.07,.5,shade);
+      const table=new THREE.Group();table.name='yellowBarTable';table.position.set(tableX,0,tableZ);table.scale.set(.6,.68,.6);group.add(table);
+      for(const sx of [-1,1])for(const sz of [-1,1])vox(table,sx*.48,.51,sz*.4,.105,.96,.105,yellow);
+      vox(table,0,1.01,0,1.38,.14,1.18,shade);vox(table,0,1.095,0,1.31,.07,1.11,yellow);
+      vox(table,0,1.137,0,.88,.014,.045,light);
+      vox(table,0,.27,0,.96,.075,.08,shade);vox(table,0,.27,0,.08,.075,.8,shade);
+      return{group,chair,table}
+    }
     function buildHeroPodium(menuGroup){const podium=new THREE.Mesh(new THREE.CircleGeometry(.85,28),new THREE.MeshBasicMaterial({color:0xf2b84b,transparent:true,opacity:.14,depthWrite:false}));podium.rotation.x=-Math.PI/2;podium.position.y=.03;menuGroup.add(podium);return podium}
 
-    return{grassBlockGeo,dryBlockGeo,mossBlockGeo,dirtBlockGeo,TREE_SYSTEM,TREE_GEOS,treeMat,ROCK_GEOS,DECOR_GEO,GROUND_GEO,FIELD_FLOWERS,buildField,buildCoffin,buildTardis,buildRoyalThrone,buildTotem:()=>makeTotem().g,buildChestDisplay,buildMenuLandscape,buildMenuTardis,buildMenuCemetery,buildMenuRoyalCourt,buildMenuNecroGraves,buildMenuCampfire,buildMenuFireRing,buildClassPedestal,buildHeroPodium}
+    return{grassBlockGeo,dryBlockGeo,mossBlockGeo,dirtBlockGeo,TREE_SYSTEM,TREE_GEOS,treeMat,ROCK_GEOS,DECOR_GEO,GROUND_GEO,FIELD_FLOWERS,buildField,buildCoffin,buildTardis,buildRoyalThrone,buildTotem:()=>makeTotem().g,buildChestDisplay,buildMenuLandscape,buildMenuTardis,buildMenuCemetery,buildMenuRoyalCourt,buildMenuNecroGraves,buildMenuCampfire,buildMenuFireRing,buildClassPedestal,buildMenuDemonRitual,buildMenuBarSet,buildHeroPodium}
   };
 })();
